@@ -6,11 +6,11 @@ import { Directory } from "../models/Directory";
 
 export class DocumentFactory {
   static async create(filePath: string): Promise<Document> {
-    const stat = await fs.stat(filePath);
-    if (stat.isDirectory()) {
+    const stats = await fs.stat(filePath);
+    if (stats && typeof stats.isDirectory === 'function' && stats.isDirectory()) {
       return new Directory(path.basename(filePath), filePath);
-    } else {
-      return new File(path.basename(filePath), filePath);
     }
+
+    return new File(path.basename(filePath), filePath);
   }
 }

@@ -1,4 +1,4 @@
-import * as fs from "fs/promises";
+import { promises as fs } from "fs";
 import { Document } from "./Document";
 
 export class File extends Document {
