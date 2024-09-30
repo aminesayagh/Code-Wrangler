@@ -4,11 +4,11 @@ type FileSystem = {
 
 export const mockFileSystem: FileSystem = {
   "root": {
-    "file1.ts": "content of file1.ts",
-    "file2.js": "content of file2.js",
+    "file1.ts": `export const test = "test 1";`,
+    "file2.js": `export const test = "test 2";`,
     dir: {
-      "file3.ts": "content of file3.ts",
-      "file4.js": "content of file4.js",
+      "file3.ts": `export const test = "test 3";`,
+      "file4.js": `export const test = "test 4";`,
     },
   },
 };

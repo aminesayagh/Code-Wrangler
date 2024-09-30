@@ -1,1 +1,1 @@
-content of file1.ts
+export const test = "test 1";

@@ -1,0 +1,15 @@
+{
+    "dir": "./",
+    "outputDir": "./",
+    "pattern": "**/*",
+    "outputFile": "output",
+    "logLevel": "info",
+    "outputFormat": "markdown",
+    "maxFileSize": 1048576,
+    "excludePatterns": [
+        "node_modules/**",
+        "dist/**",
+        ".git/**"
+    ],
+    "codeConfigFile": "codeConfig.json"
+}

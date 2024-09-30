@@ -1,1 +1,1 @@
-content of file4.js
+export const test = "test 4";

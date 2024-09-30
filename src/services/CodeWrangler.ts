@@ -11,6 +11,7 @@ export class CodeWrangler {
 
   async execute(): Promise<void> {
     const files = await FileSystem.getFiles(this.rootDir, this.pattern);
+    console.log(`Found ${files.length} files for pattern ${this.pattern} in ${this.rootDir}`);
     await this.documentTree.buildTree(files);
     const content = await this.documentTree.getContent();
     await fs.writeFile(`${this.outputFile}.md`, content);
