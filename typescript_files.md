@@ -1,3 +1,26 @@
+
+
+./src/index.ts
+```ts
+#!/usr/bin/env node
+import { CodeWrangler } from "./CodeWrangler";
+
+async function main() {
+  try {
+    await CodeWrangler.run();
+  } catch (error) {
+    console.error("Error:", error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  } finally {
+    process.exit(0);
+  }
+}
+
+main();
+```
+
+./src/CodeWrangler.ts
+```ts
 import { program } from "commander";
 import { FileSystem } from "./utils/FileSystem";
 import { DocumentTree } from "./services/DocumentTree";
@@ -103,184 +126,10 @@ export class CodeWrangler {
     await program.parseAsync(process.argv);
   }
 }
+```
 
-
-type FileSystem = {
-  [key: string]: string | FileSystem;
-};
-
-export const mockFileSystem: FileSystem = {
-  "root": {
-    "file1.ts": `export const test = "test 1";`,
-    "file2.js": `export const test = "test 2";`,
-    dir: {
-      "file3.ts": `export const test = "test 3";`,
-      "file4.js": `export const test = "test 4";`,
-    },
-  },
-};
-
-export const MOCK_PATH = "src/__mocks__/root";
-
-export function isDirectory(path: string): boolean {
-  const parts = path.split("/").filter(Boolean);
-  let current: FileSystem | string = mockFileSystem;
-  for (const part of parts) {
-    const currentPart = (current as FileSystem)[part] as FileSystem | string;
-    if (typeof currentPart === "string") return false;
-    current = currentPart;
-  }
-  return true;
-}
-
-export function getContent(path: string): string | null {
-  const parts = path.split("/").filter(Boolean);
-  let current: FileSystem | string = mockFileSystem;
-  for (const part of parts) {
-    if ((current as FileSystem)[part] === undefined) {
-        console.error("File not found: ", path, "on part: ", part);
-        throw new Error(`File not found: ${path}`);
-    }
-    current = (current as FileSystem)[part] as FileSystem | string;
-  }
-  return typeof current === "string" ? current : null;
-}
-
-
-export const test = "test 3";
-
-export const test = "test 1";
-
-#!/usr/bin/env node
-import { CodeWrangler } from "./CodeWrangler";
-
-async function main() {
-  try {
-    await CodeWrangler.run();
-  } catch (error) {
-    console.error("Error:", error instanceof Error ? error.message : String(error));
-    process.exit(1);
-  } finally {
-    process.exit(0);
-  }
-}
-
-main();
-
-
-import { Document } from "./Document";
-
-export class Directory extends Document {
-  public children: Document[] = [];
-
-  async addChild(child: Document): Promise<void> {
-    this.children.push(child);
-  }
-
-  async getContent(): Promise<string> {
-    const childrenContent = await Promise.all(this.children.map(child => child.getContent()));
-    return childrenContent.join('\n\n');
-  }
-}
-
-export abstract class Document {
-  constructor(public name: string, public path: string) {}
-  abstract getContent(): Promise<string>;
-}
-
-
-import { promises as fs } from "fs";
-import { Document } from "./Document";
-
-export class File extends Document {
-  private _content: string | null = null;
-  async getContent(): Promise<string> {
-    if (!this._content) {
-      this._content = await fs.readFile(this.path, "utf-8");
-    }
-    return this._content;
-  }
-}
-
-import * as fs from "fs/promises";
-import { DocumentTree } from "./DocumentTree";
-import { FileSystem } from "../utils/FileSystem";
-
-export class CodeWrangler {
-  private documentTree: DocumentTree;
-
-  constructor(private rootDir: string, private pattern: string, private outputFile: string) {
-    this.documentTree = new DocumentTree(rootDir);
-  }
-
-  async execute(): Promise<void> {
-    const files = await FileSystem.getFiles(this.rootDir, this.pattern);
-    console.log(`Found ${files.length} files for pattern ${this.pattern} in ${this.rootDir}`);
-    await this.documentTree.buildTree(files);
-    const content = await this.documentTree.getContent();
-    await fs.writeFile(`${this.outputFile}.md`, content);
-    console.log(`Wrote content to ${this.outputFile}.md`);
-  }
-}
-
-import * as path from "path";
-import { Directory } from "../models/Directory";
-import { DocumentFactory } from "../utils/DocumentFactory";
-import { config } from "../utils/Config";
-import { logger } from "../utils/Logger";
-import { promises as fs } from "fs";
-
-export class DocumentTree {
-  private root: Directory;
-
-  constructor(rootDir: string) {
-    this.root = new Directory(path.basename(rootDir), rootDir);
-  }
-
-  async buildTree(files: string[]): Promise<void> {
-    const maxFileSize = config.get("maxFileSize") as number;
-    for (const file of files) {
-      await this.addResource(file, {
-        maxFileSize,
-      });
-    }
-  }
-
-  private async addResource(filePath: string, options: { maxFileSize: number }): Promise<void> {
-    const stats = await fs.stat(filePath);
-    if (stats.size > options.maxFileSize) {
-      logger.info(`Skipping file ${filePath} as it exceeds the maximum file size (${stats.size} > ${options.maxFileSize} bytes)`);
-      return;
-    }
-    const relativePath = path.relative(this.root.path, filePath);
-    const pathParts = relativePath.split(path.sep);
-    let currentDir = this.root;
-
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      const dirName = pathParts[i] as string;
-      let existingDir = currentDir.children.find(
-        (child) => child.name === dirName && child instanceof Directory
-      ) as Directory | undefined;
-      if (!existingDir) {
-        existingDir = new Directory(
-          dirName,
-          path.join(currentDir.path, dirName)
-        );
-        await currentDir.addChild(existingDir);
-      }
-      currentDir = existingDir;
-    }
-
-    const document = await DocumentFactory.create(filePath);
-    await currentDir.addChild(document);
-  }
-
-  async getContent(): Promise<string> {
-    return this.root.getContent();
-  }
-}
-
-
+./src/utils/Config.ts
+```ts
 import fs from "fs";
 import path from "path";
 import { z } from "zod";
@@ -389,25 +238,10 @@ export class Config {
 
 export const config = Config.getInstance();
 export type ConfigInstance = Config;
+```
 
-
-import * as fs from "fs/promises";
-import * as path from "path";
-import { Document } from "../models/Document";
-import { File } from "../models/File";
-import { Directory } from "../models/Directory";
-
-export class DocumentFactory {
-  static async create(filePath: string): Promise<Document> {
-    const stats = await fs.stat(filePath);
-    if (stats && typeof stats.isDirectory === 'function' && stats.isDirectory()) {
-      return new Directory(path.basename(filePath), filePath);
-    }
-
-    return new File(path.basename(filePath), filePath);
-  }
-}
-
+./src/utils/FileSystem.ts
+```ts
 import { promises as fs } from "fs";
 import * as path from "path";
 import { Config } from "./Config";
@@ -462,7 +296,10 @@ export class FileSystem {
     return Array.prototype.concat(...files).filter((file) => new RegExp(pattern).test(file));
   }
 }
+```
 
+./src/utils/Logger.ts
+```ts
 import colors from "colors";
 import { Config } from "./Config";
 
@@ -539,54 +376,127 @@ export class Logger {
 }
 
 export const logger = Logger.getInstance();
+```
 
+./src/utils/DocumentFactory.ts
+```ts
+import * as fs from "fs/promises";
+import * as path from "path";
+import { Document } from "../models/Document";
+import { File } from "../models/File";
+import { Directory } from "../models/Directory";
 
-import cliProgress from "cli-progress";
-
-export class ProgressBar {
-  private bar: cliProgress.SingleBar;
-  private intervalId: NodeJS.Timeout | null = null;
-  private currentValue: number = 0;
-
-  constructor(private total: number = 100) {
-    this.bar = new cliProgress.SingleBar(
-      {},
-      cliProgress.Presets.shades_classic
-    );
-  }
-
-  private simulateProgress() {
-    const remainingProgress = this.total - this.currentValue;
-    const increment = Math.random() * remainingProgress * 0.1;
-    this.currentValue = Math.min(this.currentValue + increment, this.total * 0.95);
-    this.bar.update(this.currentValue);
-  }
-
-  start() {
-    this.bar.start(this.total, 0);
-    this.intervalId = setInterval(() => this.simulateProgress(), 200);
-  }
-
-  update(value: number): void {
-    this.currentValue = value;
-    this.bar.update(value);
-  }
-
-  stop(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
+export class DocumentFactory {
+  static async create(filePath: string): Promise<Document> {
+    const stats = await fs.stat(filePath);
+    if (stats && typeof stats.isDirectory === 'function' && stats.isDirectory()) {
+      return new Directory(path.basename(filePath), filePath);
     }
-    this.bar.update(this.total);
-    this.bar.stop();
-  }
 
-  async execute<T>(fn: () => Promise<T>): Promise<T> {
-    this.start();
-    try {
-      return await fn();
-    } finally {
-      this.stop();
-    }
+    return new File(path.basename(filePath), filePath);
   }
 }
+```
+
+./services/DocumentTree.ts
+```ts
+import * as path from "path";
+import { Directory } from "../models/Directory";
+import { DocumentFactory } from "../utils/DocumentFactory";
+import { config } from "../utils/Config";
+import { logger } from "../utils/Logger";
+import { promises as fs } from "fs";
+
+export class DocumentTree {
+  private root: Directory;
+
+  constructor(rootDir: string) {
+    this.root = new Directory(path.basename(rootDir), rootDir);
+  }
+
+  async buildTree(files: string[]): Promise<void> {
+    const maxFileSize = config.get("maxFileSize") as number;
+    for (const file of files) {
+      await this.addResource(file, {
+        maxFileSize,
+      });
+    }
+  }
+
+  private async addResource(filePath: string, options: { maxFileSize: number }): Promise<void> {
+    const stats = await fs.stat(filePath);
+    if (stats.size > options.maxFileSize) {
+      logger.info(`Skipping file ${filePath} as it exceeds the maximum file size (${stats.size} > ${options.maxFileSize} bytes)`);
+      return;
+    }
+    const relativePath = path.relative(this.root.path, filePath);
+    const pathParts = relativePath.split(path.sep);
+    let currentDir = this.root;
+
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      const dirName = pathParts[i] as string;
+      let existingDir = currentDir.children.find(
+        (child) => child.name === dirName && child instanceof Directory
+      ) as Directory | undefined;
+      if (!existingDir) {
+        existingDir = new Directory(
+          dirName,
+          path.join(currentDir.path, dirName)
+        );
+        await currentDir.addChild(existingDir);
+      }
+      currentDir = existingDir;
+    }
+
+    const document = await DocumentFactory.create(filePath);
+    await currentDir.addChild(document);
+  }
+
+  async getContent(): Promise<string> {
+    return this.root.getContent();
+  }
+}
+```
+
+./src/models/Document.ts
+```ts
+export abstract class Document {
+  constructor(public name: string, public path: string) {}
+  abstract getContent(): Promise<string>;
+}
+```
+
+./src/models/Directory.ts
+```ts
+import { Document } from "./Document";
+
+export class Directory extends Document {
+  public children: Document[] = [];
+
+  async addChild(child: Document): Promise<void> {
+    this.children.push(child);
+  }
+
+  async getContent(): Promise<string> {
+    const childrenContent = await Promise.all(this.children.map(child => child.getContent()));
+    return childrenContent.join('\n\n');
+  }
+}
+```
+
+./src/models/File.ts
+```ts
+import { promises as fs } from "fs";
+import { Document } from "./Document";
+
+export class File extends Document {
+  private _content: string | null = null;
+  async getContent(): Promise<string> {
+    if (!this._content) {
+      this._content = await fs.readFile(this.path, "utf-8");
+    }
+    return this._content;
+  }
+}
+```
+

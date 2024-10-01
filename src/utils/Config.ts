@@ -87,10 +87,10 @@ export class Config {
       throw error;
     }
   }
-  public getALl(): ConfigOptions {
+  public getAll(): ConfigOptions {
     return this.config;
   }
-  override(config: Partial<ConfigOptions>): void {
+  public override(config: Partial<ConfigOptions>): void {
     const newOverrideConfig = { ...this.config, ...config };
     try {
       ConfigSchema.parse(newOverrideConfig);
