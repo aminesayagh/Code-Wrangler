@@ -1,25 +1,42 @@
 import fs from "fs";
 import path from "path";
 import { z } from "zod";
-import { LOG_VALUES } from "./Logger";
+import { LOG_VALUES, logger } from "./Logger";
 
 export const OutputFormatSchema = z.enum(["markdown"]);
 export type OutputFormat = z.infer<typeof OutputFormatSchema>;
 
 const ConfigSchema = z.object({
   dir: z.string(),
+  rootDir: z.string(),
   pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
   outputFile: z.string(),
   logLevel: z.enum(LOG_VALUES as [string, ...string[]]),
   outputFormat: OutputFormatSchema,
   maxFileSize: z.number().positive(),
   excludePatterns: z.array(z.string()),
+  ignoreHiddenFiles: z.boolean(),
+  additionalIgnoreFiles: z.array(z.string()).optional(),
   codeConfigFile: z
     .string()
     .regex(/\.json$/, "Config file must end with .json"),
 });
 
 export type ConfigOptions = z.infer<typeof ConfigSchema>;
+
+const DEFAULT_CONFIG: ConfigOptions = {
+  dir: process.cwd(), // current working directory, where the command is run
+  rootDir: process.cwd(),
+  pattern: ".*",
+  outputFile: "output",
+  logLevel: "INFO",
+  outputFormat: "markdown",
+  maxFileSize: 1048576,
+  excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"],
+  codeConfigFile: "codewrangler.json",
+  ignoreHiddenFiles: true, // Default value
+  additionalIgnoreFiles: [],
+};
 
 export class Config {
   private static instance: Config;
@@ -36,8 +53,7 @@ export class Config {
     return Config.instance;
   }
   private loodConfig(): ConfigOptions {
-    const defaultConfigPath = path.resolve(__dirname, "../defaultConfig.json");
-    const defaultConfig = this.parseAndValidateConfig(defaultConfigPath);
+    const defaultConfig = ConfigSchema.parse(DEFAULT_CONFIG);
 
     const currentDirConfig = path.join(
       process.cwd(),
@@ -50,31 +66,10 @@ export class Config {
 
     return defaultConfig;
   }
-  private parseAndValidateConfig(
-    filePath: string,
-    defaults?: Partial<ConfigOptions>
-  ): ConfigOptions {
-    try {
-      const rawConfig = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-      const mergedConfig = defaults ? { ...defaults, ...rawConfig } : rawConfig;
-      return ConfigSchema.parse(mergedConfig);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error(
-          `Configuration validation error in ${filePath}:`,
-          error.errors
-        );
-      } else {
-        console.error(
-          `Error reading or parsing configuration file ${filePath}:`,
-          error
-        );
-      }
-      process.exit(1);
-    }
-  }
-  public get(key: keyof ConfigOptions): ConfigOptions[keyof ConfigOptions] {
-    return this.config[key];
+  public get<T extends ConfigOptions[keyof ConfigOptions]>(
+    key: keyof ConfigOptions
+  ): ConfigOptions[keyof ConfigOptions] {
+    return this.config[key] as T;
   }
 
   public set(
@@ -87,7 +82,7 @@ export class Config {
       this.config = updatedConfig;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.error(`Invalid configuration value:`, error.errors);
+        logger.error(`Invalid configuration value: ${error.errors}`);
       }
       throw error;
     }
@@ -96,8 +91,18 @@ export class Config {
     return this.config;
   }
   override(config: Partial<ConfigOptions>): void {
-    this.config = { ...this.config, ...config };
+    const newOverrideConfig = { ...this.config, ...config };
+    try {
+      ConfigSchema.parse(newOverrideConfig);
+      this.config = newOverrideConfig;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        logger.error(`Invalid configuration value: ${error.errors}`);
+      }
+      throw error;
+    }
   }
 }
 
 export const config = Config.getInstance();
+export type ConfigInstance = Config;

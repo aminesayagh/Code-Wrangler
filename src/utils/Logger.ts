@@ -1,58 +1,76 @@
-import chalk from "chalk";
+import colors from "colors";
+import { Config } from "./Config";
 
 export const LogLevel = {
-    ERROR: 0,
-    WARN: 1,
-    INFO: 2,
-    DEBUG: 3
+  ERROR: 0,
+  WARN: 1,
+  INFO: 2,
+  DEBUG: 3,
 } as const;
 
-type LogLevel = typeof LogLevel[keyof typeof LogLevel];
+type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
 export type LogLevelString = keyof typeof LogLevel;
 export const LOG_VALUES = Object.keys(LogLevel) as LogLevelString[];
 
 export class Logger {
-    private static instance: Logger;
-    private loglevel: LogLevel;
+  private static instance: Logger;
+  private config: Config | null = null;
 
-    private constructor(loglevel: LogLevel = LogLevel.INFO) {
-        this.loglevel = loglevel;
+  private constructor() {}
+  public static getInstance(): Logger {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
     }
-    public static getInstance(): Logger {
-        if (!Logger.instance) {
-            Logger.instance = new Logger();
-        }
-        return Logger.instance;
+    return Logger.instance;
+  }
+  public setConfig(config: Config) {
+    this.config = config;
+  }
+  public setLogLevel(logLevel: LogLevelString) {
+    if (this.config) {
+      this.config.set("logLevel", logLevel);
     }
-    public setLogLevel(logLevel: LogLevel) {
-        this.loglevel = logLevel;
+  }
+
+  private get logLevel(): LogLevel {
+    const configLogLevel = this.config?.get("logLevel") as LogLevelString | undefined;
+    return configLogLevel ? LogLevel[configLogLevel] : LogLevel.ERROR;
+  }
+
+  public error(message: string, error?: Error, ...other: unknown[]) {
+    if (this.logLevel >= LogLevel.ERROR) {
+      console.log(colors.red(`[ERROR] ${message}`), ...other);
+      if (error instanceof Error && error.stack) {
+        console.log(colors.red(error.stack));
+      }
     }
-    public error(message: string) {
-        if (this.loglevel >= LogLevel.ERROR) {
-            console.log(chalk.red(`[${LogLevel.ERROR}] ${message}`));
-        }
+  }
+
+  public warn(message: string) {
+    if (this.logLevel >= LogLevel.WARN) {
+      console.log(colors.yellow(`[WARN] ${message}`));
     }
-    public warn(message: string) {
-        if (this.loglevel >= LogLevel.WARN) {
-            console.log(chalk.yellow(`[${LogLevel.WARN}] ${message}`));
-        }
+  }
+
+  public info(message: string) {
+    if (this.logLevel >= LogLevel.INFO) {
+      console.log(colors.blue(`[INFO] ${message}`));
     }
-    public info(message: string) {
-        if (this.loglevel >= LogLevel.INFO) {
-            console.log(chalk.blue(`[${LogLevel.INFO}] ${message}`));
-        }
+  }
+
+  public debug(message: string) {
+    if (this.logLevel >= LogLevel.DEBUG) {
+      console.log(colors.gray(`[DEBUG] ${message}`));
     }
-    public debug(message: string) {
-        if (this.loglevel >= LogLevel.DEBUG) {
-            console.log(chalk.gray(`[${LogLevel.DEBUG}] ${message}`));
-        }
-    }
-    public success(message: string) {
-        console.log(chalk.green(message));
-    }
-    public log(message: string) {
-        console.log(message);
-    }
+  }
+
+  public success(message: string) {
+    console.log(colors.green(message));
+  }
+
+  public log(message: string) {
+    console.log(message);
+  }
 }
 
 export const logger = Logger.getInstance();

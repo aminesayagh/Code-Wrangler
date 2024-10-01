@@ -7,6 +7,8 @@ async function main() {
   } catch (error) {
     console.error("Error:", error instanceof Error ? error.message : String(error));
     process.exit(1);
+  } finally {
+    process.exit(0);
   }
 }
 
