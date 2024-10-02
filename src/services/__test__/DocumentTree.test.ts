@@ -21,10 +21,10 @@ describe("DocumentTree", () => {
 
     const content = await tree.getContent();
     const expectedContent = [
-      "content of file1.ts",
-      "content of file2.js",
-      "content of file3.ts",
-      "content of file4.js",
+      "export const test = \"test 1\";",
+      "export const test = \"test 2\";",
+      "export const test = \"test 3\";",
+      "export const test = \"test 4\";",
     ].join("\n\n");
 
     expect(content).toBe(expectedContent);
@@ -38,9 +38,10 @@ describe("DocumentTree", () => {
     ]);
 
     const content = await tree.getContent();
-    const expectedContent = ["content of file3.ts", "content of file4.js"].join(
-      "\n\n"
-    );
+    const expectedContent = [
+      "export const test = \"test 3\";",
+      "export const test = \"test 4\";",
+    ].join("\n\n");
 
     expect(content).toBe(expectedContent);
   });

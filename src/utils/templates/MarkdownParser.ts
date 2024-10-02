@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
@@ -84,8 +85,8 @@ export class MarkdownParser {
         const ast = {
             type: "root",
             children: MarkdownParser.jsonToAst(json),
-        }
-        return unified().use(remarkStringify).stringify(ast as any);
+        } as any;
+        return unified().use(remarkStringify).stringify(ast);
     }
     private static jsonToAst(json: MarkdownSection[]): any[] {
         return json.flatMap((section) => {
@@ -120,7 +121,7 @@ export class MarkdownParser {
         const json = this.toJSON();
         const updatedJson = this.updateSectionInJson(json, sectionName, newContent);
         
-        this.ast = unified().use(remarkParse).parse(MarkdownParser.fromJSON(updatedJson)) as any;
+        this.ast = unified().use(remarkParse).parse(MarkdownParser.fromJSON(updatedJson));
     }
     private updateSectionInJson(json: MarkdownSection[], sectionName: string, newContent: string): MarkdownSection[] {
         return json.map((section) => {

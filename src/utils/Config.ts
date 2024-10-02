@@ -1,4 +1,4 @@
-import fs from "fs";
+import * as fs from 'fs';
 import path from "path";
 import { z } from "zod";
 import { LOG_VALUES, logger } from "./Logger";

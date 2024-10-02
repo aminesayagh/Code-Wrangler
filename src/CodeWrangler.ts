@@ -5,11 +5,13 @@ import * as fs from "fs/promises";
 import { ProgressBar } from "./utils/ProgressBar";
 import { logger } from "./utils/Logger";
 import { config, ConfigInstance, ConfigOptions } from "./utils/Config";
+import { MarkdownGenerator, OutputFileGenerator } from "./utils/templates/MarkdownGenerator";
 
 logger.setConfig(config);
 
 export class CodeWrangler {
   private documentTree: DocumentTree;
+  private outputFileGenerator: OutputFileGenerator;
   private config: ConfigInstance = config;
 
   private constructor() {
@@ -18,6 +20,8 @@ export class CodeWrangler {
   }
 
   async execute(): Promise<void> {
+    this.outputFileGenerator = await MarkdownGenerator.init();
+
     const pattern = this.config.get("pattern") as string;
     const rootDir = this.config.get("dir") as string;
     const outputFile = this.config.get("outputFile") as string;
@@ -91,10 +95,7 @@ export class CodeWrangler {
             const wrangler = new CodeWrangler();
             await wrangler.execute();
           } catch (error) {
-            console.error(
-              "Error:",
-              error instanceof Error ? error.message : String(error)
-            );
+            logger.error(error as string);
             process.exit(1);
           }
         }

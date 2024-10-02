@@ -1,65 +1,55 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { Config } from "../Config";
+import fs from "fs/promises";
+import path from "path";
+import { logger } from "../Logger";
+import { MarkdownParser } from "./MarkdownParser";
 
-export class MarkdownGenerator {
-  private config: Config;
-  private markdownTemplatePath: {
-    page: string;
-    directory: string;
-    file: string;
-  };
-  private markdownTemplate: {
-    page: string;
-    directory: string;
-    file: string;
-  } = {
-    page: "",
-    directory: "",
-    file: "",
-  };
+export abstract class OutputFileGenerator {
+  protected constructor() {}
+  abstract updateSection(sectionName: string, content: string): void;
+  abstract generateOutput(): string;
+}
 
-  private constructor(config: Config) {
-    this.config = config;
-    this.markdownTemplatePath = this.getMarkdownTemplatePath();
+export class MarkdownGenerator extends OutputFileGenerator {
+  private templatePath: string;
+  private parser: MarkdownParser | null = null;
+
+  protected constructor() {
+    super();
+    this.templatePath = this.getTemplatePath();
   }
 
-  public static async init(config: Config): Promise<MarkdownGenerator> {
-    const markdownGenerator = new MarkdownGenerator(config);
-    await markdownGenerator.init();
+  public static async init(): Promise<MarkdownGenerator> {
+    const markdownGenerator = new MarkdownGenerator();
+    await markdownGenerator.loadTemplate();
     return markdownGenerator;
   }
 
-  private async init(): Promise<void> {
-    this.markdownTemplate = await this.getTemplateMarkdown();
+  protected getTemplatePath(): string {
+    const templateDir = path.join(__dirname, "..", "..", "templates");
+    return path.join(templateDir, "default-template.md");
   }
 
-  private getMarkdownTemplatePath(): {
-    page: string;
-    directory: string;
-    file: string;
-  } {
-    return {
-      page: path.join(__dirname, "../../../templates/default_template_page.md"),
-      directory: path.join(__dirname, "../../../templates/default_template_directory.md"),
-      file: path.join(__dirname, "../../../templates/default_template_file.md"),
-    };
+  protected async loadTemplate(): Promise<void> {
+    try {
+      const template = await fs.readFile(this.templatePath, "utf8");
+      this.parser = new MarkdownParser(template);
+    } catch (error) {
+      logger.error(`Error loading template: ${error}`);
+      throw error;
+    }
   }
 
-  public async getTemplateMarkdown(): Promise<{
-    page: string;
-    directory: string;
-    file: string;
-  }> {
-    const [page, directory, file] = await Promise.all([
-      fs.readFile(this.markdownTemplatePath.page, "utf8"),
-      fs.readFile(this.markdownTemplatePath.directory, "utf8"),
-      fs.readFile(this.markdownTemplatePath.file, "utf8"),
-    ]);
-    return {
-      page,
-      directory,
-      file,
-    };
+  public updateSection(sectionName: string, content: string): void {
+    if (!this.parser) {
+      throw new Error("Template not loaded");
+    }
+    this.parser.updateSection(sectionName, content);
+  }
+
+  public generateOutput(): string {
+    if (!this.parser) {
+      throw new Error("Template not loaded");
+    }
+    return this.parser.toString();
   }
 }
