@@ -2,7 +2,7 @@ import { program } from "commander";
 import { FileSystem } from "./utils/FileSystem";
 import { DocumentTree } from "./services/DocumentTree";
 import * as fs from "fs/promises";
-import { ProgressBar } from "./utils/ProgressBar";
+import { progressBar } from "./utils/ProgressBar";
 import { logger } from "./utils/Logger";
 import { config, ConfigInstance, ConfigOptions } from "./utils/Config";
 import { MarkdownGenerator, OutputFileGenerator } from "./utils/templates/MarkdownGenerator";
@@ -11,7 +11,7 @@ logger.setConfig(config);
 
 export class CodeWrangler {
   private documentTree: DocumentTree;
-  private outputFileGenerator: OutputFileGenerator;
+  private outputFileGenerator: OutputFileGenerator | null = null;
   private config: ConfigInstance = config;
 
   private constructor() {
@@ -19,35 +19,48 @@ export class CodeWrangler {
     this.documentTree = new DocumentTree(this.config.get("dir") as string);
   }
 
+  private async initOutputFile(): Promise<void> {
+    if (this.config.get("outputFormat") == "markdown") {
+      this.outputFileGenerator = await MarkdownGenerator.init();
+    } else {
+      logger.error("Invalid output file type");
+      process.exit(1);
+    }
+  }
+
+  private verboseLogging(): void {
+    if (this.config.get("logLevel") != "DEBUG") {
+      return;
+    }
+
+    logger.debug(`Searching for files matching pattern: ${this.config.get("pattern")}`);
+    logger.debug(`Excluding patterns: ${(this.config.get("excludePatterns") as string[]).join(", ")}`);
+    logger.debug(`Ignoring hidden files and directories: ${this.config.get("ignoreHiddenFiles")}`);
+    logger.debug(`Maximum file size: ${this.config.get("maxFileSize")} bytes`);
+  }
+
   async execute(): Promise<void> {
-    this.outputFileGenerator = await MarkdownGenerator.init();
+    await this.initOutputFile();
+    this.verboseLogging();
 
-    const pattern = this.config.get("pattern") as string;
-    const rootDir = this.config.get("dir") as string;
-    const outputFile = this.config.get("outputFile") as string;
-    const ignoreHiddenFiles = this.config.get('ignoreHiddenFiles') as boolean;
-    const maxFileSize = this.config.get('maxFileSize') as number;
-
-    logger.debug(`Searching for files matching pattern: ${pattern} in directory: ${rootDir}`);
-    logger.debug(`Excluding patterns: ${(this.config.get('excludePatterns') as string[]).join(', ')}`);
-    logger.debug(`Ignoring hidden files and directories: ${ignoreHiddenFiles}`);
-    logger.debug(`Maximum file size: ${maxFileSize} bytes`);
-
-    const files = await FileSystem.getFiles(rootDir, pattern);
+    const files = await FileSystem.getFiles(this.config.get("dir") as string, this.config.get("pattern") as string);
     logger.debug(`Found ${files.length} matching files`);
 
     logger.info("Building document tree...");
-    const progress = new ProgressBar(files.length);
-    await progress.execute(async () => {
+    await progressBar(files.length, async () => {
       await this.documentTree.buildTree(files);
     });
 
     logger.info("Generating content...");
-    const content = await this.documentTree.getContent();
+    await this.documentTree.getContent();
 
     logger.info("Writing content to file...");
-    await fs.writeFile(`${outputFile}.md`, content);
-    logger.success(`CodeWrangler: Round-up complete! Output wrangled to ${outputFile}.md`);
+
+    const content = this.outputFileGenerator!.generateOutput();
+    const outputFile = this.config.get("outputFile") as string + ".md";
+    await fs.writeFile(outputFile, content);
+
+    logger.success(`CodeWrangler: Round-up complete! Output wrangled to ${this.config.get("outputFile")}.md`);
   }
 
   static async run() {

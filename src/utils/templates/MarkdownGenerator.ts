@@ -25,8 +25,13 @@ export class MarkdownGenerator extends OutputFileGenerator {
   }
 
   protected getTemplatePath(): string {
-    const templateDir = path.join(__dirname, "..", "..", "templates");
-    return path.join(templateDir, "default-template.md");
+    return path.join(
+      __dirname,
+      "..",
+      "src",
+      "templates",
+      "default-template.md"
+    );
   }
 
   protected async loadTemplate(): Promise<void> {

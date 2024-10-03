@@ -47,3 +47,10 @@ export class ProgressBar {
     }
   }
 }
+
+export async function progressBar(total: number, callback: () => Promise<void>): Promise<void> {
+  const bar = new ProgressBar(total);
+  await bar.execute(async () => {
+    await callback();
+  });
+}
