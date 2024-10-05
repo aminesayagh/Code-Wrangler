@@ -132,11 +132,13 @@ Files larger than `maxFileSize` (in bytes) will be skipped. This is useful for a
 ## Next Steps
 
 - [ ] Add support for more output formats (e.g., HTML, JSON)
-- [ ] Add support for more ignore files (e.g., `.dockerignore`, `.npmignore`)
+- [ ] Include more testing, and improve the code coverage.
+- [x] Add support for more ignore files (e.g., `.dockerignore`, `.npmignore`)
 - [ ] Use LLMs Models to analyze the project and generate a role prompt for the LLM to use for code generation.
 - [ ] Inprove the configuration UX, To generate a config tasks from the user, executed by the command line.
 - [ ] Add a resume to the workspace env technology and save it on the workspace local configuration.
 - [ ] Add a feature that generate the documentation of the project but with a comparision with the previous documentation, and highlight the changes.
+- [ ] Claude 3.5 Sonnet API integration with specific project to send the generated documentation as a knowledge base for the project.
 
 ## Troubleshooting
 
