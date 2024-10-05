@@ -3,18 +3,13 @@ import path from "path";
 import { logger } from "../Logger";
 import { MarkdownParser } from "./MarkdownParser";
 
-export abstract class OutputFileGenerator {
-  protected constructor() {}
-  abstract updateSection(sectionName: string, content: string): void;
-  abstract generateOutput(): string;
-}
-
-export class MarkdownGenerator extends OutputFileGenerator {
+export class MarkdownGenerator {
+  public readonly name = "markdown";
+  public readonly extension = "md";
   private templatePath: string;
   private parser: MarkdownParser | null = null;
 
   protected constructor() {
-    super();
     this.templatePath = this.getTemplatePath();
   }
 

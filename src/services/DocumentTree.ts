@@ -13,10 +13,9 @@ export class DocumentTree {
   }
 
   async buildTree(files: string[]): Promise<void> {
-    const maxFileSize = config.get("maxFileSize") as number;
     for (const file of files) {
       await this.addResource(file, {
-        maxFileSize,
+        maxFileSize: config.get("maxFileSize") as number
       });
     }
   }
@@ -53,4 +52,5 @@ export class DocumentTree {
   async getContent(): Promise<string> {
     return this.root.getContent();
   }
+
 }

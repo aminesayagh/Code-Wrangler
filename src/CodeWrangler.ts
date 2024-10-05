@@ -5,27 +5,18 @@ import * as fs from "fs/promises";
 import { progressBar } from "./utils/ProgressBar";
 import { logger } from "./utils/Logger";
 import { config, ConfigInstance, ConfigOptions } from "./utils/Config";
-import { MarkdownGenerator, OutputFileGenerator } from "./utils/templates/MarkdownGenerator";
+import { TemplateEngine } from "./utils/templates/TemplateEngine";
 
 logger.setConfig(config);
 
 export class CodeWrangler {
   private documentTree: DocumentTree;
-  private outputFileGenerator: OutputFileGenerator | null = null;
+  private templateEngine: TemplateEngine | null = null;
   private config: ConfigInstance = config;
 
   private constructor() {
     this.config = config;
     this.documentTree = new DocumentTree(this.config.get("dir") as string);
-  }
-
-  private async initOutputFile(): Promise<void> {
-    if (this.config.get("outputFormat") == "markdown") {
-      this.outputFileGenerator = await MarkdownGenerator.init();
-    } else {
-      logger.error("Invalid output file type");
-      process.exit(1);
-    }
   }
 
   private verboseLogging(): void {
@@ -40,7 +31,7 @@ export class CodeWrangler {
   }
 
   async execute(): Promise<void> {
-    await this.initOutputFile();
+    this.templateEngine = await TemplateEngine.init(this.config);
     this.verboseLogging();
 
     const files = await FileSystem.getFiles(this.config.get("dir") as string, this.config.get("pattern") as string);
@@ -56,9 +47,7 @@ export class CodeWrangler {
 
     logger.info("Writing content to file...");
 
-    const content = this.outputFileGenerator!.generateOutput();
-    const outputFile = this.config.get("outputFile") as string + ".md";
-    await fs.writeFile(outputFile, content);
+    await this.templateEngine!.generateOutput();
 
     logger.success(`CodeWrangler: Round-up complete! Output wrangled to ${this.config.get("outputFile")}.md`);
   }

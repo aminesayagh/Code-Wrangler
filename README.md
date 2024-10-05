@@ -129,6 +129,15 @@ By default, CodeWrangler ignores hidden files and directories. You can change th
 
 Files larger than `maxFileSize` (in bytes) will be skipped. This is useful for avoiding processing of large binary files or data files.
 
+## Next Steps
+
+- [ ] Add support for more output formats (e.g., HTML, JSON)
+- [ ] Add support for more ignore files (e.g., `.dockerignore`, `.npmignore`)
+- [ ] Use LLMs Models to analyze the project and generate a role prompt for the LLM to use for code generation.
+- [ ] Inprove the configuration UX, To generate a config tasks from the user, executed by the command line.
+- [ ] Add a resume to the workspace env technology and save it on the workspace local configuration.
+- [ ] Add a feature that generate the documentation of the project but with a comparision with the previous documentation, and highlight the changes.
+
 ## Troubleshooting
 
 ### Common Issues

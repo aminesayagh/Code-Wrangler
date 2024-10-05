@@ -12,7 +12,8 @@ const NodeType = {
   image: "image",
   table: "table",
   other: "other",
-};
+  section: "section"
+} as const;
 
 type NodeType = (typeof NodeType)[keyof typeof NodeType];
 
