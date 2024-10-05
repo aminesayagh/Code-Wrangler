@@ -6,7 +6,7 @@ import { logger } from "../utils/Logger";
 import { promises as fs } from "fs";
 
 export class DocumentTree {
-  private root: Directory;
+  public readonly root: Directory;
 
   constructor(rootDir: string) {
     this.root = new Directory(path.basename(rootDir), rootDir);

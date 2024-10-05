@@ -16,4 +16,24 @@ export class Directory extends Document {
   getInfo(): string {
     return `${this.name} (${this.children.length} items)`;
   }
+
+  getAllFiles(): File[] {
+    const documents: File[] = [];
+    this.children.forEach(child => {
+      if (child instanceof File) {
+        documents.push(child);
+      } else if (child instanceof Directory) {
+        documents.push(...child.getAllFiles());
+      }
+    });
+    return documents;
+  }
+
+  async generateContentMarkdown(): Promise<string[]> {
+    const files = this.getAllFiles();
+    console.log("files :", files);
+    const filesContent = await Promise.all(files.map(file => file.getContent()));
+    return filesContent;
+  }
+  
 }

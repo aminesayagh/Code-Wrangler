@@ -2,10 +2,10 @@ import { program } from "commander";
 import { FileSystem } from "./utils/FileSystem";
 import { DocumentTree } from "./services/DocumentTree";
 import * as fs from "fs/promises";
-import { progressBar } from "./utils/ProgressBar";
 import { logger } from "./utils/Logger";
 import { config, ConfigInstance, ConfigOptions } from "./utils/Config";
 import { TemplateEngine } from "./utils/templates/TemplateEngine";
+import { TreeVisualizer } from "./services/TreeVisualizer";
 
 logger.setConfig(config);
 
@@ -34,19 +34,25 @@ export class CodeWrangler {
     this.templateEngine = await TemplateEngine.init(this.config);
     this.verboseLogging();
 
-    const files = await FileSystem.getFiles(this.config.get("dir") as string, this.config.get("pattern") as string);
+    const rootDir = this.config.get("dir") as string;
+    const pattern = this.config.get("pattern") as string;
+    const files = await FileSystem.getFiles(rootDir, pattern);
+    await this.documentTree.buildTree(files);
     logger.debug(`Found ${files.length} matching files`);
 
     logger.info("Building document tree...");
-    await progressBar(files.length, async () => {
-      await this.documentTree.buildTree(files);
-    });
+    const treeVisualization = await TreeVisualizer.generateTree(files, rootDir);
+    logger.info("Generating tree visualization...");
+    this.templateEngine!.updateSection("File Structure", treeVisualization);
 
     logger.info("Generating content...");
-    await this.documentTree.getContent();
+    const content = await this.documentTree.root.generateContentMarkdown();
+    console.log(content);
+    for (const c of content) {
+      this.templateEngine!.updateSection("File Contents", c);
+    }
 
-    logger.info("Writing content to file...");
-
+    logger.info("Writing output...");
     await this.templateEngine!.generateOutput();
 
     logger.success(`CodeWrangler: Round-up complete! Output wrangled to ${this.config.get("outputFile")}.md`);

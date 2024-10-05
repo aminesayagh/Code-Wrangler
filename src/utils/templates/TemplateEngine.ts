@@ -7,7 +7,7 @@ export abstract class OutputFileGenerator {
   public abstract readonly name: string;
   public abstract readonly extension: string;
   protected constructor() {}
-  abstract updateSection(sectionName: string, content: string): void;
+  abstract updateSection(sectionName: string, content: string): Promise<void>;
   abstract generateOutput(): string;
 }
 
@@ -36,16 +36,14 @@ export class TemplateEngine {
         }
       });
 
-      const loadedTemplates = await Promise.all(templatePromises);
-      this.templates = loadedTemplates.filter(
-        (template): template is MarkdownGenerator => template !== null
-      ) as OutputFileGenerator[];
+      const loadedTemplates = await Promise.all(templatePromises)
+      this.templates = loadedTemplates.filter((template) => template !== null) as OutputFileGenerator[];
     }
   }
 
-  public updateSection(sectionName: string, content: string): void {
-    this.templates.forEach((template) =>
-      template.updateSection(sectionName, content)
+  public async updateSection(sectionName: string, content: string): Promise<void> {
+    await Promise.all(
+      this.templates.map((template) => template.updateSection(sectionName, content))
     );
   }
 

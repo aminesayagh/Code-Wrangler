@@ -32,18 +32,18 @@ export class MarkdownGenerator {
   protected async loadTemplate(): Promise<void> {
     try {
       const template = await fs.readFile(this.templatePath, "utf8");
-      this.parser = new MarkdownParser(template);
+      this.parser = await MarkdownParser.init(template);
     } catch (error) {
       logger.error(`Error loading template: ${error}`);
       throw error;
     }
   }
 
-  public updateSection(sectionName: string, content: string): void {
+  public async updateSection(sectionName: string, content: string): Promise<void> {
     if (!this.parser) {
       throw new Error("Template not loaded");
     }
-    this.parser.updateSection(sectionName, content);
+    await this.parser.updateSection(sectionName, content);
   }
 
   public generateOutput(): string {

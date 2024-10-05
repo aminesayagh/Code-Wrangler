@@ -12,7 +12,7 @@ const NodeType = {
   image: "image",
   table: "table",
   other: "other",
-  section: "section"
+  section: "section",
 } as const;
 
 type NodeType = (typeof NodeType)[keyof typeof NodeType];
@@ -30,22 +30,26 @@ export class MarkdownParser {
   private remarkParse: any;
   private remarkStringify: any;
   private visit: any;
-  constructor(markdown: string) {
+  private constructor() {
     this.ast = { type: "root" } as any;
     this.unified = {} as Processor;
     this.remarkParse = null;
     this.remarkStringify = null;
     this.visit = null;
-    this.init(markdown);
   }
-
-  private async init(markdown: string): Promise<void> {
-    const [unified, remarkParse, remarkStringify, { visit }] = await Promise.all([
-      import("unified").then((module) => module.unified),
-      import("remark-parse"),
-      import("remark-stringify"),
-      import("unist-util-visit"),
-    ]);
+  static async init(markdown: string): Promise<MarkdownParser> {
+    const parser = new MarkdownParser();
+    await parser.loadParser(markdown);
+    return parser;
+  }
+  private async loadParser(markdown: string): Promise<void> {
+    const [unified, remarkParse, remarkStringify, { visit }] =
+      await Promise.all([
+        import("unified").then((module) => module.unified),
+        import("remark-parse"),
+        import("remark-stringify"),
+        import("unist-util-visit"),
+      ]);
     this.unified = unified;
     this.remarkParse = remarkParse.default;
     this.remarkStringify = remarkStringify.default;
@@ -162,6 +166,17 @@ export class MarkdownParser {
   ): Promise<void> {
     const json = await this.toJSON();
     const updatedJson = this.updateSectionInJson(json, sectionName, newContent);
+    if (!updatedJson || updatedJson.length === 0) {
+      throw new Error("Section not found");
+    }
+    // print the updatedJson on a json file
+    if (!this.remarkParse) {
+      throw new Error("MarkdownParser or Unified is not initialized");
+    }
+
+    if (typeof this.unified !== "function") {
+      throw new Error("Unified is not initialized");
+    }
 
     this.ast = this.unified()
       .use(this.remarkParse)
@@ -176,7 +191,10 @@ export class MarkdownParser {
       if (section.value === sectionName) {
         return {
           ...section,
-          children: [{ type: "paragraph", value: newContent }],
+          children: [
+            ...section.children || [],
+            { type: "paragraph", value: newContent },
+          ],
         };
       } else if (section.children) {
         return {
@@ -192,6 +210,9 @@ export class MarkdownParser {
     });
   }
   public toString(): string {
+    if (!this.unified || !this.remarkStringify) {
+      throw new Error("MarkdownParser or Unified is not initialized");
+    }
     return this.unified()
       .use(this.remarkStringify)
       .stringify(this.ast as any) as string;

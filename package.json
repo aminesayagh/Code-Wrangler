@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "build": "node build.js",
-    "dev": "ts-node src/index.ts --watch --ignore-watch='node_modules' --ignore-watch='dist'",
+    "dev": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js --sourcemap --watch",
     "lint": "eslint . --ext .ts",
     "test": "jest"
   },

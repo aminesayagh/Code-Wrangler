@@ -8,7 +8,7 @@ export class TreeVisualizer {
   static async generateTree(files: string[], rootDir: string): Promise<string> {
     const root = new Directory(path.basename(rootDir), rootDir);
     await this.buildTree(root, files, rootDir);
-    return this.generateTreeString(root, "");
+    return this.generateTreeString(root, "", true);
   }
 
   private static async buildTree(
@@ -43,22 +43,21 @@ export class TreeVisualizer {
     }
   }
 
-  private static generateTreeString(node: Document, prefix: string): string {
-    let result = `${prefix}${node.getInfo()}\n`;
+  private static generateTreeString(node: Document, prefix: string, isLast: boolean): string {
+    const nodePrefix = isLast ? "└── " : "├── ";
+    let result = prefix + nodePrefix + node.name + "\n";
 
-    if (node instanceof Directory) {
-      const childrenPrefix = prefix + "│   ";
-      const lastChildPrefix = prefix + "    ";
+    if (node instanceof Directory && node.children.length > 0) {
+      const childPrefix = prefix + (isLast ? "    " : "│   ");
+      const sortedChildren = node.children.sort((a, b) => {
+        if (a instanceof Directory && b instanceof File) return -1;
+        if (a instanceof File && b instanceof Directory) return 1;
+        return a.name.localeCompare(b.name);
+      });
 
-      node.children.forEach((child, index) => {
-        const isLastChild = index === node.children.length - 1;
-        const childPrefix = isLastChild ? "└── " : "├── ";
-        const newPrefix = isLastChild ? lastChildPrefix : childrenPrefix;
-
-        result += `${prefix}${childPrefix}${this.generateTreeString(
-          child,
-          newPrefix
-        )}`;
+      sortedChildren.forEach((child, index) => {
+        const isLastChild = index === sortedChildren.length - 1;
+        result += this.generateTreeString(child, childPrefix, isLastChild);
       });
     }
 

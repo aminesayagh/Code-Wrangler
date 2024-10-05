@@ -9,7 +9,7 @@ describe("File", () => {
 
   it('should read file content when getContent is called', async () => {
     const filePath = `${MOCK_PATH}/file1.ts`;
-    const file = new File('file1.ts', filePath);
+    const file = new File('file1.ts', filePath, 100);
     const mockContent = getContent('/root/file1.ts');
     fsPromises.readFile = jest.fn().mockResolvedValue(mockContent);
 
@@ -20,7 +20,7 @@ describe("File", () => {
 
   it('should cache file content after first read', async () => {
     const filePath = `${MOCK_PATH}/file1.ts`;
-    const file = new File('file1.ts', filePath);
+    const file = new File('file1.ts', filePath, 100);
     
     const mockContent = getContent('/root/file1.ts');
     fsPromises.readFile = jest.fn().mockResolvedValue(mockContent);

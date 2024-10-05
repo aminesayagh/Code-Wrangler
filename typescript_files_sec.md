@@ -1,3 +1,37 @@
+```json:tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "ESNext",
+    "lib": ["ES2017", "ES2018", "ES2019", "ES2020", "ES2021", "ES2022", "ES2023"],
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "resolveJsonModule": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+}
+```
+
 ```json:package.json
 {
   "name": "codewrangler",
@@ -7,7 +41,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "build": "node build.js",
-    "dev": "ts-node src/index.ts --watch --ignore-watch='node_modules' --ignore-watch='dist'",
+    "dev": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js --sourcemap --watch",
     "lint": "eslint . --ext .ts",
     "test": "jest"
   },
@@ -51,44 +85,9 @@
     "typescript": "^5.6.2",
     "typescript-eslint": "^8.7.0"
   }
-}
-```
+}```
 
-```json:tsconfig.json
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "module": "ESNext",
-    "lib": ["ES2017", "ES2018", "ES2019", "ES2020", "ES2021", "ES2022", "ES2023"],
-    "moduleResolution": "node",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "resolveJsonModule": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
-}
-```
-
-```json:jest.config.js
+```js:jest.config.js
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
@@ -105,22 +104,13 @@ module.exports = {
 };
 ```
 
-```json:build.js
-/* eslint-disable no-undef */
-/* eslint-disable @typescript-eslint/no-require-imports */
-const esbuild = require('esbuild');
-const { typescriptPlugin } = require('esbuild-plugin-typescript');
-
-esbuild.build({
-    entryPoints: ['src/index.ts'],
-    bundle: true,
-    outfile: 'dist/index.js',
-    platform: 'node',
-    target: 'node14',
-    format: 'cjs',
-    plugins: [typescriptPlugin()],
-    external: ['unified', 'remark-parse', 'remark-stringify', 'unist-util-visit'],
-}).catch(() => process.exit(1));
+```js:babel.config.js
+module.exports = {
+    presets: [
+        ['@babel/preset-env', { targets: { node: 'current' } }],
+        '@babel/preset-typescript',
+    ],
+};
 ```
 
 ```ts:src/index.ts
@@ -146,10 +136,10 @@ import { program } from "commander";
 import { FileSystem } from "./utils/FileSystem";
 import { DocumentTree } from "./services/DocumentTree";
 import * as fs from "fs/promises";
-import { progressBar } from "./utils/ProgressBar";
 import { logger } from "./utils/Logger";
 import { config, ConfigInstance, ConfigOptions } from "./utils/Config";
 import { TemplateEngine } from "./utils/templates/TemplateEngine";
+import { TreeVisualizer } from "./services/TreeVisualizer";
 
 logger.setConfig(config);
 
@@ -178,19 +168,25 @@ export class CodeWrangler {
     this.templateEngine = await TemplateEngine.init(this.config);
     this.verboseLogging();
 
-    const files = await FileSystem.getFiles(this.config.get("dir") as string, this.config.get("pattern") as string);
+    const rootDir = this.config.get("dir") as string;
+    const pattern = this.config.get("pattern") as string;
+    const files = await FileSystem.getFiles(rootDir, pattern);
+    await this.documentTree.buildTree(files);
     logger.debug(`Found ${files.length} matching files`);
 
     logger.info("Building document tree...");
-    await progressBar(files.length, async () => {
-      await this.documentTree.buildTree(files);
-    });
+    const treeVisualization = await TreeVisualizer.generateTree(files, rootDir);
+    logger.info("Generating tree visualization...");
+    this.templateEngine!.updateSection("File Structure", treeVisualization);
 
     logger.info("Generating content...");
-    await this.documentTree.getContent();
+    const content = await this.documentTree.root.generateContentMarkdown();
+    console.log(content);
+    for (const c of content) {
+      this.templateEngine!.updateSection("File Contents", c);
+    }
 
-    logger.info("Writing content to file...");
-
+    logger.info("Writing output...");
     await this.templateEngine!.generateOutput();
 
     logger.success(`CodeWrangler: Round-up complete! Output wrangled to ${this.config.get("outputFile")}.md`);
@@ -252,7 +248,7 @@ export class CodeWrangler {
 }
 ```
 
-```ts:Config.ts
+```ts:src/utils/Config.ts
 import * as fs from 'fs';
 import path from "path";
 import { z } from "zod";
@@ -363,6 +359,82 @@ export const config = Config.getInstance();
 export type ConfigInstance = Config;
 ```
 
+```ts:src/utils/DocumentFactory.ts
+import * as fs from "fs/promises";
+import * as path from "path";
+import { File } from "../models/File";
+import { Directory } from "../models/Directory";
+
+export class DocumentFactory {
+  static async create(filePath: string): Promise<File | Directory> {
+    const stats = await fs.stat(filePath);
+    const name = path.basename(filePath);
+    if (stats && typeof stats.isDirectory === 'function' && stats.isDirectory()) {
+      return new Directory(name, filePath);
+    }
+
+    return new File(name, filePath, stats.size);
+  }
+}
+```
+
+```ts:src/utils/FileSystem.ts
+import { promises as fs } from "fs";
+import * as path from "path";
+import { Config } from "./Config";
+import { logger } from "./Logger";
+import { minimatch } from "minimatch";
+
+class IgnorePatternHandler {
+  private patterns: string[] = [];
+  private readonly ignoreHiddenFiles: boolean;
+  private readonly excludePatterns: string[];
+  private readonly additionalIgnoreFiles: string[];
+
+  constructor(config: Config) {
+    this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
+    this.excludePatterns = config.get("excludePatterns") as string[];
+    this.additionalIgnoreFiles = config.get("additionalIgnoreFiles") as string[];
+    this.patterns = [...this.excludePatterns];
+    this.loadIgnorePatterns(config.get("rootDir") as string, this.additionalIgnoreFiles);
+  }
+
+  public shouldExclude(filePath: string): boolean {
+    return this.patterns.some(pattern => minimatch(filePath, pattern, { dot: !this.ignoreHiddenFiles }));
+  }
+
+  async loadIgnorePatterns(dir: string, ignoreFile: string[]): Promise<void> {
+    for (const file of ignoreFile) {
+      const filePath = path.join(dir, file);
+      try {
+        const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+        if (fileExists && (await fs.stat(filePath)).isFile()) {
+          const content = await fs.readFile(filePath, "utf8");
+          this.patterns.push(...content.split("\n").map(pattern => pattern.trim()).filter(pattern => pattern && !pattern.startsWith("#")));
+        }
+      } catch (error) {
+        logger.error(`Error reading ignore file ${filePath}: ${error}`);
+      }
+    }
+  }
+}
+
+export class FileSystem {
+  static async getFiles(dir: string, pattern: string): Promise<string[]> {
+    const dirents = await fs.readdir(dir, { withFileTypes: true });
+    const ignorePatternHandler = new IgnorePatternHandler(Config.getInstance());
+    const files = await Promise.all(dirents.map((dirent) => {
+      const res = path.resolve(dir, dirent.name);
+      if (ignorePatternHandler.shouldExclude(res)) {
+        return [];
+      }
+      return dirent.isDirectory() ? FileSystem.getFiles(res, pattern) : res;
+    }));
+    return Array.prototype.concat(...files).filter((file) => new RegExp(pattern).test(file));
+  }
+}
+```
+
 ```ts:src/utils/Logger.ts
 import colors from "colors";
 import { Config } from "./Config";
@@ -442,79 +514,62 @@ export class Logger {
 export const logger = Logger.getInstance();
 ```
 
-```ts:src/utils/FileSystem.ts
-import { promises as fs } from "fs";
-import * as path from "path";
-import { Config } from "./Config";
-import { logger } from "./Logger";
-import { minimatch } from "minimatch";
+```ts:src/utils/ProgressBar.ts
+import cliProgress from "cli-progress";
 
-class IgnorePatternHandler {
-  private patterns: string[] = [];
-  private readonly ignoreHiddenFiles: boolean;
-  private readonly excludePatterns: string[];
-  private readonly additionalIgnoreFiles: string[];
+export class ProgressBar {
+  private bar: cliProgress.SingleBar;
+  private intervalId: NodeJS.Timeout | null = null;
+  private currentValue: number = 0;
 
-  constructor(config: Config) {
-    this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
-    this.excludePatterns = config.get("excludePatterns") as string[];
-    this.additionalIgnoreFiles = config.get("additionalIgnoreFiles") as string[];
-    this.patterns = [...this.excludePatterns];
-    this.loadIgnorePatterns(config.get("rootDir") as string, this.additionalIgnoreFiles);
+  constructor(private total: number = 100) {
+    this.bar = new cliProgress.SingleBar(
+      {},
+      cliProgress.Presets.shades_classic
+    );
   }
 
-  public shouldExclude(filePath: string): boolean {
-    return this.patterns.some(pattern => minimatch(filePath, pattern, { dot: !this.ignoreHiddenFiles }));
+  private simulateProgress() {
+    const remainingProgress = this.total - this.currentValue;
+    const increment = Math.random() * remainingProgress * 0.1;
+    this.currentValue = Math.min(this.currentValue + increment, this.total * 0.95);
+    this.bar.update(this.currentValue);
   }
 
-  async loadIgnorePatterns(dir: string, ignoreFile: string[]): Promise<void> {
-    for (const file of ignoreFile) {
-      const filePath = path.join(dir, file);
-      try {
-        const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
-        if (fileExists && (await fs.stat(filePath)).isFile()) {
-          const content = await fs.readFile(filePath, "utf8");
-          this.patterns.push(...content.split("\n").map(pattern => pattern.trim()).filter(pattern => pattern && !pattern.startsWith("#")));
-        }
-      } catch (error) {
-        logger.error(`Error reading ignore file ${filePath}: ${error}`);
-      }
+  start() {
+    this.bar.start(this.total, 0);
+    this.intervalId = setInterval(() => this.simulateProgress(), 200);
+  }
+
+  update(value: number): void {
+    this.currentValue = value;
+    this.bar.update(value);
+  }
+
+  stop(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.bar.update(this.total);
+    this.bar.stop();
+  }
+
+  async execute<T>(fn: () => Promise<T>): Promise<T> {
+    this.start();
+    try {
+      return await fn();
+    } finally {
+      this.stop();
     }
   }
 }
 
-export class FileSystem {
-  static async getFiles(dir: string, pattern: string): Promise<string[]> {
-    const dirents = await fs.readdir(dir, { withFileTypes: true });
-    const ignorePatternHandler = new IgnorePatternHandler(Config.getInstance());
-    const files = await Promise.all(dirents.map((dirent) => {
-      const res = path.resolve(dir, dirent.name);
-      if (ignorePatternHandler.shouldExclude(res)) {
-        return [];
-      }
-      return dirent.isDirectory() ? FileSystem.getFiles(res, pattern) : res;
-    }));
-    return Array.prototype.concat(...files).filter((file) => new RegExp(pattern).test(file));
-  }
-}
-```
-
-```ts:src/utils/DocumentFactory.ts
-import * as fs from "fs/promises";
-import * as path from "path";
-import { Document } from "../models/Document";
-import { File } from "../models/File";
-import { Directory } from "../models/Directory";
-
-export class DocumentFactory {
-  static async create(filePath: string): Promise<Document> {
-    const stats = await fs.stat(filePath);
-    if (stats && typeof stats.isDirectory === 'function' && stats.isDirectory()) {
-      return new Directory(path.basename(filePath), filePath);
-    }
-
-    return new File(path.basename(filePath), filePath);
-  }
+export async function progressBar(total: number, callback: () => Promise<void>): Promise<void> {
+  const bar = new ProgressBar(total);
+  await bar.execute(async () => {
+    await callback();
+  });
 }
 ```
 
@@ -528,7 +583,7 @@ export abstract class OutputFileGenerator {
   public abstract readonly name: string;
   public abstract readonly extension: string;
   protected constructor() {}
-  abstract updateSection(sectionName: string, content: string): void;
+  abstract updateSection(sectionName: string, content: string): Promise<void>;
   abstract generateOutput(): string;
 }
 
@@ -557,16 +612,14 @@ export class TemplateEngine {
         }
       });
 
-      const loadedTemplates = await Promise.all(templatePromises);
-      this.templates = loadedTemplates.filter(
-        (template): template is MarkdownGenerator => template !== null
-      ) as OutputFileGenerator[];
+      const loadedTemplates = await Promise.all(templatePromises)
+      this.templates = loadedTemplates.filter((template) => template !== null) as OutputFileGenerator[];
     }
   }
 
-  public updateSection(sectionName: string, content: string): void {
-    this.templates.forEach((template) =>
-      template.updateSection(sectionName, content)
+  public async updateSection(sectionName: string, content: string): Promise<void> {
+    await Promise.all(
+      this.templates.map((template) => template.updateSection(sectionName, content))
     );
   }
 
@@ -623,18 +676,18 @@ export class MarkdownGenerator {
   protected async loadTemplate(): Promise<void> {
     try {
       const template = await fs.readFile(this.templatePath, "utf8");
-      this.parser = new MarkdownParser(template);
+      this.parser = await MarkdownParser.init(template);
     } catch (error) {
       logger.error(`Error loading template: ${error}`);
       throw error;
     }
   }
 
-  public updateSection(sectionName: string, content: string): void {
+  public async updateSection(sectionName: string, content: string): Promise<void> {
     if (!this.parser) {
       throw new Error("Template not loaded");
     }
-    this.parser.updateSection(sectionName, content);
+    await this.parser.updateSection(sectionName, content);
   }
 
   public generateOutput(): string {
@@ -661,7 +714,7 @@ const NodeType = {
   image: "image",
   table: "table",
   other: "other",
-  section: "section"
+  section: "section",
 } as const;
 
 type NodeType = (typeof NodeType)[keyof typeof NodeType];
@@ -679,22 +732,26 @@ export class MarkdownParser {
   private remarkParse: any;
   private remarkStringify: any;
   private visit: any;
-  constructor(markdown: string) {
+  private constructor() {
     this.ast = { type: "root" } as any;
     this.unified = {} as Processor;
     this.remarkParse = null;
     this.remarkStringify = null;
     this.visit = null;
-    this.init(markdown);
   }
-
-  private async init(markdown: string): Promise<void> {
-    const [unified, remarkParse, remarkStringify, { visit }] = await Promise.all([
-      import("unified").then((module) => module.unified),
-      import("remark-parse"),
-      import("remark-stringify"),
-      import("unist-util-visit"),
-    ]);
+  static async init(markdown: string): Promise<MarkdownParser> {
+    const parser = new MarkdownParser();
+    await parser.loadParser(markdown);
+    return parser;
+  }
+  private async loadParser(markdown: string): Promise<void> {
+    const [unified, remarkParse, remarkStringify, { visit }] =
+      await Promise.all([
+        import("unified").then((module) => module.unified),
+        import("remark-parse"),
+        import("remark-stringify"),
+        import("unist-util-visit"),
+      ]);
     this.unified = unified;
     this.remarkParse = remarkParse.default;
     this.remarkStringify = remarkStringify.default;
@@ -811,6 +868,17 @@ export class MarkdownParser {
   ): Promise<void> {
     const json = await this.toJSON();
     const updatedJson = this.updateSectionInJson(json, sectionName, newContent);
+    if (!updatedJson || updatedJson.length === 0) {
+      throw new Error("Section not found");
+    }
+    // print the updatedJson on a json file
+    if (!this.remarkParse) {
+      throw new Error("MarkdownParser or Unified is not initialized");
+    }
+
+    if (typeof this.unified !== "function") {
+      throw new Error("Unified is not initialized");
+    }
 
     this.ast = this.unified()
       .use(this.remarkParse)
@@ -825,7 +893,10 @@ export class MarkdownParser {
       if (section.value === sectionName) {
         return {
           ...section,
-          children: [{ type: "paragraph", value: newContent }],
+          children: [
+            ...section.children || [],
+            { type: "paragraph", value: newContent },
+          ],
         };
       } else if (section.children) {
         return {
@@ -841,9 +912,81 @@ export class MarkdownParser {
     });
   }
   public toString(): string {
+    if (!this.unified || !this.remarkStringify) {
+      throw new Error("MarkdownParser or Unified is not initialized");
+    }
     return this.unified()
       .use(this.remarkStringify)
       .stringify(this.ast as any) as string;
+  }
+}
+```
+
+```ts:src/services/TreeVisualizer.ts
+import { Directory } from "../models/Directory";
+import { File } from "../models/File";
+import { Document } from "../models/Document";
+import path from "path";
+import * as fs from "fs/promises";
+
+export class TreeVisualizer {
+  static async generateTree(files: string[], rootDir: string): Promise<string> {
+    const root = new Directory(path.basename(rootDir), rootDir);
+    await this.buildTree(root, files, rootDir);
+    return this.generateTreeString(root, "", true);
+  }
+
+  private static async buildTree(
+    root: Directory,
+    files: string[],
+    rootDir: string
+  ): Promise<void> {
+    for (const file of files) {
+      const relativePath = path.relative(rootDir, file);
+      const parts = relativePath.split(path.sep);
+      let currentDir = root;
+
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i] as string;
+        if (i === parts.length - 1) {
+          // It's a file
+          const stats = await fs.stat(file);
+          const newFile = new File(part, file, stats.size);
+          await currentDir.addChild(newFile);
+        } else {
+          // It's a directory
+          let child = currentDir.children.find(
+            (c) => c.name === part
+          ) as Directory;
+          if (!child) {
+            child = new Directory(part, path.join(currentDir.path, part));
+            await currentDir.addChild(child);
+          }
+          currentDir = child;
+        }
+      }
+    }
+  }
+
+  private static generateTreeString(node: Document, prefix: string, isLast: boolean): string {
+    const nodePrefix = isLast ? "└── " : "├── ";
+    let result = prefix + nodePrefix + node.name + "\n";
+
+    if (node instanceof Directory && node.children.length > 0) {
+      const childPrefix = prefix + (isLast ? "    " : "│   ");
+      const sortedChildren = node.children.sort((a, b) => {
+        if (a instanceof Directory && b instanceof File) return -1;
+        if (a instanceof File && b instanceof Directory) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      sortedChildren.forEach((child, index) => {
+        const isLastChild = index === sortedChildren.length - 1;
+        result += this.generateTreeString(child, childPrefix, isLastChild);
+      });
+    }
+
+    return result;
   }
 }
 ```
@@ -857,7 +1000,7 @@ import { logger } from "../utils/Logger";
 import { promises as fs } from "fs";
 
 export class DocumentTree {
-  private root: Directory;
+  public readonly root: Directory;
 
   constructor(rootDir: string) {
     this.root = new Directory(path.basename(rootDir), rootDir);
@@ -903,16 +1046,77 @@ export class DocumentTree {
   async getContent(): Promise<string> {
     return this.root.getContent();
   }
+
+}
+```
+
+```ts:src/models/File.ts
+import { promises as fs } from "fs";
+import { Document } from "./Document";
+import path from "path";
+
+export class File extends Document {
+  private content: string | null = null;
+  public readonly extension: string;
+  public size: number;
+
+  constructor(name: string, filePath: string, size: number) {
+    super(name, filePath);
+    this.extension = path.extname(name);
+    this.size = size;
+  }
+
+  public async getContent(): Promise<string> {
+    if (!this.content) {
+      this.content = await fs.readFile(this.path, "utf-8");
+    }
+    return `
+    Name: ${this.name}
+    Extension: ${this.extension}
+    Size: ${this.formatSize()}
+    Content:
+    \`\`\`${this.extension} 
+    ${this.content}
+    \`\`\``;
+  }
+  public getInfo(): string {
+    return `${this.name} (${this.extension}, ${this.formatSize()})`;
+  }
+  private formatSize(): string {
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let size = this.size;
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    return `${size.toFixed(2)} ${units[unitIndex]}`;
+  }
+  public async toMarkdown(): Promise<string> {
+    let content = `\`\`\`${this.extension}\n`;
+    content += `# ${this.name}\n`;
+    content += `\n`;
+    content += await this.getContent();
+    content += `\n\`\`\`\n\n`;
+    return content;
+  }
+  public async toHTML(): Promise<string> {
+    let content = `<pre><code class="language-${this.extension}">`;
+    content += await this.getContent();
+    content += `</code></pre>`;
+    return content;
+  }
 }
 ```
 
 ```ts:src/models/Directory.ts
 import { Document } from "./Document";
+import { File } from "./File";
 
 export class Directory extends Document {
-  public children: Document[] = [];
+  public children: (File | Directory)[] = [];
 
-  async addChild(child: Document): Promise<void> {
+  async addChild(child: File | Directory): Promise<void> {
     this.children.push(child);
   }
 
@@ -920,21 +1124,30 @@ export class Directory extends Document {
     const childrenContent = await Promise.all(this.children.map(child => child.getContent()));
     return childrenContent.join('\n\n');
   }
-}
-```
 
-```ts:src/models/File.ts
-import { promises as fs } from "fs";
-import { Document } from "./Document";
-
-export class File extends Document {
-  private _content: string | null = null;
-  async getContent(): Promise<string> {
-    if (!this._content) {
-      this._content = await fs.readFile(this.path, "utf-8");
-    }
-    return this._content;
+  getInfo(): string {
+    return `${this.name} (${this.children.length} items)`;
   }
+
+  getAllFiles(): File[] {
+    const documents: File[] = [];
+    this.children.forEach(child => {
+      if (child instanceof File) {
+        documents.push(child);
+      } else if (child instanceof Directory) {
+        documents.push(...child.getAllFiles());
+      }
+    });
+    return documents;
+  }
+
+  async generateContentMarkdown(): Promise<string[]> {
+    const files = this.getAllFiles();
+    console.log("files :", files);
+    const filesContent = await Promise.all(files.map(file => file.getContent()));
+    return filesContent;
+  }
+  
 }
 ```
 
@@ -942,5 +1155,50 @@ export class File extends Document {
 export abstract class Document {
   constructor(public name: string, public path: string) {}
   abstract getContent(): Promise<string>;
+  abstract getInfo(): string;
 }
 ```
+
+```ts:src/mockFileSystem.ts
+type FileSystem = {
+  [key: string]: string | FileSystem;
+};
+
+export const mockFileSystem: FileSystem = {
+  "root": {
+    "file1.ts": `export const test = "test 1";`,
+    "file2.js": `export const test = "test 2";`,
+    dir: {
+      "file3.ts": `export const test = "test 3";`,
+      "file4.js": `export const test = "test 4";`,
+    },
+  },
+};
+
+export const MOCK_PATH = "src/__mocks__/root";
+
+export function isDirectory(path: string): boolean {
+  const parts = path.split("/").filter(Boolean);
+  let current: FileSystem | string = mockFileSystem;
+  for (const part of parts) {
+    const currentPart = (current as FileSystem)[part] as FileSystem | string;
+    if (typeof currentPart === "string") return false;
+    current = currentPart;
+  }
+  return true;
+}
+
+export function getContent(path: string): string | null {
+  const parts = path.split("/").filter(Boolean);
+  let current: FileSystem | string = mockFileSystem;
+  for (const part of parts) {
+    if ((current as FileSystem)[part] === undefined) {
+        console.error("File not found: ", path, "on part: ", part);
+        throw new Error(`File not found: ${path}`);
+    }
+    current = (current as FileSystem)[part] as FileSystem | string;
+  }
+  return typeof current === "string" ? current : null;
+}
+```
+

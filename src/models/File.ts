@@ -17,7 +17,14 @@ export class File extends Document {
     if (!this.content) {
       this.content = await fs.readFile(this.path, "utf-8");
     }
-    return this.content;
+    return `
+    Name: ${this.name}
+    Extension: ${this.extension}
+    Size: ${this.formatSize()}
+    Content:
+    \`\`\`${this.extension} 
+    ${this.content}
+    \`\`\``;
   }
   public getInfo(): string {
     return `${this.name} (${this.extension}, ${this.formatSize()})`;

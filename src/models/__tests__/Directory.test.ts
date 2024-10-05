@@ -5,7 +5,8 @@ import { MOCK_PATH } from '../../__mocks__/mockFileSystem';
 describe("Directory", () => {
   it('should add child documents', async () => {
     const directory = new Directory('root', `${MOCK_PATH}`);
-    const file = new File('file1.ts', `${MOCK_PATH}/file1.ts`);
+    const size = 100;
+    const file = new File('file1.ts', `${MOCK_PATH}/file1.ts`, size);
 
     await directory.addChild(file);
 
@@ -15,8 +16,8 @@ describe("Directory", () => {
 
   it('should get content of all children', async () => {
     const directory = new Directory('root', `${MOCK_PATH}`);
-    const file1 = new File('file1.ts', `${MOCK_PATH}/file1.ts`);
-    const file2 = new File('file2.js', `${MOCK_PATH}/file2.js`);
+    const file1 = new File('file1.ts', `${MOCK_PATH}/file1.ts`, 100);
+    const file2 = new File('file2.js', `${MOCK_PATH}/file2.js`, 200);
 
     jest.spyOn(file1, 'getContent').mockResolvedValue('content of file1.ts');
     jest.spyOn(file2, 'getContent').mockResolvedValue('content of file2.js');
