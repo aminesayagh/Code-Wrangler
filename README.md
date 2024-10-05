@@ -137,8 +137,13 @@ Files larger than `maxFileSize` (in bytes) will be skipped. This is useful for a
 - [ ] Use LLMs Models to analyze the project and generate a role prompt for the LLM to use for code generation.
 - [ ] Inprove the configuration UX, To generate a config tasks from the user, executed by the command line.
 - [ ] Add a resume to the workspace env technology and save it on the workspace local configuration.
+- [ ] Define programming language used on every file, and conclude the programming language used by percentage on the complete workspace
 - [ ] Add a feature that generate the documentation of the project but with a comparision with the previous documentation, and highlight the changes.
 - [ ] Claude 3.5 Sonnet API integration with specific project to send the generated documentation as a knowledge base for the project.
+- [ ] Add shurtcode vs-code to use on the workspace to run a specific task
+- [ ] Use Windows + P to list task of the workspace
+- [ ] Add a input CLI, to ask for the next update with a ai autocomplete feature
+- [ ] 
 
 ## Troubleshooting
 
