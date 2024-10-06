@@ -143,7 +143,7 @@ Files larger than `maxFileSize` (in bytes) will be skipped. This is useful for a
 - [ ] Add shurtcode vs-code to use on the workspace to run a specific task
 - [ ] Use Windows + P to list task of the workspace
 - [ ] Add a input CLI, to ask for the next update with a ai autocomplete feature
-- [ ] 
+- [ ] Define an dataset of Programming language, with their extension and their their comments pattern
 
 ## Troubleshooting
 
