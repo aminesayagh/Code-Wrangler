@@ -146,6 +146,7 @@ Files larger than `maxFileSize` (in bytes) will be skipped. This is useful for a
 - [ ] Define an dataset of Programming language, with their extension and their their comments pattern
 - [ ] Propose the best module to use in order to achieve  the best result from the api
 - [ ] Host a External API to use as a backend to the CLI
+- [ ] Convert stack overflow recherche to a prompt cheker of specific list of files
 
 ## Troubleshooting
 
