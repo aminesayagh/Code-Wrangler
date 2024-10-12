@@ -1,56 +1,44 @@
-import { promises as fs } from "fs";
-import { Document } from "./Document";
 import path from "path";
+import { DocumentFactory } from "../utils/DocumentFactory";
+import { BaseNode } from "./BaseNode";
+import { RenderStrategy } from "./RenderStrategy";
 
-export class File extends Document {
-  private content: string | null = null;
-  public readonly extension: string;
-  public size: number;
-
-  constructor(name: string, filePath: string, size: number) {
-    super(name, filePath);
-    this.extension = path.extname(name);
-    this.size = size;
+export abstract class File extends BaseNode {
+  public readonly _extension: string;
+  private _content: string | null = null;
+  public get children() {
+    return this._content;
   }
-
-  public async getContent(): Promise<string> {
-    if (!this.content) {
-      this.content = await fs.readFile(this.path, "utf-8");
+  public constructor(name: string, pathName: string) {
+    super(name, pathName);
+    this._extension = path.extname(name);
+  }
+  public get secondaryProps(): Record<string, unknown> | undefined {
+    return {
+      extension: this._extension
     }
-    return `
-    Name: ${this.name}
-    Extension: ${this.extension}
-    Size: ${this.formatSize()}
-    Content:
-    \`\`\`${this.extension} 
-    ${this.content}
-    \`\`\``;
   }
-  public getInfo(): string {
-    return `${this.name} (${this.extension}, ${this.formatSize()})`;
+  public async bundle(deep: number = 0): Promise<void> {
+    this._deep = deep;
+    this._size = await DocumentFactory.size(this._path);
+    await this.generateContent();
   }
-  private formatSize(): string {
-    const units = ["B", "KB", "MB", "GB", "TB"];
-    let size = this.size;
-    let unitIndex = 0;
-    while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024;
-      unitIndex++;
-    }
-    return `${size.toFixed(2)} ${units[unitIndex]}`;
+  private async generateContent(): Promise<void> {
+    this._content = await DocumentFactory.fileContent(this._path);
   }
-  public async toMarkdown(): Promise<string> {
-    let content = `\`\`\`${this.extension}\n`;
-    content += `# ${this.name}\n`;
-    content += `\n`;
-    content += await this.getContent();
-    content += `\n\`\`\`\n\n`;
-    return content;
+  public abstract override render(): void;
+}
+
+export class RenderableFile extends File {
+  constructor(
+    name: string,
+    pathName: string,
+    private renderStrategy: RenderStrategy
+  ) {
+    super(name, pathName);
   }
-  public async toHTML(): Promise<string> {
-    let content = `<pre><code class="language-${this.extension}">`;
-    content += await this.getContent();
-    content += `</code></pre>`;
-    return content;
+
+  render(): void {
+    this.renderStrategy.renderFile(this);
   }
 }

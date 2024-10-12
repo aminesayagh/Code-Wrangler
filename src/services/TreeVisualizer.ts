@@ -2,7 +2,6 @@ import { Directory } from "../models/Directory";
 import { File } from "../models/File";
 import { Document } from "../models/Document";
 import path from "path";
-import * as fs from "fs/promises";
 
 export class TreeVisualizer {
   static async generateTree(files: string[], rootDir: string): Promise<string> {
@@ -24,9 +23,7 @@ export class TreeVisualizer {
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i] as string;
         if (i === parts.length - 1) {
-          // It's a file
-          const stats = await fs.stat(file);
-          const newFile = new File(part, file, stats.size);
+          const newFile = new File(part, file);
           await currentDir.addChild(newFile);
         } else {
           // It's a directory
