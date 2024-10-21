@@ -1,9 +1,11 @@
+import path from "path";
+
 type FileSystem = {
   [key: string]: string | FileSystem;
 };
 
 export const mockFileSystem: FileSystem = {
-  "root": {
+  root: {
     "file1.ts": `export const test = "test 1";`,
     "file2.js": `export const test = "test 2";`,
     dir: {
@@ -13,7 +15,7 @@ export const mockFileSystem: FileSystem = {
   },
 };
 
-export const MOCK_PATH = "src/__mocks__/root";
+export const mockPath = (): string => path.resolve("src/__mocks__/root");
 
 export function isDirectory(path: string): boolean {
   const parts = path.split("/").filter(Boolean);
@@ -31,8 +33,8 @@ export function getContent(path: string): string | null {
   let current: FileSystem | string = mockFileSystem;
   for (const part of parts) {
     if ((current as FileSystem)[part] === undefined) {
-        console.error("File not found: ", path, "on part: ", part);
-        throw new Error(`File not found: ${path}`);
+      console.error("File not found: ", path, "on part: ", part);
+      throw new Error(`File not found: ${path}`);
     }
     current = (current as FileSystem)[part] as FileSystem | string;
   }

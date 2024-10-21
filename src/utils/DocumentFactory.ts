@@ -18,5 +18,4 @@ export class DocumentFactory {
   static async readFile(filePath: string): Promise<string> {
     return await fs.readFile(filePath, "utf-8");
   }
-  
 }

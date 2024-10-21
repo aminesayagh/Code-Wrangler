@@ -8,7 +8,7 @@ export interface RenderStrategy {
   loadTemplates(): Promise<void>;
   renderFile(file: File): string;
   renderDirectory(directory: Directory): string;
-  generateOutput(rootDirectory: Directory): Promise<string>;
+  bundler(rootDirectory: Directory): Promise<string>;
 }
 
 export abstract class BaseRenderStrategy implements RenderStrategy {
@@ -48,7 +48,7 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
     });
   }
 
-  renderDirectory(directory: Directory): string {
+  public renderDirectory(directory: Directory): string {
     const content = directory.children
       .map(
         (child) =>
@@ -63,13 +63,6 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
     });
   }
 
-  async generateOutput(rootDirectory: Directory): Promise<string> {
-    const directoryContent = this.renderDirectory(rootDirectory);
-    return this.replaceSelectors(this.templatePage, {
-      CONTENT: directoryContent,
-    });
-  }
-
   protected replaceSelectors(
     template: string,
     values: Record<string, string | number>
@@ -77,5 +70,19 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
     return template.replace(/\{\{(\w+)\}\}/g, (_, key) =>
       values[key] !== undefined ? String(values[key]) : `{{${key}}}`
     );
+  }
+
+  public async bundler(rootDirectory: Directory): Promise<string> {
+    const directoryContent = this.renderDirectory(rootDirectory);
+    return this.replaceSelectors(this.templatePage, {
+      PROJECT_NAME:
+        this.config.get("projectName") || rootDirectory.name || "Project",
+      GENERATION_DATE: new Date().toLocaleDateString(),
+      DIRECTORY_STRUCTURE: directoryContent,
+      TOTAL_FILES: rootDirectory.length,
+      TOTAL_DIRECTORIES: rootDirectory.deepLength,
+      TOTAL_SIZE: rootDirectory.size,
+      CONTENT: directoryContent,
+    });
   }
 }

@@ -21,9 +21,6 @@ export abstract class File extends BaseNode {
   public async bundle(deep: number = 0): Promise<void> {
     this._deep = deep;
     this._size = await DocumentFactory.size(this._path);
-    await this.generateContent();
-  }
-  private async generateContent(): Promise<void> {
     this._content = await DocumentFactory.fileContent(this._path);
   }
   public abstract override render(): void;

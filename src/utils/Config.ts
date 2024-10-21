@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from "fs";
 import path from "path";
 import { z } from "zod";
 import { LOG_VALUES, logger } from "./Logger";
@@ -17,12 +17,18 @@ const ConfigSchema = z.object({
   excludePatterns: z.array(z.string()),
   ignoreHiddenFiles: z.boolean(),
   additionalIgnoreFiles: z.array(z.string()).optional(),
+  projectName: z.string().optional(),
   codeConfigFile: z
     .string()
     .regex(/\.json$/, "Config file must end with .json"),
-});
+  })
+  .strict();
 
 export type ConfigOptions = z.infer<typeof ConfigSchema>;
+// get a type listing all the keys of the config
+export type ConfigKeys = keyof ConfigOptions;
+
+
 
 const DEFAULT_CONFIG: ConfigOptions = {
   dir: process.cwd(), // current working directory, where the command is run
@@ -34,6 +40,7 @@ const DEFAULT_CONFIG: ConfigOptions = {
   maxFileSize: 1048576,
   excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"],
   codeConfigFile: "codewrangler.json",
+  projectName: undefined,
   ignoreHiddenFiles: true, // Default value
   additionalIgnoreFiles: [],
 };
@@ -66,10 +73,8 @@ export class Config {
 
     return defaultConfig;
   }
-  public get<T extends ConfigOptions[keyof ConfigOptions]>(
-    key: keyof ConfigOptions
-  ): ConfigOptions[keyof ConfigOptions] {
-    return this.config[key] as T;
+  public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
+    return this.config[key] as ConfigOptions[T];
   }
 
   public set(

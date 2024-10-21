@@ -1,8 +1,16 @@
+import * as path from "path";
+
 export abstract class BaseNode {
   protected _deep: number = 0;
   protected _size: number = 0;
-
-  constructor(protected _name: string, protected _path: string) {}
+  protected _path: string;
+  constructor(protected _name: string, _path: string) {
+    // check if path is absolute or a valid path
+    if (!path.isAbsolute(_path) && !path.resolve(_path)) {
+      throw new Error("Path must be absolute");
+    }
+    this._path = path.resolve(_path);
+  }
 
   abstract bundle(deep: number): Promise<void>;
   abstract render(): void;
@@ -27,7 +35,7 @@ export abstract class BaseNode {
       path: this._path,
       deep: this._deep,
       size: this._size,
-      ...this.secondaryProps
+      ...this.secondaryProps,
     };
   }
 }
