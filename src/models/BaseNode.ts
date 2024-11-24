@@ -29,6 +29,13 @@ export abstract class BaseNode {
     return this._path;
   }
 
+  public async dispose(): Promise<void> {
+    this._deep = 0;
+    this._size = 0;
+    this._path = "";
+    this._name = "";
+  }
+
   get props() {
     return {
       name: this._name,

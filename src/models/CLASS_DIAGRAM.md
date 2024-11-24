@@ -1,7 +1,7 @@
 # CodeWrangler Class Diagram
 
 ```mermaid
-classDiagram
+cdlassDiagram
     class BaseNode {
         <<abstract>>
         #_deep: number
@@ -9,7 +9,7 @@ classDiagram
         #_name: string
         #_path: string
         +bundle(deep: number): Promise<void>
-        +render(): void
+        +render(): voi
         +get secondaryProps(): Record<string, unknown> | undefined
         +get deep(): number
         +get size(): number

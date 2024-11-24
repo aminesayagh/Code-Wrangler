@@ -1,0 +1,5 @@
+
+describe("BaseRenderStrategy", () => {
+  test("render", () => {
+  });
+});

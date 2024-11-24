@@ -4,6 +4,8 @@ type FileSystem = {
   [key: string]: string | FileSystem;
 };
 
+export const MOCK_PATH = path.resolve("src/__mocks__/root");
+
 export const mockFileSystem: FileSystem = {
   root: {
     "file1.ts": `export const test = "test 1";`,

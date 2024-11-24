@@ -12,12 +12,12 @@ type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
 export type LogLevelString = keyof typeof LogLevel;
 export const LOG_VALUES = Object.keys(LogLevel) as LogLevelString[];
 
-export class Logger {
+class Logger {
   private static instance: Logger;
   private config: Config | null = null;
 
   private constructor() {}
-  public static getInstance(): Logger {
+  public static load(): Logger {
     if (!Logger.instance) {
       Logger.instance = new Logger();
     }
@@ -33,7 +33,9 @@ export class Logger {
   }
 
   private get logLevel(): LogLevel {
-    const configLogLevel = this.config?.get("logLevel") as LogLevelString | undefined;
+    const configLogLevel = this.config?.get("logLevel") as
+      | LogLevelString
+      | undefined;
     return configLogLevel ? LogLevel[configLogLevel] : LogLevel.ERROR;
   }
 
@@ -73,4 +75,4 @@ export class Logger {
   }
 }
 
-export const logger = Logger.getInstance();
+export const logger = Logger.load();

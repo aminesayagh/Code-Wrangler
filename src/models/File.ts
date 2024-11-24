@@ -15,13 +15,13 @@ export abstract class File extends BaseNode {
   }
   public get secondaryProps(): Record<string, unknown> | undefined {
     return {
-      extension: this._extension
-    }
+      extension: this._extension,
+    };
   }
   public async bundle(deep: number = 0): Promise<void> {
     this._deep = deep;
     this._size = await DocumentFactory.size(this._path);
-    this._content = await DocumentFactory.fileContent(this._path);
+    this._content = await DocumentFactory.readFile(this._path);
   }
   public abstract override render(): void;
 }
@@ -37,5 +37,10 @@ export class RenderableFile extends File {
 
   render(): void {
     this.renderStrategy.renderFile(this);
+  }
+
+  public override async dispose(): Promise<void> {
+    await super.dispose();
+    await this.renderStrategy.dispose();
   }
 }

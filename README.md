@@ -40,6 +40,7 @@ This script will download and install CodeWrangler on your system.
 After installation, you can quickly generate a documentation report for your project:
 
 1. Navigate to your project directory:
+
    ```bash
    cd /path/to/your/project
    ```
@@ -62,11 +63,13 @@ codewrangler "<pattern>" [options]
 ### Examples
 
 1. Generate a report for all TypeScript files:
+
    ```bash
    codewrangler "\.ts$" -d ./src -o typescript_report
    ```
 
 2. Generate a report for both JavaScript and TypeScript files, excluding tests:
+
    ```bash
    codewrangler "\.(js|ts)$" --exclude-patterns "**/*.test.js,**/*.test.ts" -o js_ts_report
    ```
@@ -103,16 +106,16 @@ Example `codewrangler.json`:
 
 ### Configuration Options
 
-| Option | Description |
-|--------|-------------|
-| `dir` | Root directory to search |
-| `pattern` | Regex pattern for matching files |
-| `outputFile` | Name of the output file (without extension) |
-| `logLevel` | Logging level ("ERROR", "WARN", "INFO", "DEBUG") |
-| `outputFormat` | Output format (currently only "markdown" is supported) |
-| `maxFileSize` | Maximum file size in bytes to process |
-| `excludePatterns` | Array of glob patterns to exclude |
-| `ignoreHiddenFiles` | Whether to ignore hidden files and directories |
+| Option                  | Description                                                    |
+| ----------------------- | -------------------------------------------------------------- |
+| `dir`                   | Root directory to search                                       |
+| `pattern`               | Regex pattern for matching files                               |
+| `outputFile`            | Name of the output file (without extension)                    |
+| `logLevel`              | Logging level ("ERROR", "WARN", "INFO", "DEBUG")               |
+| `outputFormat`          | Output format (currently only "markdown" is supported)         |
+| `maxFileSize`           | Maximum file size in bytes to process                          |
+| `excludePatterns`       | Array of glob patterns to exclude                              |
+| `ignoreHiddenFiles`     | Whether to ignore hidden files and directories                 |
 | `additionalIgnoreFiles` | Array of additional ignore files to use (e.g., [".gitignore"]) |
 
 ## Advanced Features
@@ -144,19 +147,105 @@ Files larger than `maxFileSize` (in bytes) will be skipped. This is useful for a
 - [ ] Use Windows + P to list task of the workspace
 - [ ] Add a input CLI, to ask for the next update with a ai autocomplete feature
 - [ ] Define an dataset of Programming language, with their extension and their their comments pattern
-- [ ] Propose the best module to use in order to achieve  the best result from the api
+- [ ] Propose the best module to use in order to achieve the best result from the api
 - [ ] Host a External API to use as a backend to the CLI
 - [ ] Convert stack overflow recherche to a prompt cheker of specific list of files
+
+## Recommended Additions
+
+- [ ] Caching Layer
+
+```ts
+export interface ContentCache {
+  get(path: string): Promise<string | null>;
+  set(path: string, content: string): Promise<void>;
+  has(path: string): Promise<boolean>;
+}
+
+export class FileSystemCache implements ContentCache {
+  private cacheDir: string;
+
+  constructor(cacheDir: string) {
+    this.cacheDir = cacheDir;
+  }
+  // ... implement methods
+}
+```
+
+- [ ] Plugin System
+
+```ts
+export interface Plugin {
+  name: string;
+  beforeRender?(node: BaseNode): Promise<void>;
+  afterRender?(node: BaseNode, content: string): Promise<string>;
+  beforeBundle?(directory: Directory): Promise<void>;
+  afterBundle?(content: string): Promise<string>;
+}
+
+export class PluginManager {
+  private plugins: Plugin[] = [];
+
+  register(plugin: Plugin): void {
+    this.plugins.push(plugin);
+  }
+  // ... implement plugin execution methods
+}
+```
+
+## Performance optimizations
+
+- [ ] Parallel Processing
+
+```ts
+export class Directory extends BaseNode {
+  public async bundle(deep: number = 0): Promise<void> {
+    this._deep = deep;
+    
+    // Process children in parallel with concurrency limit
+    const concurrency = 5;
+    const chunks = chunk(this.children, concurrency);
+    
+    for (const chunk of chunks) {
+      await Promise.all(chunk.map(child => child.bundle(deep + 1)));
+    }
+    
+    // ... rest of the bundling logic
+  }
+}
+```
+
+## Incremental updates
+
+```ts
+export class FileWatcher {
+  private watchedPaths: Set<string> = new Set();
+  
+  watch(path: string, onChange: () => void): void {
+    if (this.watchedPaths.has(path)) return;
+    
+    fs.watch(path, (eventType, filename) => {
+      if (eventType === 'change') {
+        onChange();
+      }
+    });
+    
+    this.watchedPaths.add(path);
+  }
+}
+```
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **CodeWrangler not found after installation**
+
    - Ensure that the installation directory is in your system's PATH.
    - Try restarting your terminal session.
 
 2. **No files found matching pattern**
+
    - Check if your pattern is correct and matches the files you expect.
    - Ensure you're in the correct directory or specify the correct directory with `-d`.
 

@@ -6,21 +6,22 @@ import { LOG_VALUES, logger } from "./Logger";
 export const OutputFormatSchema = z.enum(["markdown"]);
 export type OutputFormat = z.infer<typeof OutputFormatSchema>;
 
-const ConfigSchema = z.object({
-  dir: z.string(),
-  rootDir: z.string(),
-  pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
-  outputFile: z.string(),
-  logLevel: z.enum(LOG_VALUES as [string, ...string[]]),
-  outputFormat: z.array(OutputFormatSchema),
-  maxFileSize: z.number().positive(),
-  excludePatterns: z.array(z.string()),
-  ignoreHiddenFiles: z.boolean(),
-  additionalIgnoreFiles: z.array(z.string()).optional(),
-  projectName: z.string().optional(),
-  codeConfigFile: z
-    .string()
-    .regex(/\.json$/, "Config file must end with .json"),
+const ConfigSchema = z
+  .object({
+    dir: z.string(),
+    rootDir: z.string(),
+    pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
+    outputFile: z.string(),
+    logLevel: z.enum(LOG_VALUES as [string, ...string[]]),
+    outputFormat: z.array(OutputFormatSchema),
+    maxFileSize: z.number().positive(),
+    excludePatterns: z.array(z.string()),
+    ignoreHiddenFiles: z.boolean(),
+    additionalIgnoreFiles: z.array(z.string()).optional(),
+    projectName: z.string().optional(),
+    codeConfigFile: z
+      .string()
+      .regex(/\.json$/, "Config file must end with .json"),
   })
   .strict();
 
@@ -28,9 +29,7 @@ export type ConfigOptions = z.infer<typeof ConfigSchema>;
 // get a type listing all the keys of the config
 export type ConfigKeys = keyof ConfigOptions;
 
-
-
-const DEFAULT_CONFIG: ConfigOptions = {
+export const DEFAULT_CONFIG: ConfigOptions = {
   dir: process.cwd(), // current working directory, where the command is run
   rootDir: process.cwd(),
   pattern: ".*",
@@ -46,14 +45,14 @@ const DEFAULT_CONFIG: ConfigOptions = {
 };
 
 export class Config {
-  private static instance: Config;
+  private static instance: Config | undefined;
   private config: ConfigOptions;
 
   private constructor() {
     this.config = this.loodConfig();
   }
 
-  public static getInstance(): Config {
+  public static load(): Config {
     if (!Config.instance) {
       Config.instance = new Config();
     }
@@ -95,6 +94,12 @@ export class Config {
   public getAll(): ConfigOptions {
     return this.config;
   }
+  public reset(): void {
+    this.config = DEFAULT_CONFIG;
+  }
+  public static destroy(): void {
+    Config.instance = undefined;
+  }
   public override(config: Partial<ConfigOptions>): void {
     const newOverrideConfig = { ...this.config, ...config };
     try {
@@ -108,6 +113,3 @@ export class Config {
     }
   }
 }
-
-export const config = Config.getInstance();
-export type ConfigInstance = Config;
