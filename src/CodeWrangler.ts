@@ -90,6 +90,7 @@ class CodeWrangler {
   private async build() {
     // verbose logging
     this.verboseLoggingConfig();
+    
   }
 }
 

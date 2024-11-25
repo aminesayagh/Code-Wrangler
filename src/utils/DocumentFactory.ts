@@ -1,5 +1,6 @@
 import { ObjectEncodingOptions } from "fs";
 import * as fs from "fs/promises";
+import * as fsSync from "fs";
 import * as path from "path";
 
 import {
@@ -14,9 +15,8 @@ import {
   WriteOptions,
   ReadOptions,
   FileTreeOptions,
-  FileTreeItem
+  FileTreeItem,
 } from "../models/type";
-
 
 export class DocumentFactory {
   /**
@@ -42,12 +42,30 @@ export class DocumentFactory {
    * @throws {DocumentError} For other file system errors
    */
   static async size(filePath: string): Promise<number> {
-    const isDirectory = await this.type(filePath) === FileType.Directory;
+    const isDirectory = (await this.type(filePath)) === FileType.Directory;
     if (isDirectory) {
       throw new DocumentError("Path is a directory", filePath);
     }
     const stats = await this.getStats(filePath);
     return stats.size;
+  }
+
+  /**
+   * Gets the extension of a file
+   * @param filePath - The path to the file
+   * @returns The extension of the file
+   */
+  static extension(filePath: string): string {
+    return path.extname(filePath);
+  }
+
+  /**
+   * Resolves a path to an absolute path
+   * @param filePath - The path to resolve
+   * @returns The absolute path
+   */
+  static resolve(filePath: string): string {
+    return path.resolve(filePath);
   }
 
   /**
@@ -184,14 +202,19 @@ export class DocumentFactory {
   /**
    * Checks if a file or directory exists
    */
-  static async exists(filePath: string): Promise<boolean> {
+  static exists(filePath: string): boolean {
     try {
-      await fs.access(filePath);
+      fsSync.accessSync(filePath);
       return true;
     } catch {
       return false;
     }
   }
+
+  static isAbsolute(filePath: string): boolean {
+    return path.isAbsolute(filePath);
+  }
+
   /**
    * Gets directory contents with type information
    * @throws {DocumentError} If path is not a directory or other errors

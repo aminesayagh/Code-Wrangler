@@ -1,28 +1,65 @@
-import path from "path";
 import { DocumentFactory } from "../utils/DocumentFactory";
 import { BaseNode } from "./BaseNode";
 import { RenderStrategy } from "./RenderStrategy";
 
+interface PropsFile {
+  extension: string;
+}
+
+const defaultPropsFile: PropsFile = {
+  extension: ""
+};
+
 export abstract class File extends BaseNode {
-  public readonly _extension: string;
+  private _propsFile: PropsFile = { ...defaultPropsFile };
   private _content: string | null = null;
-  public get children() {
-    return this._content;
-  }
+
   public constructor(name: string, pathName: string) {
     super(name, pathName);
-    this._extension = path.extname(name);
+    this.initFile(name);
   }
+
+  private initFile(name: string): void {
+    this._propsFile = { ...defaultPropsFile };
+    this.extension = DocumentFactory.extension(name);
+    this._content = null;
+  }
+
+  // getters and setters
+  // extension
+  public get extension(): string {
+    return this._propsFile.extension;
+  }
+  protected set extension(extension: string) {
+    this._propsFile.extension = extension;
+  }
+  // content
+  public get content(): string | null {
+    return this._content;
+  }
+  protected set content(content: string | null) {
+    this._content = content;
+  }
+  // secondary props
   public get secondaryProps(): Record<string, unknown> | undefined {
     return {
-      extension: this._extension,
+      extension: this.extension,
     };
   }
+
+  // bundle
   public async bundle(deep: number = 0): Promise<void> {
-    this._deep = deep;
-    this._size = await DocumentFactory.size(this._path);
-    this._content = await DocumentFactory.readFile(this._path);
+    // set the deep of the file
+    this.deep = deep;
+    // set the size of the file
+    this.size = await DocumentFactory.size(this.path);
+    // set the content of the file
+    this.content = await DocumentFactory.readFile(this.path);
+    // set the stats of the file
+    this.stats = await DocumentFactory.getStats(this.path);
   }
+
+  // render
   public abstract override render(): void;
 }
 
@@ -35,10 +72,12 @@ export class RenderableFile extends File {
     super(name, pathName);
   }
 
-  render(): void {
+  // render
+  public render(): void {
     this.renderStrategy.renderFile(this);
   }
 
+  // dispose
   public override async dispose(): Promise<void> {
     await super.dispose();
     await this.renderStrategy.dispose();

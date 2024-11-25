@@ -161,20 +161,18 @@ describe("DocumentFactory", () => {
   });
 
   describe("exists", () => {
-    it("should return true for existing file", async () => {
-      const exists = await DocumentFactory.exists(
-        path.join(MOCK_PATH, "file1.ts")
-      );
+    it("should return true for existing file", () => {
+      const exists = DocumentFactory.exists(path.join(MOCK_PATH, "file1.ts"));
       expect(exists).toBe(true);
     });
 
-    it("should return true for existing directory", async () => {
-      const exists = await DocumentFactory.exists(MOCK_PATH);
+    it("should return true for existing directory", () => {
+      const exists = DocumentFactory.exists(MOCK_PATH);
       expect(exists).toBe(true);
     });
 
-    it("should return false for non-existent path", async () => {
-      const exists = await DocumentFactory.exists("nonexistent");
+    it("should return false for non-existent path", () => {
+      const exists = DocumentFactory.exists("nonexistent");
       expect(exists).toBe(false);
     });
   });
@@ -245,6 +243,157 @@ describe("DocumentFactory", () => {
       await expect(
         DocumentFactory.remove(path.join(tempDir, "nonexistent"))
       ).rejects.toThrow();
+    });
+  });
+
+  describe("isAbsolute", () => {
+    it("should return true for absolute path", () => {
+      expect(DocumentFactory.isAbsolute(MOCK_PATH)).toBe(true);
+    });
+
+    it("should return false for relative path", () => {
+      expect(DocumentFactory.isAbsolute(path.join("file1.ts"))).toBe(false);
+    });
+
+    it("should return false for non-existent path", () => {
+      expect(DocumentFactory.isAbsolute("nonexistent")).toBe(false);
+    });
+  });
+
+  describe("extension", () => {
+    it("should return extension for file", () => {
+      expect(DocumentFactory.extension("file1.ts")).toBe(".ts");
+    });
+
+    it("should return empty string for directory", () => {
+      expect(DocumentFactory.extension("directory")).toBe("");
+    });
+
+    it("should return empty string for non-existent file", () => {
+      expect(DocumentFactory.extension("nonexistent")).toBe("");
+    });
+
+    it("should return extension for file without two . characters", () => {
+      expect(DocumentFactory.extension("file1.test.ts")).toBe("");
+    });
+  });
+
+  describe("copy", () => {
+    const tempDir = path.join(MOCK_PATH, "temp_copy");
+
+    beforeEach(async () => {
+      await fs.mkdir(tempDir, { recursive: true });
+    });
+
+    afterEach(async () => {
+      await fs.rm(tempDir, { recursive: true });
+    });
+
+    it("should copy a file", async () => {
+      await DocumentFactory.copy(
+        path.join(MOCK_PATH, "file1.ts"),
+        path.join(tempDir, "file1.ts")
+      );
+      expect(await DocumentFactory.exists(path.join(tempDir, "file1.ts"))).toBe(
+        true
+      );
+    });
+  });
+});
+
+describe("DocumentFactory.getFiles", () => {
+  const testDir = path.join(MOCK_PATH, "test_getFiles");
+  const srcDir = path.join(testDir, "src");
+  const nodeModulesDir = path.join(testDir, "node_modules");
+  const contentDir = path.join(testDir, "content");
+
+  beforeEach(async () => {
+    await fs.mkdir(testDir, { recursive: true });
+    await fs.mkdir(srcDir, { recursive: true });
+    await fs.mkdir(path.join(srcDir, "utils"), { recursive: true });
+    await fs.mkdir(path.join(srcDir, "models"), { recursive: true });
+    await fs.mkdir(nodeModulesDir, { recursive: true });
+    await fs.mkdir(contentDir, { recursive: true });
+
+    // Create TypeScript files in src
+    await fs.writeFile(path.join(srcDir, "index.ts"), "console.log('index');");
+    await fs.writeFile(
+      path.join(srcDir, "utils/helper.ts"),
+      "export const help = () => {};"
+    );
+    await fs.writeFile(
+      path.join(srcDir, "models/type.ts"),
+      "export type Test = string;"
+    );
+    await fs.writeFile(path.join(srcDir, ".hidden.ts"), "// hidden file");
+
+    // Create node_modules content
+    await fs.writeFile(
+      path.join(nodeModulesDir, "package.ts"),
+      "console.log('package');"
+    );
+
+    // Create content files with different dates
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+    await fs.writeFile(path.join(contentDir, "recent.txt"), "recent content");
+    await fs.utimes(path.join(contentDir, "recent.txt"), now, now);
+
+    await fs.writeFile(path.join(contentDir, "oneWeekOld.txt"), "one week old");
+    await fs.utimes(
+      path.join(contentDir, "oneWeekOld.txt"),
+      oneWeekAgo,
+      oneWeekAgo
+    );
+
+    await fs.writeFile(
+      path.join(contentDir, "twoWeeksOld.txt"),
+      "two weeks old"
+    );
+    await fs.utimes(
+      path.join(contentDir, "twoWeeksOld.txt"),
+      twoWeeksAgo,
+      twoWeeksAgo
+    );
+
+    // Create a symlink
+    // Create node_modules content
+    await fs
+      .symlink(
+        path.join(contentDir, "recent.txt"),
+        path.join(contentDir, "recent-link.txt")
+      )
+      .catch(() => {
+        // Ignore symlink creation errors in environments where it's not supported
+      });
+  });
+
+  afterAll(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  describe("TypeScript files search", () => {
+    it("should find all TypeScript files with details and respect deepth limit", async () => {
+      const result = await DocumentFactory.getFileTree(srcDir, {
+        pattern: /\.ts$/,
+        returnType: "details",
+        maxDepth: 3,
+        includeHidden: false,
+        sort: {
+          by: "name",
+          order: "asc",
+        },
+      });
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+
+      const paths = result.map((item) =>
+        typeof item === "object" ? item.path : item
+      );
+      expect(paths).toEqual([...paths].sort());
     });
   });
 });

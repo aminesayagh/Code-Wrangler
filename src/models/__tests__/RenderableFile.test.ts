@@ -18,13 +18,12 @@ describe("File", () => {
 
   beforeEach(() => {
     testFile = new TestFile(testName, testPath);
-    jest.clearAllMocks();
   });
 
   test("constructor initializes name, path, and extension correctly", () => {
     expect(testFile.name).toBe(testName);
     expect(testFile.path).toBe(testPath);
-    expect(testFile._extension).toBe(".ts");
+    expect(testFile.extension).toBe(".ts");
   });
 
   test("Check props value before bundle", () => {
@@ -40,9 +39,8 @@ describe("File", () => {
 
   test("Bundle method sets content correctly", async () => {
     await testFile.bundle();
-    const children = testFile.children;
     const content = getContent("root/file1.ts");
-    expect(children).toBe(content);
+    expect(testFile.content).toBe(content);
   });
 
   test("Check props value after bundle", async () => {

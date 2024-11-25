@@ -59,3 +59,12 @@ export interface FileTreeItem {
   type: FileType;
   stats?: FileStats;
 }
+
+export interface PropsNode {
+  name: string;
+  path: string;
+  deep: number;
+  size: number;
+  extension?: string;
+  stats: FileStats;
+}
