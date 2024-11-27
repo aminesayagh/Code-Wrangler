@@ -2,9 +2,15 @@ import * as path from "path";
 
 import { File } from "./File";
 import { Directory } from "./Directory";
-import { TemplateValidator } from "./TemplateValidator";
-import { Config } from "../utils/Config";
+import { Config, FileExtension } from "../utils/Config";
 import { DocumentFactory } from "../utils/DocumentFactory";
+import { Template } from "./template/Template";
+import { TemplateType } from "./template/type";
+import {
+  BaseTemplateSchema,
+  FileTemplateSchema,
+  DirectoryTemplateSchema,
+} from "./template/zod";
 
 interface ContentRenderer {
   renderFile(file: File): string;
@@ -13,28 +19,31 @@ interface ContentRenderer {
 
 interface TemplateLoader {
   loadTemplates(): Promise<void>;
-  validateTemplates(): void;
 }
 
-interface DocumentBundler {
-  bundle(rootDirectory: Directory): Promise<string>;
+interface DocumentRenderer {
+  render(rootDirectory: Directory): Promise<string>;
   dispose(): Promise<void>;
 }
 
 export interface RenderStrategy
   extends ContentRenderer,
     TemplateLoader,
-    DocumentBundler {}
+    DocumentRenderer {}
 
 export abstract class BaseRenderStrategy implements RenderStrategy {
-  protected templatePage: string = "";
-  protected templateFile: string = "";
-  protected templateDirectory: string = "";
+  protected extension: FileExtension;
+  protected templates: Record<TemplateType, Template | null>;
   protected config: Config;
-  protected abstract fileExtension: string;
 
-  protected constructor(config: Config) {
+  protected constructor(config: Config, extension: FileExtension) {
     this.config = config;
+    this.templates = {
+      page: null,
+      file: null,
+      directory: null,
+    };
+    this.extension = extension;
   }
 
   async loadTemplates(): Promise<void> {
@@ -43,58 +52,38 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
       "templates"
     );
     // check if the templates directory exists
-    if (!(await DocumentFactory.exists(templateDir))) {
+    if (!DocumentFactory.exists(templateDir)) {
       throw new Error(`Templates directory not found: ${templateDir}`);
     }
-    [this.templatePage, this.templateFile, this.templateDirectory] =
-      await Promise.all([
-        DocumentFactory.readFile(
-          path.join(templateDir, `page.${this.fileExtension}`)
-        ),
-        DocumentFactory.readFile(
-          path.join(templateDir, `file.${this.fileExtension}`)
-        ),
-        DocumentFactory.readFile(
-          path.join(templateDir, `directory.${this.fileExtension}`)
-        ),
-      ]);
-  }
 
-  public validateTemplates(): void {
-    TemplateValidator.validate(this.templatePage, {
-      required: [
-        "{{PROJECT_NAME}}",
-        "{{GENERATION_DATE}}",
-        "{{DIRECTORY_STRUCTURE}}",
-        "{{TOTAL_FILES}}",
-        "{{TOTAL_DIRECTORIES}}",
-        "{{TOTAL_SIZE}}",
-        "{{CONTENT}}",
-      ],
-      optional: ["{{FILE_CONTENTS}}"],
-    });
-    TemplateValidator.validate(this.templateFile, {
-      required: [
-        "{{FILE_NAME}}",
-        "{{FILE_EXTENSION}}",
-        "{{FILE_SIZE}}",
-        "{{FILE_CONTENTS}}",
-      ],
-    });
-    TemplateValidator.validate(this.templateDirectory, {
-      required: [
-        "{{DIRECTORY_NAME}}",
-        "{{DIRECTORY_PATH}}",
-        "{{DIRECTORY_SIZE}}",
-        "{{CONTENT}}",
-      ],
-    });
+    this.templates = {
+      page: await Template.create(
+        "page",
+        BaseTemplateSchema,
+        path.join(templateDir, `page.${this.extension}`)
+      ),
+      file: await Template.create(
+        "file",
+        FileTemplateSchema,
+        path.join(templateDir, `file.${this.extension}`)
+      ),
+      directory: await Template.create(
+        "directory",
+        DirectoryTemplateSchema,
+        path.join(templateDir, `directory.${this.extension}`)
+      ),
+    };
   }
 
   public renderFile(file: File): string {
-    return this.replaceSelectors(this.templateFile, {
-      ...file.props,
-      CONTENT: file.children || "",
+    if (!this.templates.file) {
+      throw new Error("File template is not loaded");
+    }
+    return this.replaceSelectors(this.templates.file.content, {
+      FILE_NAME: file.name,
+      FILE_EXTENSION: file.extension,
+      FILE_SIZE: file.size,
+      FILE_CONTENTS: file.content || "",
     });
   }
 
@@ -107,8 +96,13 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
             : this.renderDirectory(child) // save the rendering result on the object after bundling execution
       )
       .join("");
-    return this.replaceSelectors(this.templateDirectory, {
-      ...directory.props,
+    if (!this.templates.directory) {
+      throw new Error("Directory template is not loaded");
+    }
+    return this.replaceSelectors(this.templates.directory.content, {
+      DIRECTORY_NAME: directory.name,
+      DIRECTORY_PATH: directory.path,
+      DIRECTORY_SIZE: directory.size,
       CONTENT: content,
     });
   }
@@ -122,9 +116,12 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
     );
   }
 
-  public async bundle(rootDirectory: Directory): Promise<string> {
+  public async render(rootDirectory: Directory): Promise<string> {
     const directoryContent = this.renderDirectory(rootDirectory);
-    return this.replaceSelectors(this.templatePage, {
+    if (!this.templates.page) {
+      throw new Error("Page template is not loaded");
+    }
+    return this.replaceSelectors(this.templates.page.content, {
       PROJECT_NAME:
         this.config.get("projectName") || rootDirectory.name || "Project",
       GENERATION_DATE: new Date().toLocaleDateString(),
@@ -137,8 +134,10 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
   }
 
   public async dispose(): Promise<void> {
-    this.templatePage = "";
-    this.templateFile = "";
-    this.templateDirectory = "";
+    this.templates = {
+      page: null,
+      file: null,
+      directory: null,
+    };
   }
 }

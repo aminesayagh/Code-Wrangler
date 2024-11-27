@@ -1,4 +1,4 @@
-import { FileStats, PropsNode } from "./type";
+import { FileStats, PropsNode } from "../type";
 import { DocumentFactory } from "../utils/DocumentFactory";
 
 const defaultProps: PropsNode = {

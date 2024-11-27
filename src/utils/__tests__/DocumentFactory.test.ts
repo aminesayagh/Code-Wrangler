@@ -3,7 +3,7 @@ import * as fs from "fs/promises";
 
 import { MOCK_PATH } from "../../__mocks__/mockFileSystem";
 import { DocumentFactory } from "../DocumentFactory";
-import { FileType } from "../../models/type";
+import { FileType } from "../../type";
 
 describe("DocumentFactory", () => {
   beforeEach(() => {

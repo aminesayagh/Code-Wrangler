@@ -16,7 +16,7 @@ import {
   ReadOptions,
   FileTreeOptions,
   FileTreeItem,
-} from "../models/type";
+} from "../type";
 
 export class DocumentFactory {
   /**

@@ -3,8 +3,15 @@ import path from "path";
 import { z } from "zod";
 import { LOG_VALUES, logger } from "./Logger";
 
-export const OutputFormatSchema = z.enum(["markdown"]);
+export const OutputFormatSchema = z.enum(["markdown", "html"]);
+export const FileExtensionSchema = z.enum(["md", "html"]);
 export type OutputFormat = z.infer<typeof OutputFormatSchema>;
+export type FileExtension = z.infer<typeof FileExtensionSchema>;
+
+export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
+  markdown: "md",
+  html: "html",
+};
 
 const ConfigSchema = z
   .object({
