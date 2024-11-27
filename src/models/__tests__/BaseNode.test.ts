@@ -52,4 +52,58 @@ describe("BaseNode", () => {
       );
     });
   });
+  describe("properties", () => {
+    let node: TestNode;
+
+    beforeEach(() => {
+      node = new TestNode("test", "/test/path");
+    });
+
+    it("should get and set deep property", () => {
+      node["deep"] = 2;
+      expect(node.deep).toBe(2);
+    });
+
+    it("should get and set size property", () => {
+      node["size"] = 100;
+      expect(node.size).toBe(100);
+    });
+
+    it("should get combined props", () => {
+      node["size"] = 100;
+      node["deep"] = 2;
+      expect(node.props).toEqual(
+        expect.objectContaining({
+          name: "test",
+          path: "/test/path",
+          size: 100,
+          deep: 2,
+        })
+      );
+    });
+  });
+
+  describe("methods", () => {
+    let node: TestNode;
+
+    beforeEach(() => {
+      node = new TestNode("test", "/test/path");
+    });
+
+    it("should dispose correctly", async () => {
+      node["size"] = 100;
+      await node.dispose();
+      expect(node.size).toBe(0);
+      expect(node.name).toBe("");
+      expect(node.path).toBe("");
+    });
+
+    it("should clone correctly", async () => {
+      node["size"] = 100;
+      const clone = await node.clone();
+      expect(clone.size).toBe(100);
+      expect(clone.name).toBe("test");
+      expect(clone.path).toBe("/test/path");
+    });
+  });
 });
