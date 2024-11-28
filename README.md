@@ -1,270 +1,269 @@
 # CodeWrangler
 
-CodeWrangler is a powerful command-line tool designed to generate a comprehensive documentation report from a project directory. It's specifically tailored for developers who need to prepare project overviews for Large Language Models (LLMs) to assist with code generation and analysis tasks.
+CodeWrangler is an extensible documentation automation platform that transforms code repositories into structured knowledge bases. Built with a powerful plugin architecture, it enables seamless integration with AI services, documentation generators, and analysis tools.
 
 ## Table of Contents
 
-- [Features](#features)
-- [Installation](#installation)
-- [Getting Started](#getting-started)
-- [Usage](#usage)
-- [Options](#options)
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Quick Start](#quick-start)
+- [Template System](#template-system)
+- [Command Line Interface](#command-line-interface)
 - [Configuration](#configuration)
-- [Advanced Features](#advanced-features)
-- [Troubleshooting](#troubleshooting)
+- [Plugin System](#plugin-system)
+- [Advanced Usage](#advanced-usage)
+- [Development](#development)
 - [Contributing](#contributing)
-- [License](#license)
 
-## Features
+## Overview
 
-- **Flexible File Matching**: Use regex patterns to find specific files.
-- **Configurable**: Easily customize behavior through command-line options or a configuration file.
-- **Ignore Patterns**: Exclude files and directories using `.gitignore`-style patterns.
-- **Hidden File Handling**: Option to include or exclude hidden files.
-- **Max File Size Limit**: Automatically skip files that exceed a specified size.
-- **Detailed Logging**: Configurable log levels for debugging and information.
-- **Markdown Output**: Output is saved to a markdown file by default for easy viewing and sharing with LLMs.
+CodeWrangler streamlines the process of generating comprehensive documentation from source code. By leveraging intelligent scanning and customizable templates, it produces consistent, high-quality documentation that can be enhanced through AI-powered analysis.
 
-## Installation
+## Key Features
 
-To install CodeWrangler, run the following command in your terminal:
+- 🌳 **Smart Repository Scanning**: Advanced file tree generation with intelligent filtering and customizable ignore patterns
+- 🔌 **Plugin Architecture**: Extensible pipeline system supporting custom documentation workflows and integrations
+- 🤖 **AI Integration Ready**: Built-in support for LLM-powered documentation enhancement and code analysis
+- 📦 **Template Engine**: Flexible template system supporting multiple output formats and custom variables
+- ⚡ **High Performance**: Parallel processing and caching capabilities for efficient handling of large repositories
+- 🔄 **Incremental Updates**: Smart change detection for efficient documentation maintenance
 
-```bash
-curl -o- https://raw.githubusercontent.com/aminesayagh/codewrangler/main/install.sh | bash
-```
+## Quick Start
 
-This script will download and install CodeWrangler on your system.
-
-## Getting Started
-
-After installation, you can quickly generate a documentation report for your project:
-
-1. Navigate to your project directory:
-
-   ```bash
-   cd /path/to/your/project
-   ```
-
-2. Run CodeWrangler with default settings:
-   ```bash
-   codewrangler ".*"
-   ```
-
-This will generate an `output.md` file containing a report of all files in your project.
-
-## Usage
-
-Basic usage:
+### Installation
 
 ```bash
-codewrangler "<pattern>" [options]
+npm install -g codewrangler
 ```
 
-### Examples
+### Basic Usage
 
-1. Generate a report for all TypeScript files:
+```bash
+# Generate documentation for TypeScript files
+cw "\.ts$" --output typescript-docs
 
-   ```bash
-   codewrangler "\.ts$" -d ./src -o typescript_report
-   ```
+# Watch mode with custom template
+cw "\.js$" --template-dir ./my-templates --watch
 
-2. Generate a report for both JavaScript and TypeScript files, excluding tests:
+# Generate documentation with AI analysis
+cw "\.py$" --output python-docs --enable-ai-analysis
+```
 
-   ```bash
-   codewrangler "\.(js|ts)$" --exclude-patterns "**/*.test.js,**/*.test.ts" -o js_ts_report
-   ```
+## Template System
 
-3. Generate a report with verbose logging:
-   ```bash
-   codewrangler "\.py$" -v -o python_report
-   ```
+CodeWrangler uses a powerful templating system that supports customization at multiple levels.
 
-## Options
+### Directory Structure
 
-- `-d, --dir <dir>`: Directory to search (default: current directory)
-- `-o, --output <output>`: Output file name (default: "output")
-- `-c, --config <config>`: Path to a custom configuration file
-- `-v, --verbose`: Enable verbose logging
+```
+templates/
+├── page.md          # Overall documentation template
+├── directory.md     # Directory entry template
+└── file.md         # File entry template
+```
+
+### Template Variables
+
+#### Page Template
+
+```md
+# {{PROJECT_NAME}}
+
+Generated: {{GENERATION_DATE}}
+
+{{DIRECTORY_STRUCTURE}}
+
+## Content
+
+{{CONTENT}}
+```
+
+#### File Template
+
+```md
+### {{FILE_NAME}}
+
+{{FILE_EXTENSION}}
+{{FILE_CONTENTS}}
+```
+
+### Custom Templates
+
+Create your own templates by placing them in a custom directory:
+
+```bash
+mkdir custom-templates
+echo "# {{PROJECT_NAME}}" > custom-templates/page.md
+cw "\.ts$" --template-dir ./custom-templates
+```
+
+## Command Line Interface
+
+```bash
+Usage: cw [options] <pattern>
+
+Arguments:
+  pattern                         File pattern to match (e.g., "\.ts$")
+
+Options:
+  -V, --version                  Display version information
+  -d, --dir <dir>               Directory to search (default: current)
+  -o, --output <name>           Output file name (default: "output")
+  -t, --template-dir <dir>      Custom templates directory
+  -c, --config <path>           Config file path
+  --watch                       Watch for file changes
+  -h, --help                    Display help information
+```
 
 ## Configuration
 
-CodeWrangler can be configured via a JSON file. By default, it looks for `codewrangler.json` in the current directory. You can specify a different config file using the `-c` option.
-
-Example `codewrangler.json`:
+### Configuration File (codewrangler.json)
 
 ```json
 {
-  "dir": "./src",
-  "pattern": "\\.(ts|js)$",
-  "outputFile": "code_compilation",
-  "logLevel": "INFO",
-  "maxFileSize": 1048576,
-  "excludePatterns": ["node_modules/**", "**/*.test.ts"],
-  "ignoreHiddenFiles": true
-}
-```
-
-### Configuration Options
-
-| Option                  | Description                                                    |
-| ----------------------- | -------------------------------------------------------------- |
-| `dir`                   | Root directory to search                                       |
-| `pattern`               | Regex pattern for matching files                               |
-| `outputFile`            | Name of the output file (without extension)                    |
-| `logLevel`              | Logging level ("ERROR", "WARN", "INFO", "DEBUG")               |
-| `outputFormat`          | Output format (currently only "markdown" is supported)         |
-| `maxFileSize`           | Maximum file size in bytes to process                          |
-| `excludePatterns`       | Array of glob patterns to exclude                              |
-| `ignoreHiddenFiles`     | Whether to ignore hidden files and directories                 |
-| `additionalIgnoreFiles` | Array of additional ignore files to use (e.g., [".gitignore"]) |
-
-## Advanced Features
-
-### Ignore Patterns
-
-CodeWrangler respects `.gitignore`-style patterns specified in the `excludePatterns` configuration option. You can also specify additional ignore files using the `additionalIgnoreFiles` option.
-
-### Hidden Files
-
-By default, CodeWrangler ignores hidden files and directories. You can change this behavior by setting `ignoreHiddenFiles` to `false` in your configuration.
-
-### File Size Limit
-
-Files larger than `maxFileSize` (in bytes) will be skipped. This is useful for avoiding processing of large binary files or data files.
-
-## Next Steps
-
-- [ ] Add support for more output formats (e.g., HTML, JSON)
-- [ ] Include more testing, and improve the code coverage.
-- [x] Add support for more ignore files (e.g., `.dockerignore`, `.npmignore`)
-- [ ] Use LLMs Models to analyze the project and generate a role prompt for the LLM to use for code generation.
-- [ ] Inprove the configuration UX, To generate a config tasks from the user, executed by the command line.
-- [ ] Add a resume to the workspace env technology and save it on the workspace local configuration.
-- [ ] Define programming language used on every file, and conclude the programming language used by percentage on the complete workspace
-- [ ] Add a feature that generate the documentation of the project but with a comparision with the previous documentation, and highlight the changes.
-- [ ] Claude 3.5 Sonnet API integration with specific project to send the generated documentation as a knowledge base for the project.
-- [ ] Add shurtcode vs-code to use on the workspace to run a specific task
-- [ ] Use Windows + P to list task of the workspace
-- [ ] Add a input CLI, to ask for the next update with a ai autocomplete feature
-- [ ] Define an dataset of Programming language, with their extension and their their comments pattern
-- [ ] Propose the best module to use in order to achieve the best result from the api
-- [ ] Host a External API to use as a backend to the CLI
-- [ ] Convert stack overflow recherche to a prompt cheker of specific list of files
-
-## Recommended Additions
-
-- [ ] Caching Layer
-
-```ts
-export interface ContentCache {
-  get(path: string): Promise<string | null>;
-  set(path: string, content: string): Promise<void>;
-  has(path: string): Promise<boolean>;
-}
-
-export class FileSystemCache implements ContentCache {
-  private cacheDir: string;
-
-  constructor(cacheDir: string) {
-    this.cacheDir = cacheDir;
-  }
-  // ... implement methods
-}
-```
-
-- [ ] Plugin System
-
-```ts
-export interface Plugin {
-  name: string;
-  beforeRender?(node: BaseNode): Promise<void>;
-  afterRender?(node: BaseNode, content: string): Promise<string>;
-  beforeBundle?(directory: Directory): Promise<void>;
-  afterBundle?(content: string): Promise<string>;
-}
-
-export class PluginManager {
-  private plugins: Plugin[] = [];
-
-  register(plugin: Plugin): void {
-    this.plugins.push(plugin);
-  }
-  // ... implement plugin execution methods
-}
-```
-
-## Performance optimizations
-
-- [ ] Parallel Processing
-
-```ts
-export class Directory extends BaseNode {
-  public async bundle(deep: number = 0): Promise<void> {
-    this._deep = deep;
-    
-    // Process children in parallel with concurrency limit
-    const concurrency = 5;
-    const chunks = chunk(this.children, concurrency);
-    
-    for (const chunk of chunks) {
-      await Promise.all(chunk.map(child => child.bundle(deep + 1)));
+  "core": {
+    "dir": "./src",
+    "pattern": "\\.ts$",
+    "outputFile": "documentation"
+  },
+  "templates": {
+    "directory": "./templates",
+    "variables": {
+      "AUTHOR": "Your Name",
+      "VERSION": "1.0.0"
     }
-    
-    // ... rest of the bundling logic
+  },
+  "plugins": {
+    "ai-summary": {
+      "enabled": true,
+      "model": "gpt-4"
+    }
   }
 }
 ```
 
-## Incremental updates
+### Environment Variables
 
-```ts
-export class FileWatcher {
-  private watchedPaths: Set<string> = new Set();
-  
-  watch(path: string, onChange: () => void): void {
-    if (this.watchedPaths.has(path)) return;
-    
-    fs.watch(path, (eventType, filename) => {
-      if (eventType === 'change') {
-        onChange();
-      }
-    });
-    
-    this.watchedPaths.add(path);
+```bash
+CODEWRANGLER_CONFIG_PATH=./config/codewrangler.json
+CODEWRANGLER_TEMPLATE_DIR=./templates
+CODEWRANGLER_LOG_LEVEL=DEBUG
+```
+
+## Plugin System
+
+CodeWrangler supports plugins for extending functionality. Plugins can hook into various stages of the documentation process.
+
+### Creating a Plugin
+
+```typescript
+import { Plugin, BaseNode } from "codewrangler";
+
+export class CustomPlugin implements Plugin {
+  name = "custom-plugin";
+
+  async beforeScan(options: ScanOptions): Promise<void> {
+    // Pre-scan setup
+  }
+
+  async afterRender(content: string): Promise<string> {
+    // Post-render modifications
+    return modifiedContent;
   }
 }
 ```
 
-## Troubleshooting
+### Using Plugins
 
-### Common Issues
+```typescript
+const pipeline = new DocumentationPipeline()
+  .use(new TypeScriptDocsPlugin())
+  .use(new AIAnalysisPlugin())
+  .use(new CustomPlugin());
 
-1. **CodeWrangler not found after installation**
+await pipeline.process({
+  input: "./src",
+  pattern: ".ts$",
+});
+```
 
-   - Ensure that the installation directory is in your system's PATH.
-   - Try restarting your terminal session.
+## Advanced Usage
 
-2. **No files found matching pattern**
+### AI Integration Example
 
-   - Check if your pattern is correct and matches the files you expect.
-   - Ensure you're in the correct directory or specify the correct directory with `-d`.
+```typescript
+import { LangChain } from "langchain";
 
-3. **Output file is empty**
-   - Verify that the files matching your pattern are not excluded by `excludePatterns` or `ignoreHiddenFiles`.
-   - Check if all matching files exceed the `maxFileSize` limit.
+const pipeline = new DocumentationPipeline().use(
+  new LangChainPlugin({
+    prompt: `
+      Analyze this codebase and provide:
+      1. Architecture overview
+      2. Key components
+      3. Improvement suggestions
+    `,
+    model: "gpt-4",
+  })
+);
+```
 
-For more issues, please check our [GitHub Issues](https://github.com/aminesayagh/codewrangler/issues) page or open a new issue.
+### Custom Template Example
+
+```typescript
+const customTemplate = new Template({
+  content: `
+    # {{PROJECT_NAME}}
+    Author: {{AUTHOR}}
+    
+    ## Analysis
+    {{AI_ANALYSIS}}
+    
+    ## Components
+    {{COMPONENTS}}
+  `,
+});
+```
+
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- TypeScript 4.5+
+- npm or yarn
+
+### Setup
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/codewrangler.git
+
+# Install dependencies
+cd codewrangler
+npm install
+
+# Build project
+npm run build
+
+# Run tests
+npm test
+```
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- Setting up the development environment
+- Coding standards
+- Submission process
+- Plugin development
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT © Mohamed Amine SAYAGH, 2024
+
+---
+
+Built with ❤️ by the CodeWrangler team
+
+For more information, visit our [Documentation](https://codewrangler.dev/docs) or join our [Discord Community](https://discord.gg/codewrangler).
