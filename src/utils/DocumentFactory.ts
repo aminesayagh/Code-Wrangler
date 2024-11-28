@@ -5,7 +5,6 @@ import * as path from "path";
 
 import {
   FileNotFoundError,
-  DirectoryNotFoundError,
   DocumentError,
 } from "../models/DocumentError";
 import {
@@ -13,9 +12,7 @@ import {
   FileStats,
   DirectoryOptions,
   WriteOptions,
-  ReadOptions,
-  FileTreeOptions,
-  FileTreeItem,
+  ReadOptions
 } from "../type";
 
 export class DocumentFactory {
@@ -48,15 +45,6 @@ export class DocumentFactory {
     }
     const stats = await this.getStats(filePath);
     return stats.size;
-  }
-
-  /**
-   * Gets the extension of a file
-   * @param filePath - The path to the file
-   * @returns The extension of the file
-   */
-  static extension(filePath: string): string {
-    return path.extname(filePath);
   }
 
   /**
@@ -122,6 +110,13 @@ export class DocumentFactory {
       writable: await check(fs.constants.W_OK),
       executable: await check(fs.constants.X_OK),
     };
+  }
+
+  static readFileSync(filePath: string, options: ReadOptions = {}): string {
+    return fsSync.readFileSync(filePath, {
+      encoding: options.encoding ?? "utf-8",
+      flag: options.flag,
+    });
   }
 
   /**
@@ -200,6 +195,24 @@ export class DocumentFactory {
   }
 
   /**
+   * Gets the base name of a file
+   * @param filePath - The path to the file
+   * @returns The base name of the file
+   */
+  static baseName(filePath: string): string {
+    return path.basename(filePath);
+  }
+
+  /**
+   * Gets the extension of a file
+   * @param filePath - The path to the file
+   * @returns The extension of the file
+   */
+  static extension(filePath: string): string {
+    return path.extname(filePath);
+  }
+
+  /**
    * Checks if a file or directory exists
    */
   static exists(filePath: string): boolean {
@@ -241,7 +254,7 @@ export class DocumentFactory {
     options: DirectoryOptions = {}
   ): Promise<void> {
     try {
-      if (!(await this.exists(dirPath))) {
+      if (!(this.exists(dirPath))) {
         await fs.mkdir(dirPath, {
           recursive: options.recursive ?? true,
           mode: options.mode,
@@ -288,135 +301,7 @@ export class DocumentFactory {
     }
   }
 
-  /**
-   * Gets a recursive list of all files in a directory with advanced filtering
-   * @param dirPath - Starting directory path
-   * @param options - Configuration options for tree traversal
-   * @throws {DirectoryNotFoundError} If the directory doesn't exist
-   * @throws {DocumentError} For other file system errors
-   */
-  static async getFileTree(
-    dirPath: string,
-    options: FileTreeOptions
-  ): Promise<string[] | FileTreeItem[]> {
-    // Validate directory exists
-    if (!(await this.exists(dirPath))) {
-      throw new DirectoryNotFoundError(dirPath);
-    }
-
-    // Initialize results based on return type
-    const results: (string | FileTreeItem)[] = [];
-
-    // Create a recursive scan function
-    async function scan(
-      currentPath: string,
-      currentDepth: number
-    ): Promise<void> {
-      // Check depth limit
-      if (options.maxDepth !== undefined && currentDepth > options.maxDepth) {
-        return;
-      }
-
-      try {
-        const entries = await fs.readdir(currentPath, { withFileTypes: true });
-
-        // Process each entry
-        await Promise.all(
-          entries.map(async (entry) => {
-            const fullPath = path.join(currentPath, entry.name);
-
-            // Skip hidden files if not included
-            if (
-              !options.includeHidden &&
-              (entry.name.startsWith(".") || entry.name.startsWith("_"))
-            ) {
-              return;
-            }
-
-            // Handle symlinks
-            let isDirectory = entry.isDirectory();
-            let stats: FileStats | undefined;
-
-            if (entry.isSymbolicLink() && options.followSymlinks) {
-              try {
-                stats = await DocumentFactory.getStats(fullPath);
-                isDirectory = stats.isDirectory;
-              } catch {
-                // Skip invalid symlinks
-                return;
-              }
-            }
-
-            // Apply custom filter if provided
-            if (options.filter) {
-              const shouldInclude = await options.filter(fullPath);
-              if (!shouldInclude) {
-                return;
-              }
-            }
-
-            if (isDirectory) {
-              // Recurse into directory
-              await scan(fullPath, currentDepth + 1);
-            } else {
-              // Check if file matches pattern
-              if (!options.pattern || options.pattern.test(entry.name)) {
-                if (options.returnType === "paths") {
-                  results.push(fullPath);
-                } else {
-                  // Get stats if we haven't already
-                  if (!stats) {
-                    stats = await DocumentFactory.getStats(fullPath);
-                  }
-
-                  results.push({
-                    path: fullPath,
-                    type: FileType.File,
-                    stats,
-                  });
-                }
-              }
-            }
-          })
-        );
-      } catch (error) {
-        throw new DocumentError(
-          `Error scanning directory: ${error}`,
-          currentPath
-        );
-      }
-    }
-
-    // Start the recursive scan
-    await scan(dirPath, 0);
-
-    // Sort results if requested
-    if (options.sort) {
-      results.sort((a, b) => {
-        const aValue = typeof a === "string" ? a : a.path;
-        const bValue = typeof b === "string" ? b : b.path;
-
-        if (options.sort!.by === "name") {
-          const comparison = aValue.localeCompare(bValue);
-          return options.sort!.order === "asc" ? comparison : -comparison;
-        }
-
-        if (options.sort!.by === "size" && options.returnType === "details") {
-          const aSize = (a as FileTreeItem).stats?.size || 0;
-          const bSize = (b as FileTreeItem).stats?.size || 0;
-          return options.sort!.order === "asc" ? aSize - bSize : bSize - aSize;
-        }
-
-        if (options.sort!.by === "date" && options.returnType === "details") {
-          const aTime = (a as FileTreeItem).stats?.modified.getTime() || 0;
-          const bTime = (b as FileTreeItem).stats?.modified.getTime() || 0;
-          return options.sort!.order === "asc" ? aTime - bTime : bTime - aTime;
-        }
-
-        return 0;
-      });
-    }
-
-    return results as string[] | FileTreeItem[];
+  public static join(...paths: string[]): string {
+    return path.join(...paths);
   }
 }

@@ -41,6 +41,8 @@ export interface FileTreeOptions {
   maxDepth?: number;
   /** Include hidden files/directories */
   includeHidden?: boolean;
+  /** Additional ignore files */
+  additionalIgnoreFiles?: string[];
   /** Return type format */
   returnType: "paths" | "details";
   /** Sort results */

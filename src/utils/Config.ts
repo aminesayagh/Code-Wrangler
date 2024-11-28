@@ -1,7 +1,6 @@
-import * as fs from "fs";
-import path from "path";
 import { z } from "zod";
 import { LOG_VALUES, logger } from "./Logger";
+import { DocumentFactory } from "./DocumentFactory";
 
 export const OutputFormatSchema = z.enum(["markdown", "html"]);
 export const FileExtensionSchema = z.enum(["md", "html"]);
@@ -15,20 +14,28 @@ export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
 
 const ConfigSchema = z
   .object({
-    dir: z.string(),
-    rootDir: z.string(),
-    pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
-    outputFile: z.string(),
-    logLevel: z.enum(LOG_VALUES as [string, ...string[]]),
-    outputFormat: z.array(OutputFormatSchema),
-    maxFileSize: z.number().positive(),
-    excludePatterns: z.array(z.string()),
-    ignoreHiddenFiles: z.boolean(),
-    additionalIgnoreFiles: z.array(z.string()).optional(),
+    dir: z.string().default(process.cwd()),
+    rootDir: z.string().default(process.cwd()),
+    pattern: z
+      .string()
+      .regex(/^.*$/, "Pattern must be a valid regex")
+      .default(".*"),
+    outputFile: z.string().default("output"),
+    logLevel: z.enum(LOG_VALUES as [string, ...string[]]).default("INFO"),
+    outputFormat: z.array(OutputFormatSchema).default(["markdown"]),
+    maxFileSize: z.number().positive().default(1048576),
+    maxDepth: z.number().default(100),
+    excludePatterns: z
+      .array(z.string())
+      .default(["node_modules/**", "**/*.test.ts", "dist/**"]),
+    ignoreHiddenFiles: z.boolean().default(true),
+    additionalIgnoreFiles: z.array(z.string()).optional().default([]),
     projectName: z.string().optional(),
+    followSymlinks: z.boolean().default(false),
     codeConfigFile: z
       .string()
-      .regex(/\.json$/, "Config file must end with .json"),
+      .regex(/\.json$/, "Config file must end with .json")
+      .default("codewrangler.json"),
   })
   .strict();
 
@@ -44,11 +51,13 @@ export const DEFAULT_CONFIG: ConfigOptions = {
   logLevel: "INFO",
   outputFormat: ["markdown"],
   maxFileSize: 1048576,
-  excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"],
+  maxDepth: 100,
   codeConfigFile: "codewrangler.json",
   projectName: undefined,
+  followSymlinks: false,
   ignoreHiddenFiles: true, // Default value
   additionalIgnoreFiles: [],
+  excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"],
 };
 
 export class Config {
@@ -68,12 +77,14 @@ export class Config {
   private loodConfig(): ConfigOptions {
     const defaultConfig = ConfigSchema.parse(DEFAULT_CONFIG);
 
-    const currentDirConfig = path.join(
+    const currentDirConfig = DocumentFactory.join(
       process.cwd(),
       defaultConfig.codeConfigFile
     );
-    if (fs.existsSync(currentDirConfig)) {
-      const userConfig = JSON.parse(fs.readFileSync(currentDirConfig, "utf-8"));
+    if (DocumentFactory.exists(currentDirConfig)) {
+      const userConfig = JSON.parse(
+        DocumentFactory.readFileSync(currentDirConfig)
+      );
       return { ...defaultConfig, ...userConfig };
     }
 
