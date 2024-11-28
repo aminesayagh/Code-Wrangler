@@ -1,17 +1,16 @@
 import * as path from "path";
 
-import { File } from "./File";
-import { Directory } from "./Directory";
-import { Config, FileExtension } from "../utils/Config";
-import { DocumentFactory } from "../utils/DocumentFactory";
-import { Template } from "./template/Template";
-import { TemplateType } from "./template/type";
+import { File } from "../../core/entities/File";
+import { Directory } from "../../core/entities/Directory";
+import { Config, FileExtension } from "../../utils/config";
+import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+import { Template } from "../../infrastructure/templates/Template";
 import {
   BaseTemplateSchema,
   FileTemplateSchema,
   DirectoryTemplateSchema,
-} from "./template/zod";
-
+} from "../../infrastructure/templates/zod";
+import { TemplateType } from "../../types/template";
 
 interface ContentRenderer {
   renderFile(file: File): string;
