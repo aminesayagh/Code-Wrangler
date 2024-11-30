@@ -131,6 +131,34 @@ export class DocumentFactory {
     });
   }
 
+  static async readJsonSync(filePath: string): Promise<object> {
+    try {
+      // Resolve the absolute path
+      const absolutePath = this.resolve(filePath);
+
+      // Check if file exists first
+      if (!this.exists(absolutePath)) {
+        throw new Error(`File not found: ${absolutePath}`);
+      }
+
+      const fileContents = await fs.readFile(absolutePath, "utf-8");
+      if (!fileContents) {
+        throw new Error(`File is empty: ${absolutePath}`);
+      }
+
+      try {
+        return JSON.parse(fileContents);
+      } catch (parseError) {
+        throw new Error(
+          `Invalid JSON in file ${absolutePath}: ${String(parseError)}`
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      throw new DocumentError(String(error), filePath);
+    }
+  }
+
   /**
    * Reads the entire contents of a file
    * @param filePath - The path to the file

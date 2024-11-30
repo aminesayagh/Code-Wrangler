@@ -1,7 +1,7 @@
 import { BaseRenderStrategy } from "../RenderStrategy";
 import { Config } from "../../../utils/config";
 import { NodeFile } from "../../../core/entities/NodeFile";
-import { OUTPUT_FORMATS } from "../../../utils/config/shema";
+import { OUTPUT_FORMATS } from "../../../utils/config/schema";
 
 export class HTMLRenderStrategy extends BaseRenderStrategy {
   constructor(config: Config) {
