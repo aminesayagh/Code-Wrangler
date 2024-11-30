@@ -3,8 +3,6 @@ import { NodeBase } from "./NodeBase";
 import { RenderStrategy } from "../../services/renderer/RenderStrategy";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 
-type ContentType = (string | ContentType)[];
-
 interface PropsDirectory {
   length: number;
   deepLength: number;
@@ -18,7 +16,6 @@ const defaultPropsDirectory: PropsDirectory = {
 export abstract class NodeDirectory extends NodeBase {
   public children: (NodeFile | NodeDirectory)[] = [];
   private _propsDirectory: PropsDirectory = { ...defaultPropsDirectory };
-  private _content: ContentType = [];
 
   public constructor(name: string, pathName: string) {
     super(name, pathName);
@@ -28,7 +25,6 @@ export abstract class NodeDirectory extends NodeBase {
   private initDirectory(): void {
     this.children = [];
     this._propsDirectory = { ...defaultPropsDirectory };
-    this._content = [];
   }
 
   // getters and setters
@@ -43,12 +39,6 @@ export abstract class NodeDirectory extends NodeBase {
   }
   public set deepLength(deepLength: number) {
     this._propsDirectory.deepLength = deepLength;
-  }
-  public get content(): ContentType {
-    return this._content;
-  }
-  public set content(content: ContentType) {
-    this._content = content;
   }
   public get secondaryProps(): Record<string, unknown> {
     return {

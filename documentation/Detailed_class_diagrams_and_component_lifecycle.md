@@ -4,54 +4,44 @@
 
 ```mermaid
 classDiagram
-    class NodeBase {
-        #_props: PropsNode
-        +constructor(name: string, path: string)
-        +validate(): boolean
-        +bundle(deep: number)*: Promise~void~
-        +render()*: void
-        +dispose(): Promise~void~
-        +clone(): Promise~NodeBase~
-        +props: Record~string, unknown~
-        +secondaryProps*: Record~string, unknown~
-        __Properties__
-        +deep: number
+    %% Interfaces
+    class FileStats {
+        <<interface>>
         +size: number
+        +created: Date
+        +modified: Date
+        +accessed: Date
+        +isDirectory: boolean
+        +isFile: boolean
+        +permissions: FilePermissions
+    }
+
+    class FilePermissions {
+        <<interface>>
+        +readable: boolean
+        +writable: boolean
+        +executable: boolean
+    }
+
+    class PropsNode {
+        <<interface>>
         +name: string
         +path: string
+        +deep: number
+        +size: number
         +stats: FileStats
+        +extension?: string
     }
 
-    class NodeFile {
-        -_propsFile: PropsFile
-        -_content: string
-        +constructor(name: string, pathName: string)
-        -initFile(name: string): void
-        +bundle(deep: number): Promise~void~
+    class NodeLifeCycle {
+        <<interface>>
+        +validate(): boolean
+        +bundle(deep: number): Promise<void>
         +render(): void
-        __Properties__
-        +extension: string
-        +content: string
-        +secondaryProps: PropsFile
+        +dispose(): Promise<void>
+        +clone(): Promise<NodeBase>
     }
 
-    class NodeDirectory {
-        +children: (NodeFile|NodeDirectory)[]
-        -_propsDirectory: PropsDirectory
-        -_content: ContentType[]
-        +constructor(name: string, pathName: string)
-        -initDirectory(): void
-        +addChild(child: Node): Promise~NodeDirectory~
-        +bundle(deep: number): Promise~void~
-        +render(): void
-        __Properties__
-        +length: number
-        +deepLength: number
-        +content: ContentType[]
-        +secondaryProps: PropsDirectory
-    }
-
-    %% Rendering Strategy Hierarchy
     class RenderStrategy {
         <<interface>>
         +renderFile(file: NodeFile): string
@@ -61,67 +51,112 @@ classDiagram
         +dispose(): Promise~void~
     }
 
-    class BaseRenderStrategy {
-        #extension: OutputFormatExtension
-        #templates: Record~TemplateType, Template~
-        #config: Config
-        +constructor(config: Config, extension: OutputFormatExtension)
-        +renderFile(file: NodeFile): string
-        +renderDirectory(directory: NodeDirectory): string
-        #replaceSelectors(template: string, values: any): string
-        +loadTemplates(): Promise~void~
-        +render(rootDirectory: NodeDirectory): Promise~string~
+    %% Abstract Base Classes
+    class NodeBase {
+        <<abstract>>
+        #_props: PropsNode
+        +constructor(name: string, path: string)
+        -initNode(name: string, path: string): void
+        -validatePath(path: string): boolean
+        +validate(): boolean
+        +bundle(deep: number)*: Promise~void~
+        +render()*: void
+        +dispose(): Promise~void~
+        +clone(): Promise~NodeBase~
+        __Properties__
+        +deep: number
+        +size: number
+        +name: string
+        +path: string
+        +stats: FileStats
+        +props: Record~string, unknown~
+        +secondaryProps*: Record~string, unknown~
+    }
+
+    class NodeDirectory {
+        <<abstract>>
+        +children: (NodeFile|NodeDirectory)[]
+        -_propsDirectory: PropsDirectory
+        +constructor(name: string, pathName: string)
+        -initDirectory(): void
+        +addChild(child: NodeBase): Promise~NodeDirectory~
+        +bundle(deep: number): Promise~void~
+        +render()*: void
+        __Properties__
+        +length: number
+        +deepLength: number
+        +secondaryProps*: Record~string, unknown~
+    }
+
+    class NodeFile {
+        <<abstract>>
+        -_propsFile: PropsFile
+        -_content: string
+        +constructor(name: string, pathName: string)
+        -initFile(name: string): void
+        +bundle(deep: number): Promise~void~
+        +render()*: void
+        __Properties__
+        +extension: string
+        +content: string
+        +secondaryProps*: Record~string, unknown~
+    }
+
+    %% Concrete Classes
+    class RenderableDirectory {
+        -renderStrategy: RenderStrategy[]
+        +constructor(name: string, pathName: string, strategy: RenderStrategy[])
+        +render(): void
+    }
+
+    class RenderableFile {
+        -renderStrategy: RenderStrategy[]
+        +constructor(name: string, pathName: string, strategy: RenderStrategy[])
+        +render(): void
         +dispose(): Promise~void~
     }
 
-    class MarkdownStrategy {
+    %% Builder Classes
+    class DocumentTreeBuilder {
+        -root: RenderableDirectory|RenderableFile
+        -builder: FileTreeBuilder
+        +constructor(config: Config, renderStrategy: RenderStrategy[])
+        +build(): Promise~void~
+        -createDocumentStructure(node: FileTreeNode): Promise~RenderableDirectory|RenderableFile~
+    }
+
+    class FileTreeBuilder {
+        -config: Config
+        -options: FileTreeBuilderOptions
+        -fileHidden: FileHidden
         +constructor(config: Config)
-        #processCodeBlock(content: string, language: string): string
-        +renderFile(file: NodeFile): string
+        +build(): Promise~FileTreeNode~
+        -buildTree(nodePath: string, depth: number): Promise~FileTreeNode~
     }
 
-    class HTMLStrategy {
+    class FileHidden {
+        -ignoreHiddenFiles: boolean
+        -patterns: string[]
+        -additionalIgnoreFiles: string[]
         +constructor(config: Config)
-        #processCodeBlock(content: string, language: string): string
-        -escapeHtml(content: string): string
-        +renderFile(file: NodeFile): string
-    }
-
-    %% Template System
-    class Template~T~ {
-        -_content: string
-        -type: TemplateType
-        -schema: ZodObject~T~
-        +constructor(type: TemplateType, schema: ZodObject~T~)
-        +load(path: string): Promise~void~
-        -validate(): void
-        -getTemplateTokens(): string[]
-        +render(values: T): string
-        __Static Methods__
-        +create(type, schema, path): Promise~Template~
-    }
-
-    %% Document Factory
-    class DocumentFactory {
-        __Static Methods__
-        +type(filePath: string): Promise~FileType~
-        +size(filePath: string): Promise~number~
-        +getStats(filePath: string): Promise~FileStats~
-        +readFile(filePath: string): Promise~string~
-        +writeFile(filePath: string, data: string): Promise~void~
-        +exists(filePath: string): boolean
-        +isAbsolute(filePath: string): boolean
+        +shouldExclude(fileName: string): boolean
     }
 
     %% Relationships
-    NodeBase <|-- NodeFile
-    NodeBase <|-- NodeDirectory
-    RenderStrategy <|.. BaseRenderStrategy
-    BaseRenderStrategy <|-- MarkdownStrategy
-    BaseRenderStrategy <|-- HTMLStrategy
-    NodeFile -- DocumentFactory
-    NodeDirectory -- DocumentFactory
-    Template -- BaseRenderStrategy
+    NodeLifeCycle <|-- NodeBase: implements
+    NodeBase <|-- NodeFile: extends
+    NodeBase <|-- NodeDirectory: extends
+    NodeFile <|-- RenderableFile: extends
+    NodeDirectory <|-- RenderableDirectory: extends
+    NodeBase .. PropsNode: implements
+    PropsNode .. FileStats: implements
+    FileStats .. FilePermissions: implements
+    FileTreeBuilder o-- FileHidden: uses
+    DocumentTreeBuilder o-- FileTreeBuilder: uses
+    RenderableFile o-- RenderStrategy: uses
+    RenderableDirectory o-- RenderStrategy: uses
+    NodeDirectory o-- NodeFile: contains
+    NodeDirectory o-- NodeDirectory: contains
 ```
 
 ## State Transitions and Lifecycle
