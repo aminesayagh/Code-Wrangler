@@ -11,8 +11,8 @@ export class CodeWrangler {
   private program: Command;
   private generateCommand: GenerateCommand;
 
-  private constructor() {
-    this.config = Config.load();
+  private constructor(config: Config) {
+    this.config = config;
     this.generateCommand = new GenerateCommand(this.config);
     this.program = new ProgramBuilder(this.config, this.VERSION).build();
 
@@ -27,7 +27,8 @@ export class CodeWrangler {
 
   public static async run(): Promise<boolean> {
     if (!CodeWrangler.instance) {
-      CodeWrangler.instance = new CodeWrangler();
+      const config = await Config.load();
+      CodeWrangler.instance = new CodeWrangler(config);
       await CodeWrangler.instance.program.parseAsync(process.argv);
       return true;
     }
