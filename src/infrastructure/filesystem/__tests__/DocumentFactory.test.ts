@@ -282,6 +282,7 @@ describe("DocumentFactory", () => {
 
     it("should read file content synchronously with default options", () => {
       const content = DocumentFactory.readFileSync(testFilePath);
+      console.log(content);
       expect(content).toBe(testContent);
     });
 

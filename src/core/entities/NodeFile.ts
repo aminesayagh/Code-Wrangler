@@ -1,17 +1,17 @@
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import { NodeBase } from "./NodeBase";
-import { RenderStrategy } from "../../services/renderer/RenderStrategy";
+import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
 
-interface PropsFile {
+interface IPropsFile {
   extension: string;
 }
 
-const defaultPropsFile: PropsFile = {
+const defaultPropsFile: IPropsFile = {
   extension: "",
 };
 
 export abstract class NodeFile extends NodeBase {
-  private _propsFile: PropsFile = { ...defaultPropsFile };
+  private _propsFile: IPropsFile = { ...defaultPropsFile };
   private _content: string | null = null;
 
   public constructor(name: string, pathName: string) {
@@ -67,7 +67,7 @@ export class RenderableFile extends NodeFile {
   constructor(
     name: string,
     pathName: string,
-    private renderStrategy: RenderStrategy[]
+    private renderStrategy: IRenderStrategy[]
   ) {
     super(name, pathName);
   }

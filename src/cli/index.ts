@@ -2,7 +2,7 @@
 import { CodeWrangler } from "./CodeWrangler";
 import { logger } from "../utils/logger/Logger";
 
-async function main() {
+async function main(): Promise<void> {
   try {
     await CodeWrangler.run();
   } catch (error) {

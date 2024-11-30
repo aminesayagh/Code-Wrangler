@@ -3,16 +3,18 @@ import * as fs from "fs/promises";
 import * as fsSync from "fs";
 import * as path from "path";
 
-import { FileNotFoundError, DocumentError } from "../../core/errors";
+import { DocumentError, FileNotFoundError } from "../../core/errors";
 import {
   FileType,
-  FileStats,
-  DirectoryOptions,
-  WriteOptions,
-  ReadOptions,
+  IDirectoryOptions,
+  IFileStats,
+  IReadOptions,
+  IWriteOptions,
 } from "../../types/type";
 
 export class DocumentFactory {
+  public static VERSION = "1.0.0";
+
   /**
    * Gets the type of a file system entry
    * @param filePath - The path to check
@@ -64,7 +66,7 @@ export class DocumentFactory {
    * @throws {FileNotFoundError} If the path doesn't exist
    * @throws {DocumentError} For other file system errors
    */
-  static async getStats(filePath: string): Promise<FileStats> {
+  static async getStats(filePath: string): Promise<IFileStats> {
     try {
       const stats = await fs.stat(filePath);
       const accessFlags = await this.checkAccess(filePath);
@@ -124,7 +126,7 @@ export class DocumentFactory {
    * @returns The contents of the file as a string
    * @throws {Error} If the file cannot be read
    */
-  static readFileSync(filePath: string, options: ReadOptions = {}): string {
+  static readFileSync(filePath: string, options: IReadOptions = {}): string {
     return fsSync.readFileSync(filePath, {
       encoding: options.encoding ?? "utf-8",
       flag: options.flag,
@@ -154,7 +156,6 @@ export class DocumentFactory {
         );
       }
     } catch (error) {
-      console.log(error);
       throw new DocumentError(String(error), filePath);
     }
   }
@@ -169,7 +170,7 @@ export class DocumentFactory {
    */
   static async readFile(
     filePath: string,
-    options: ReadOptions = {}
+    options: IReadOptions = {}
   ): Promise<string> {
     try {
       return await fs.readFile(filePath, {
@@ -194,7 +195,7 @@ export class DocumentFactory {
   static async writeFile(
     filePath: string,
     data: string | Buffer,
-    options: WriteOptions = {}
+    options: IWriteOptions = {}
   ): Promise<void> {
     try {
       await fs.writeFile(filePath, data, {
@@ -217,7 +218,7 @@ export class DocumentFactory {
   static async appendFile(
     filePath: string,
     content: string,
-    options: WriteOptions = {}
+    options: IWriteOptions = {}
   ): Promise<void> {
     try {
       await fs.appendFile(filePath, content, {
@@ -323,7 +324,7 @@ export class DocumentFactory {
    */
   static async ensureDirectory(
     dirPath: string,
-    options: DirectoryOptions = {}
+    options: IDirectoryOptions = {}
   ): Promise<void> {
     try {
       if (!this.exists(dirPath)) {

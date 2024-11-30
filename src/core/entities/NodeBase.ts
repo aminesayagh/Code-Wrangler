@@ -1,7 +1,7 @@
-import { FileStats, PropsNode } from "../../types/type";
+import { IFileStats, IPropsNode } from "../../types/type";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 
-const defaultProps: PropsNode = {
+const defaultProps: IPropsNode = {
   name: "",
   path: "",
   deep: 0,
@@ -21,7 +21,7 @@ const defaultProps: PropsNode = {
   },
 };
 
-interface NodeLifeCycle {
+interface INodeLifeCycle {
   validate(): boolean;
   bundle(deep: number): Promise<void>;
   render(): void;
@@ -29,8 +29,8 @@ interface NodeLifeCycle {
   clone(): Promise<NodeBase>;
 }
 
-export abstract class NodeBase implements NodeLifeCycle {
-  protected _props: PropsNode = { ...defaultProps };
+export abstract class NodeBase implements INodeLifeCycle {
+  protected _props: IPropsNode = { ...defaultProps };
 
   constructor(_name: string, _path: string) {
     // check if path is absolute or a valid path
@@ -98,24 +98,19 @@ export abstract class NodeBase implements NodeLifeCycle {
   }
 
   // stats
-  get stats(): FileStats {
+  get stats(): IFileStats | undefined {
     return this._props.stats;
   }
-  protected set stats(stats: FileStats) {
+  protected set stats(stats: IFileStats | undefined) {
     this._props.stats = stats;
   }
 
   // props
-  get props() {
+  get props(): IPropsNode {
     return { ...this._props, ...this.secondaryProps };
   }
 
   public async dispose(): Promise<void> {
-    this._props.deep = 0;
-    this._props.path = "";
-    this._props.name = "";
-    this._props.stats = { ...defaultProps.stats };
-    this._props.size = 0;
     this._props = { ...defaultProps };
   }
 

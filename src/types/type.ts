@@ -5,7 +5,7 @@ export const FileType = {
 
 export type FileType = (typeof FileType)[keyof typeof FileType];
 
-export interface FileStats {
+export interface IFileStats {
   size: number;
   created: Date;
   modified: Date;
@@ -19,32 +19,32 @@ export interface FileStats {
   };
 }
 
-export interface ReadOptions {
+export interface IReadOptions {
   encoding?: BufferEncoding;
   flag?: string;
 }
 
-export interface WriteOptions extends ReadOptions {
+export interface IWriteOptions extends IReadOptions {
   mode?: number;
   flag?: string;
 }
 
-export interface DirectoryOptions {
+export interface IDirectoryOptions {
   recursive?: boolean;
   mode?: number;
 }
 
-export interface FileTreeItem {
+export interface IFileTreeItem {
   path: string;
   type: FileType;
-  stats?: FileStats;
+  stats?: IFileStats;
 }
 
-export interface PropsNode {
+export interface IPropsNode {
   name: string;
   path: string;
   deep: number;
   size: number;
   extension?: string;
-  stats: FileStats;
+  stats?: IFileStats;
 }
