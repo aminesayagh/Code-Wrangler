@@ -1,0 +1,20 @@
+{
+    "dir": "public",
+    "rootDir": "public",
+    "templatesDir": "public/templates",
+    "pattern": ".*",
+    "outputFile": "output",
+    "logLevel": "INFO",
+    "outputFormat": [
+        "markdown"
+    ],
+    "maxFileSize": 1048576,
+    "maxDepth": 100,
+    "excludePatterns": [
+        "node_modules/**",
+        "**/*.test.ts",
+        "dist/**"
+    ],
+    "ignoreHiddenFiles": true,
+    "additionalIgnoreFiles": []
+}

@@ -4,7 +4,7 @@ const esbuild = require('esbuild');
 const { typescriptPlugin } = require('esbuild-plugin-typescript');
 
 esbuild.build({
-    entryPoints: ['src/index.ts'],
+    entryPoints: ['src/cli/index.ts'],
     bundle: true,
     outfile: 'dist/index.js',
     platform: 'node',

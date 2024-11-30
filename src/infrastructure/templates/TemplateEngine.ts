@@ -2,7 +2,6 @@ import { z, ZodObject } from "zod";
 import { TemplateType } from "../../types/template";
 
 import { DocumentFactory } from "../filesystem/DocumentFactory";
-import { FILE_EXTENSION, Config, FileExtension } from "../../utils/config";
 
 type TemplateValue = z.ZodType<string | number | boolean>;
 
@@ -89,10 +88,5 @@ export class Template<
       }
       throw error;
     }
-  }
-
-  static get templateFileExtensions(): FileExtension[] {
-    const config = Config.load();
-    return config.get("outputFormat").map((format) => FILE_EXTENSION[format]);
   }
 }
