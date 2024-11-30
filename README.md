@@ -236,7 +236,7 @@ const customTemplate = new Template({
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/codewrangler.git
+git clone https://github.com/aminesayagh/Code-Wrangler
 
 # Install dependencies
 cd codewrangler
@@ -253,15 +253,10 @@ npm test
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
 
-- Setting up the development environment
-- Coding standards
-- Submission process
-- Plugin development
-
 ## License
 
 Apache 2.0 License - See [LICENSE](LICENSE.md) for details.
 
 Built with ❤️ by the CodeWrangler team
 
-For more information, visit our [Documentation](CONTRIBUTION.md).
+For more information, visit our [Documentation](CONTRIBUTING.md).
