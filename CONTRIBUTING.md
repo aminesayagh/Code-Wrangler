@@ -250,7 +250,8 @@ When contributing to the codebase:
 
 ## Next Steps
 
-- CLI Documentation
-- Template System Guide
-- Rendering Strategy Guide
-- Configuration Guide
+- [CLI Documentation](./documentation/CLI_DOCUMENTATION.md)
+- [Template System Guide](./documentation/TEMPLATE_SYSTEM_GUIDE.md)
+- [Detailed Class Diagrams and Component Lifecycle](./documentation/DETAILED_CLASS_DIAGRAMS_AND_COMPONENT_LIFECYCLE.md)
+- [Rendering Strategy Guide](./documentation/RENDERING_STRATEGY_GUIDE.md)
+- [Configuration Guide](./documentation/CONFIGURATION_GUIDE.md)
