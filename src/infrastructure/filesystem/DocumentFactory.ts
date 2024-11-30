@@ -3,16 +3,18 @@ import * as fs from "fs/promises";
 import * as fsSync from "fs";
 import * as path from "path";
 
-import { FileNotFoundError, DocumentError } from "../../core/errors";
+import { DocumentError, FileNotFoundError } from "../../core/errors";
 import {
   FileType,
-  FileStats,
-  DirectoryOptions,
-  WriteOptions,
-  ReadOptions,
+  IDirectoryOptions,
+  IFileStats,
+  IReadOptions,
+  IWriteOptions,
 } from "../../types/type";
 
-export class DocumentFactory {
+export const DocumentFactory = {
+  VERSION: "1.0.0",
+
   /**
    * Gets the type of a file system entry
    * @param filePath - The path to check
@@ -20,7 +22,7 @@ export class DocumentFactory {
    * @throws {FileNotFoundError} If the path doesn't exist
    * @throws {DocumentError} For other file system errors
    */
-  static async type(filePath: string): Promise<FileType> {
+  async type(filePath: string): Promise<FileType> {
     try {
       const stats = await fs.stat(filePath);
       return stats.isDirectory() ? FileType.Directory : FileType.File;
@@ -30,7 +32,7 @@ export class DocumentFactory {
       }
       throw new DocumentError(String(error), filePath);
     }
-  }
+  },
 
   /**
    * Gets file size in bytes
@@ -39,23 +41,23 @@ export class DocumentFactory {
    * @throws {FileNotFoundError} If the file doesn't exist
    * @throws {DocumentError} For other file system errors or if path is a directory
    */
-  static async size(filePath: string): Promise<number> {
+  async size(filePath: string): Promise<number> {
     const isDirectory = (await this.type(filePath)) === FileType.Directory;
     if (isDirectory) {
       throw new DocumentError("Path is a directory", filePath);
     }
     const stats = await this.getStats(filePath);
     return stats.size;
-  }
+  },
 
   /**
    * Resolves a path to an absolute path
    * @param filePath - The path to resolve
    * @returns The absolute path
    */
-  static resolve(filePath: string): string {
+  resolve(filePath: string): string {
     return path.resolve(filePath);
-  }
+  },
 
   /**
    * Gets detailed file statistics
@@ -64,7 +66,7 @@ export class DocumentFactory {
    * @throws {FileNotFoundError} If the path doesn't exist
    * @throws {DocumentError} For other file system errors
    */
-  static async getStats(filePath: string): Promise<FileStats> {
+  async getStats(filePath: string): Promise<IFileStats> {
     try {
       const stats = await fs.stat(filePath);
       const accessFlags = await this.checkAccess(filePath);
@@ -88,7 +90,7 @@ export class DocumentFactory {
       }
       throw new DocumentError(String(error), filePath);
     }
-  }
+  },
 
   /**
    * Checks various access flags for a path
@@ -96,7 +98,7 @@ export class DocumentFactory {
    * @param filePath - The path to check access for
    * @returns An object containing readable, writable, and executable permission flags
    */
-  private static async checkAccess(filePath: string): Promise<{
+  async checkAccess(filePath: string): Promise<{
     readable: boolean;
     writable: boolean;
     executable: boolean;
@@ -115,7 +117,7 @@ export class DocumentFactory {
       writable: await check(fs.constants.W_OK),
       executable: await check(fs.constants.X_OK),
     };
-  }
+  },
 
   /**
    * Reads the entire contents of a file synchronously
@@ -124,14 +126,14 @@ export class DocumentFactory {
    * @returns The contents of the file as a string
    * @throws {Error} If the file cannot be read
    */
-  static readFileSync(filePath: string, options: ReadOptions = {}): string {
+  readFileSync(filePath: string, options: IReadOptions = {}): string {
     return fsSync.readFileSync(filePath, {
       encoding: options.encoding ?? "utf-8",
       flag: options.flag,
     });
-  }
+  },
 
-  static async readJsonSync(filePath: string): Promise<object> {
+  async readJsonSync(filePath: string): Promise<object> {
     try {
       // Resolve the absolute path
       const absolutePath = this.resolve(filePath);
@@ -154,10 +156,9 @@ export class DocumentFactory {
         );
       }
     } catch (error) {
-      console.log(error);
       throw new DocumentError(String(error), filePath);
     }
-  }
+  },
 
   /**
    * Reads the entire contents of a file
@@ -167,9 +168,9 @@ export class DocumentFactory {
    * @throws {FileNotFoundError} If the file doesn't exist
    * @throws {DocumentError} For other file system errors
    */
-  static async readFile(
+  async readFile(
     filePath: string,
-    options: ReadOptions = {}
+    options: IReadOptions = {}
   ): Promise<string> {
     try {
       return await fs.readFile(filePath, {
@@ -182,7 +183,7 @@ export class DocumentFactory {
       }
       throw new DocumentError(String(error), filePath);
     }
-  }
+  },
 
   /**
    * Writes data to a file, replacing the file if it already exists
@@ -191,10 +192,10 @@ export class DocumentFactory {
    * @param options - The options for the write operation
    * @throws {DocumentError} For file system errors
    */
-  static async writeFile(
+  async writeFile(
     filePath: string,
     data: string | Buffer,
-    options: WriteOptions = {}
+    options: IWriteOptions = {}
   ): Promise<void> {
     try {
       await fs.writeFile(filePath, data, {
@@ -205,7 +206,7 @@ export class DocumentFactory {
     } catch (error) {
       throw new DocumentError(String(error), filePath);
     }
-  }
+  },
 
   /**
    * Appends data to a file
@@ -214,10 +215,10 @@ export class DocumentFactory {
    * @param options - The options for the write operation
    * @throws {DocumentError} For file system errors
    */
-  static async appendFile(
+  async appendFile(
     filePath: string,
     content: string,
-    options: WriteOptions = {}
+    options: IWriteOptions = {}
   ): Promise<void> {
     try {
       await fs.appendFile(filePath, content, {
@@ -228,7 +229,7 @@ export class DocumentFactory {
     } catch (error) {
       throw new DocumentError(String(error), filePath);
     }
-  }
+  },
 
   /**
    * Reads the contents of a directory
@@ -237,12 +238,12 @@ export class DocumentFactory {
    * @returns An array of file and directory names in the directory
    * @throws {Error} If the directory cannot be read
    */
-  static async readDir(
+  async readDir(
     dirPath: string,
     options?: { withFileTypes?: boolean }
   ): Promise<string[]> {
     return await fs.readdir(dirPath, options as ObjectEncodingOptions);
-  }
+  },
 
   /**
    * Creates a directory if it doesn't exist
@@ -250,50 +251,50 @@ export class DocumentFactory {
    * @param recursive - Whether to create parent directories if they don't exist
    * @throws {DocumentError} For file system errors
    */
-  static async createDir(dirPath: string, recursive = true): Promise<void> {
+  async createDir(dirPath: string, recursive = true): Promise<void> {
     await fs.mkdir(dirPath, { recursive });
-  }
+  },
 
   /**
    * Gets the base name of a file
    * @param filePath - The path to the file
    * @returns The base name of the file (last portion of the path)
    */
-  static baseName(filePath: string): string {
+  baseName(filePath: string): string {
     return path.basename(filePath);
-  }
+  },
 
   /**
    * Gets the extension of a file
    * @param filePath - The path to the file
    * @returns The extension of the file including the dot (e.g., '.txt')
    */
-  static extension(filePath: string): string {
+  extension(filePath: string): string {
     return path.extname(filePath);
-  }
+  },
 
   /**
    * Checks if a file or directory exists
    * @param filePath - The path to check
    * @returns True if the file or directory exists, false otherwise
    */
-  static exists(filePath: string): boolean {
+  exists(filePath: string): boolean {
     try {
       fsSync.accessSync(filePath);
       return true;
     } catch {
       return false;
     }
-  }
+  },
 
   /**
    * Checks if a path is absolute
    * @param filePath - The path to check
    * @returns True if the path is absolute, false otherwise
    */
-  static isAbsolute(filePath: string): boolean {
+  isAbsolute(filePath: string): boolean {
     return path.isAbsolute(filePath);
-  }
+  },
 
   /**
    * Gets directory contents with type information
@@ -301,7 +302,7 @@ export class DocumentFactory {
    * @returns An array of objects containing name and type information for each entry
    * @throws {DocumentError} If path is not a directory or other errors occur
    */
-  static async readDirectory(
+  async readDirectory(
     dirPath: string
   ): Promise<Array<{ name: string; type: FileType }>> {
     try {
@@ -313,7 +314,7 @@ export class DocumentFactory {
     } catch (error) {
       throw new DocumentError(String(error), dirPath);
     }
-  }
+  },
 
   /**
    * Creates a directory if it doesn't exist
@@ -321,9 +322,9 @@ export class DocumentFactory {
    * @param options - Options for directory creation including recursive and mode
    * @throws {DocumentError} For file system errors
    */
-  static async ensureDirectory(
+  async ensureDirectory(
     dirPath: string,
-    options: DirectoryOptions = {}
+    options: IDirectoryOptions = {}
   ): Promise<void> {
     try {
       if (!this.exists(dirPath)) {
@@ -335,21 +336,21 @@ export class DocumentFactory {
     } catch (error) {
       throw new DocumentError(String(error), dirPath);
     }
-  }
+  },
 
   /**
    * Removes a file or directory
    * @param filePath - The path to remove
    * @throws {DocumentError} For file system errors
    */
-  static async remove(filePath: string): Promise<void> {
+  async remove(filePath: string): Promise<void> {
     const stats = await fs.stat(filePath);
     if (stats.isDirectory()) {
       await fs.rm(filePath, { recursive: true, force: true });
     } else {
       await fs.unlink(filePath);
     }
-  }
+  },
 
   /**
    * Copies a file or directory
@@ -357,7 +358,7 @@ export class DocumentFactory {
    * @param dest - The destination path
    * @throws {DocumentError} For file system errors
    */
-  static async copy(src: string, dest: string): Promise<void> {
+  async copy(src: string, dest: string): Promise<void> {
     const stats = await fs.stat(src);
 
     if (stats.isDirectory()) {
@@ -365,7 +366,7 @@ export class DocumentFactory {
     } else {
       await fs.copyFile(src, dest);
     }
-  }
+  },
 
   /**
    * Copies a directory recursively
@@ -374,7 +375,7 @@ export class DocumentFactory {
    * @param dest - The destination directory path
    * @throws {DocumentError} For file system errors
    */
-  private static async copyDir(src: string, dest: string): Promise<void> {
+  async copyDir(src: string, dest: string): Promise<void> {
     await this.ensureDirectory(dest);
     const entries = await fs.readdir(src, { withFileTypes: true });
 
@@ -388,14 +389,14 @@ export class DocumentFactory {
         await fs.copyFile(srcPath, destPath);
       }
     }
-  }
+  },
 
   /**
    * Joins an array of paths into a single path
    * @param paths - The paths to join
    * @returns The joined path
    */
-  public static join(...paths: string[]): string {
+  join(...paths: string[]): string {
     return path.join(...paths);
-  }
-}
+  },
+};

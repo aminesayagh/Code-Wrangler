@@ -2,10 +2,10 @@ import { z } from "zod";
 import { logger } from "../logger/Logger";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import {
-  ConfigSchema,
-  ConfigOptions,
-  DEFAULT_CONFIG,
   ConfigKeys,
+  ConfigOptions,
+  ConfigSchema,
+  DEFAULT_CONFIG,
 } from "./schema";
 
 export class Config {

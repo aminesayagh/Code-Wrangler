@@ -1,7 +1,7 @@
-import { FileTreeBuilder, FileTreeNode } from "./FileTreeBuilder";
+import { FileTreeBuilder, IFileTreeNode } from "./FileTreeBuilder";
 import { RenderableDirectory } from "../../core/entities/NodeDIrectory";
 import { RenderableFile } from "../../core/entities/NodeFile";
-import { RenderStrategy } from "../renderer/RenderStrategy";
+import { IRenderStrategy } from "../renderer/RenderStrategy";
 import { Config } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import { FileType } from "../../types/type";
@@ -9,7 +9,7 @@ import { FileType } from "../../types/type";
 export class DocumentTreeBuilder {
   private root: RenderableDirectory | RenderableFile | undefined;
   private builder: FileTreeBuilder;
-  constructor(config: Config, private renderStrategy: RenderStrategy[]) {
+  constructor(config: Config, private renderStrategy: IRenderStrategy[]) {
     this.builder = new FileTreeBuilder(config);
   }
 
@@ -30,7 +30,7 @@ export class DocumentTreeBuilder {
   }
 
   private async createDocumentStructure(
-    node: FileTreeNode
+    node: IFileTreeNode
   ): Promise<RenderableDirectory | RenderableFile> {
     if (node.type === FileType.Directory) {
       const directory = new RenderableDirectory(

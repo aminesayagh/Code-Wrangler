@@ -1,12 +1,12 @@
 import path from "path";
 
-type FileSystem = {
-  [key: string]: string | FileSystem;
-};
+export interface IFileSystem {
+  [key: string]: string | IFileSystem;
+}
 
 export const MOCK_PATH = path.resolve("src/__mocks__/root");
 
-export const mockFileSystem: FileSystem = {
+export const mockFileSystem: IFileSystem = {
   root: {
     "file1.ts": `export const test = "test 1";\n`,
     "file2.js": `export const test = "test 2";`,
@@ -21,9 +21,9 @@ export const mockPath = (): string => path.resolve("src/__mocks__/root");
 
 export function isDirectory(path: string): boolean {
   const parts = path.split("/").filter(Boolean);
-  let current: FileSystem | string = mockFileSystem;
+  let current: IFileSystem | string = mockFileSystem;
   for (const part of parts) {
-    const currentPart = (current as FileSystem)[part] as FileSystem | string;
+    const currentPart = (current as IFileSystem)[part] as IFileSystem | string;
     if (typeof currentPart === "string") return false;
     current = currentPart;
   }
@@ -32,13 +32,13 @@ export function isDirectory(path: string): boolean {
 
 export function getContent(path: string): string | null {
   const parts = path.split("/").filter(Boolean);
-  let current: FileSystem | string = mockFileSystem;
+  let current: IFileSystem | string = mockFileSystem;
   for (const part of parts) {
-    if ((current as FileSystem)[part] === undefined) {
+    if ((current as IFileSystem)[part] === undefined) {
       console.error("File not found: ", path, "on part: ", part);
       throw new Error(`File not found: ${path}`);
     }
-    current = (current as FileSystem)[part] as FileSystem | string;
+    current = (current as IFileSystem)[part] as IFileSystem | string;
   }
   return typeof current === "string" ? current : null;
 }

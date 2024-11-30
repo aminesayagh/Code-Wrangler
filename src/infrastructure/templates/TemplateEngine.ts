@@ -1,4 +1,4 @@
-import { z, ZodObject } from "zod";
+import { ZodObject, z } from "zod";
 import { TemplateType } from "../../types/template";
 
 import { DocumentFactory } from "../filesystem/DocumentFactory";
@@ -33,7 +33,7 @@ export class Template<
     return this._content;
   }
 
-  private validate() {
+  private validate(): void {
     const tokens = this.getTemplateTokens();
     const requiredFields = Object.keys(this.schema.shape);
     const missingRequired = requiredFields.filter(
@@ -66,7 +66,11 @@ export class Template<
     let match;
 
     while ((match = tokenRegex.exec(this.content)) !== null) {
-      tokens.push(match[1]!);
+      const token = match[1];
+      if (token === undefined) {
+        throw new Error(`Invalid template content for ${this.type}`);
+      }
+      tokens.push(token);
     }
 
     return tokens;

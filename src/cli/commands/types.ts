@@ -1,4 +1,4 @@
-export interface CommandOptions {
+export interface ICommandOptions {
   dir?: string;
   output?: string;
   config?: string;
@@ -10,6 +10,6 @@ export interface CommandOptions {
   additionalIgnore?: string[];
 }
 
-export interface Command {
-  execute(args: string[], options: CommandOptions): Promise<void>;
+export interface ICommand {
+  execute(args: string[], options: ICommandOptions): Promise<void>;
 }

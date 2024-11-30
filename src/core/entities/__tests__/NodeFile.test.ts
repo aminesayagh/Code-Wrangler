@@ -1,12 +1,8 @@
 import { NodeFile } from "../NodeFile";
-import { mockPath, getContent } from "../../../__mocks__/mockFileSystem";
+import { getContent, mockPath } from "../../../__mocks__/mockFileSystem";
 
 class TestFile extends NodeFile {
-  constructor(name: string, pathName: string) {
-    super(name, pathName);
-  }
   public render(): void {
-    console.log("render");
   }
 }
 

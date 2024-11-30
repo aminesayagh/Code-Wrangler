@@ -12,12 +12,6 @@ module.exports = {
   },
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "clover"],
-  collectCoverageForm: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/**/__tests__/**',
-    '!src/**/*.test.ts'
-  ],
   transformIgnorePatterns: [
     '/node_modules/(?!(unified|remark-parse|remark-stringify|unist-util-visit|unist)/)',
   ],

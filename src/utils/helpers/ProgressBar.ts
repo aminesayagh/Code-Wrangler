@@ -12,30 +12,36 @@ export class ProgressBar {
     );
   }
 
-  private simulateProgress() {
+  private simulateProgress(): void {
     const remainingProgress = this.total - this.currentValue;
     const increment = Math.random() * remainingProgress * 0.1;
-    this.currentValue = Math.min(this.currentValue + increment, this.total * 0.95);
+    this.currentValue = Math.min(
+      this.currentValue + increment,
+      this.total * 0.95
+    );
     this.bar.update(this.currentValue);
   }
 
-  start() {
+  start(): ProgressBar {
     this.bar.start(this.total, 0);
     this.intervalId = setInterval(() => this.simulateProgress(), 200);
+    return this;
   }
 
-  update(value: number): void {
+  update(value: number): ProgressBar {
     this.currentValue = value;
     this.bar.update(value);
+    return this;
   }
 
-  stop(): void {
+  stop(): ProgressBar {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
     this.bar.update(this.total);
     this.bar.stop();
+    return this;
   }
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {
@@ -48,7 +54,10 @@ export class ProgressBar {
   }
 }
 
-export async function progressBar(total: number, callback: () => Promise<void>): Promise<void> {
+export async function progressBar(
+  total: number,
+  callback: () => Promise<void>
+): Promise<void> {
   const bar = new ProgressBar(total);
   await bar.execute(async () => {
     await callback();
