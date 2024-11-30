@@ -8,7 +8,7 @@ export const MOCK_PATH = path.resolve("src/__mocks__/root");
 
 export const mockFileSystem: FileSystem = {
   root: {
-    "file1.ts": `export const test = "test 1";`,
+    "file1.ts": `export const test = "test 1";\n`,
     "file2.js": `export const test = "test 2";`,
     dir: {
       "file3.ts": `export const test = "test 3";`,

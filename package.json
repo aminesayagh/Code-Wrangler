@@ -8,7 +8,11 @@
     "build": "node build.js",
     "dev": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js --sourcemap --watch",
     "lint": "eslint . --ext .ts",
-    "test": "jest"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "typecheck": "tsc --noEmit",
+    "ci": "npm run typecheck && npm run lint && npm run test:coverage"
   },
   "bin": {
     "codewrangler": "dist/index.js",
