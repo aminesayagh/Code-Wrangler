@@ -260,10 +260,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## License
 
-MIT © Mohamed Amine SAYAGH, 2024
-
----
+Apache 2.0 License - See [LICENSE](LICENSE) for details.
 
 Built with ❤️ by the CodeWrangler team
 
-For more information, visit our [Documentation](https://codewrangler.dev/docs) or join our [Discord Community](https://discord.gg/codewrangler).
+For more information, visit our [Documentation](https://codewrangler.dev/docs).
