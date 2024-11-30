@@ -260,8 +260,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## License
 
-Apache 2.0 License - See [LICENSE](LICENSE) for details.
+Apache 2.0 License - See [LICENSE](LICENSE.md) for details.
 
 Built with ❤️ by the CodeWrangler team
 
-For more information, visit our [Documentation](https://codewrangler.dev/docs).
+For more information, visit our [Documentation](CONTRIBUTION.md).
