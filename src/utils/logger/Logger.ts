@@ -12,7 +12,7 @@ type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
 export type LogLevelString = keyof typeof LogLevel;
 export const LOG_VALUES = Object.keys(LogLevel) as LogLevelString[];
 
-class Logger {
+export class Logger {
   private static instance: Logger;
   private config: Config | null = null;
 

@@ -46,7 +46,7 @@ export const ConfigSchema = z
     codeConfigFile: z
       .string()
       .regex(/\.json$/, "Config file must end with .json")
-      .default("codewrangler.json"),
+      .default("public/codewrangler.json"),
   })
   .strict();
 
@@ -64,7 +64,7 @@ export const DEFAULT_CONFIG: ConfigOptions = {
   outputFormat: ["markdown"],
   maxFileSize: 1048576,
   maxDepth: 100,
-  codeConfigFile: "codewrangler.json",
+  codeConfigFile: "public/codewrangler.json",
   projectName: undefined,
   followSymlinks: false,
   ignoreHiddenFiles: true, // Default value

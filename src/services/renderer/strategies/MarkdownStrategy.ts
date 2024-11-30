@@ -1,6 +1,6 @@
 import { BaseRenderStrategy } from "../RenderStrategy";
 import { Config } from "../../../utils/config";
-import { OUTPUT_FORMATS } from "../../../utils/config/shema";
+import { OUTPUT_FORMATS } from "../../../utils/config/schema";
 import { NodeFile } from "../../../core/entities/NodeFile";
 
 export class MarkdownStrategy extends BaseRenderStrategy {

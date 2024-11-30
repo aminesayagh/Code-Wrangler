@@ -1,5 +1,18 @@
 # CodeWrangler Architecture Documentation
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Architectural Principles](#architectural-principles)
+- [Branching Strategy](#branching-strategy)
+- [Core Components](#core-components)
+- [Design Patterns](#design-patterns)
+- [Data Flow](#data-flow)
+- [Extension Points](#extension-points)
+- [Configuration](#configuration)
+- [Getting Started for Contributors](#getting-started-for-contributors)
+- [Next Steps](#next-steps)
+
 ## Overview
 
 CodeWrangler is a TypeScript-based library designed to generate documentation from code repositories using regex patterns. It employs a modular architecture that separates concerns into distinct layers, making it both maintainable and extensible.
@@ -237,7 +250,8 @@ When contributing to the codebase:
 
 ## Next Steps
 
-- CLI Documentation
-- Template System Guide
-- Rendering Strategy Guide
-- Configuration Guide
+- [CLI Documentation](./documentation/CLI_DOCUMENTATION.md)
+- [Template System Guide](./documentation/TEMPLATE_SYSTEM_GUIDE.md)
+- [Detailed Class Diagrams and Component Lifecycle](./documentation/DETAILED_CLASS_DIAGRAMS_AND_COMPONENT_LIFECYCLE.md)
+- [Rendering Strategy Guide](./documentation/RENDERING_STRATEGY_GUIDE.md)
+- [Configuration Guide](./documentation/CONFIGURATION_GUIDE.md)

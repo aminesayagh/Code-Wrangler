@@ -6,38 +6,66 @@ import {
   ConfigOptions,
   DEFAULT_CONFIG,
   ConfigKeys,
-} from "./shema";
+} from "./schema";
 
 export class Config {
   private static instance: Config | undefined;
   private config: ConfigOptions;
 
   private constructor() {
-    this.config = this.loodConfig();
+    this.config = ConfigSchema.parse(DEFAULT_CONFIG);
   }
 
-  public static load(): Config {
+  public static async load(): Promise<Config> {
     if (!Config.instance) {
       Config.instance = new Config();
+      await Config.instance.initialize();
     }
     return Config.instance;
   }
-  private loodConfig(): ConfigOptions {
-    const defaultConfig = ConfigSchema.parse(DEFAULT_CONFIG);
-
-    const currentDirConfig = DocumentFactory.join(
-      process.cwd(),
-      defaultConfig.codeConfigFile
-    );
-    if (DocumentFactory.exists(currentDirConfig)) {
-      const userConfig = JSON.parse(
-        DocumentFactory.readFileSync(currentDirConfig)
+  private async initialize(): Promise<Config> {
+    try {
+      const currentDirConfig = DocumentFactory.join(
+        process.cwd(),
+        this.config.codeConfigFile
       );
-      return { ...defaultConfig, ...userConfig };
-    }
 
-    return defaultConfig;
+      if (DocumentFactory.exists(currentDirConfig)) {
+        const fileContent = await DocumentFactory.readFile(currentDirConfig);
+
+        if (!fileContent.trim()) {
+          throw new Error(`Configuration file is empty: ${currentDirConfig}`);
+        }
+
+        let userConfig;
+        try {
+          userConfig = JSON.parse(fileContent);
+        } catch {
+          throw new Error(
+            `Invalid JSON in configuration file: ${currentDirConfig}`
+          );
+        }
+
+        // Validate and merge configurations
+        const validatedConfig = ConfigSchema.parse({
+          ...this.config,
+          ...userConfig,
+        });
+
+        this.config = validatedConfig;
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const details = error.errors
+          .map((err) => `${err.path.join(".")}: ${err.message}`)
+          .join(", ");
+        throw new Error(`Configuration validation failed: ${details}`);
+      }
+      throw error;
+    }
+    return this;
   }
+
   public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
     return this.config[key] as ConfigOptions[T];
   }

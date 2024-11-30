@@ -21,7 +21,15 @@ const defaultProps: PropsNode = {
   },
 };
 
-export abstract class NodeBase {
+interface NodeLifeCycle {
+  validate(): boolean;
+  bundle(deep: number): Promise<void>;
+  render(): void;
+  dispose(): Promise<void>;
+  clone(): Promise<NodeBase>;
+}
+
+export abstract class NodeBase implements NodeLifeCycle {
   protected _props: PropsNode = { ...defaultProps };
 
   constructor(_name: string, _path: string) {
