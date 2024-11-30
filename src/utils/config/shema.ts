@@ -10,17 +10,10 @@ export type OutputFormats = typeof OUTPUT_FORMATS;
 export type OutputFormatName = keyof OutputFormats;
 export type OutputFormatExtension = OutputFormats[OutputFormatName];
 
-const OUTPUT_FORMATS_KEYS = Object.keys(OUTPUT_FORMATS) as OutputFormatName[];
-const OUTPUT_FORMATS_VALUES = Object.values(
-  OUTPUT_FORMATS
-) as OutputFormatExtension[];
+export const OutputFormatSchema = z.enum(["markdown", "html"] as const);
 
-export const OutputFormatSchema = z.enum(
-  OUTPUT_FORMATS_KEYS as [string, ...string[]]
-);
-export const FileExtensionSchema = z.enum(
-  OUTPUT_FORMATS_VALUES as [string, ...string[]]
-);
+export const FileExtensionSchema = z.enum(["md", "html"] as const);
+
 export type OutputFormat = z.infer<typeof OutputFormatSchema>;
 export type FileExtension = z.infer<typeof FileExtensionSchema>;
 
@@ -33,6 +26,7 @@ export const ConfigSchema = z
   .object({
     dir: z.string().default(process.cwd()),
     rootDir: z.string().default(process.cwd()),
+    templatesDir: z.string().default("public/templates"),
     pattern: z
       .string()
       .regex(/^.*$/, "Pattern must be a valid regex")
@@ -63,6 +57,7 @@ export type ConfigKeys = keyof ConfigOptions;
 export const DEFAULT_CONFIG: ConfigOptions = {
   dir: process.cwd(), // current working directory, where the command is run
   rootDir: process.cwd(),
+  templatesDir: "public/templates",
   pattern: ".*",
   outputFile: "output",
   logLevel: "INFO",

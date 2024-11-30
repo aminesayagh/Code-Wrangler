@@ -2,6 +2,8 @@ import { Command, CommandOptions } from "./types";
 import { Config } from "../../utils/config/Config";
 import { logger } from "../../utils/logger/Logger";
 import { DocumentTreeBuilder } from "../../services/builder/DocumentTreeBuilder";
+import { MarkdownStrategy } from "../../services/renderer/strategies/MarkdownStrategy";
+import { HTMLRenderStrategy } from "../../services/renderer/strategies/HTMLStrategy";
 
 export class GenerateCommand implements Command {
   constructor(private config: Config) {}
@@ -32,13 +34,21 @@ export class GenerateCommand implements Command {
       }
 
       // Execute document tree building
-      const builder = new DocumentTreeBuilder(
-        this.config,
-        new RenderStrategy(this.config)
-      );
+      const outputFormat = this.config.get("outputFormat");
+      const renderStrategies = outputFormat.map((format) => {
+        switch (format) {
+          case "markdown":
+            return new MarkdownStrategy(this.config);
+          case "html":
+            return new HTMLRenderStrategy(this.config);
+          default:
+            throw new Error(`Unsupported output format: ${format}`);
+        }
+      });
+      const builder = new DocumentTreeBuilder(this.config, renderStrategies);
       await builder.build();
     } catch (error) {
-      logger.error("Generation failed:", error);
+      logger.error("Generation failed:", error as Error);
       throw error;
     }
   }

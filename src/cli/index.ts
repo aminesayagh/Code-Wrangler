@@ -6,7 +6,11 @@ async function main() {
   try {
     await CodeWrangler.run();
   } catch (error) {
-    logger.error("Error:", error);
+    if (error instanceof Error) {
+      logger.error(error.message);
+    } else {
+      logger.error("An unknown error occurred");
+    }
     process.exit(1);
   }
 }

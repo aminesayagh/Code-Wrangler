@@ -10,7 +10,7 @@ const defaultPropsFile: PropsFile = {
   extension: "",
 };
 
-export abstract class File extends BaseNode {
+export abstract class FileNode extends BaseNode {
   private _propsFile: PropsFile = { ...defaultPropsFile };
   private _content: string | null = null;
 
@@ -63,23 +63,25 @@ export abstract class File extends BaseNode {
   public abstract override render(): void;
 }
 
-export class RenderableFile extends File {
+export class RenderableFile extends FileNode {
   constructor(
     name: string,
     pathName: string,
-    private renderStrategy: RenderStrategy
+    private renderStrategy: RenderStrategy[]
   ) {
     super(name, pathName);
   }
 
   // render
   public render(): void {
-    this.renderStrategy.renderFile(this);
+    this.renderStrategy.map((strategy) => strategy.renderFile(this));
   }
 
   // dispose
   public override async dispose(): Promise<void> {
     await super.dispose();
-    await this.renderStrategy.dispose();
+    await Promise.all(
+      this.renderStrategy.map((strategy) => strategy.dispose())
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { File } from "./File";
+import { FileNode } from "./File";
 import { BaseNode } from "./BaseNode";
 import { RenderStrategy } from "../../services/renderer/RenderStrategy";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
@@ -15,8 +15,8 @@ const defaultPropsDirectory: PropsDirectory = {
   deepLength: 0,
 };
 
-export abstract class Directory extends BaseNode {
-  public children: (File | Directory)[] = [];
+export abstract class DirectoryNode extends BaseNode {
+  public children: (FileNode | DirectoryNode)[] = [];
   private _propsDirectory: PropsDirectory = { ...defaultPropsDirectory };
   private _content: ContentType = [];
 
@@ -56,8 +56,10 @@ export abstract class Directory extends BaseNode {
     };
   }
 
-  public async addChild(child: File | Directory): Promise<Directory> {
-    if (!(child instanceof File || child instanceof Directory)) {
+  public async addChild(
+    child: FileNode | DirectoryNode
+  ): Promise<DirectoryNode> {
+    if (!(child instanceof FileNode || child instanceof DirectoryNode)) {
       throw new Error("Invalid child type");
     }
     this.children.push(child);
@@ -72,12 +74,14 @@ export abstract class Directory extends BaseNode {
     await Promise.all(this.children.map((child) => child.bundle(deep + 1)));
 
     // set the length of the directory
-    this.length = this.children.filter((child) => child instanceof File).length;
+    this.length = this.children.filter(
+      (child) => child instanceof FileNode
+    ).length;
 
     // set the deep length of the directory
     this.deepLength = this.children.reduce(
       (acc, child) =>
-        acc + (child instanceof Directory ? child.deepLength + 1 : 1),
+        acc + (child instanceof DirectoryNode ? child.deepLength + 1 : 1),
       0
     );
 
@@ -91,16 +95,16 @@ export abstract class Directory extends BaseNode {
   public abstract override render(): void;
 }
 
-export class RenderableDirectory extends Directory {
+export class RenderableDirectory extends DirectoryNode {
   constructor(
     name: string,
     pathName: string,
-    private renderStrategy: RenderStrategy
+    private renderStrategy: RenderStrategy[]
   ) {
     super(name, pathName);
   }
 
-  render(): string {
-    return this.renderStrategy.renderDirectory(this);
+  public render(): void {
+    this.renderStrategy.map((strategy) => strategy.renderDirectory(this));
   }
 }

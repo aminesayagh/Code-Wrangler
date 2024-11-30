@@ -9,11 +9,8 @@ import { FileType } from "../../types/type";
 export class DocumentTreeBuilder {
   private root: RenderableDirectory | RenderableFile | undefined;
   private builder: FileTreeBuilder;
-  private renderStrategy: RenderStrategy;
-
-  constructor(config: Config, renderStrategy: RenderStrategy) {
+  constructor(config: Config, private renderStrategy: RenderStrategy[]) {
     this.builder = new FileTreeBuilder(config);
-    this.renderStrategy = renderStrategy;
   }
 
   async build(): Promise<void> {

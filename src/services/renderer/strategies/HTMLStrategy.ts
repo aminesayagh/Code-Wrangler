@@ -1,5 +1,6 @@
 import { BaseRenderStrategy } from "../RenderStrategy";
 import { Config } from "../../../utils/config";
+import { FileNode } from "../../../core/entities/File";
 import { OUTPUT_FORMATS } from "../../../utils/config/shema";
 
 export class HTMLRenderStrategy extends BaseRenderStrategy {
@@ -7,10 +8,7 @@ export class HTMLRenderStrategy extends BaseRenderStrategy {
     super(config, OUTPUT_FORMATS.html);
   }
 
-  protected async processCodeBlock(
-    content: string,
-    language: string
-  ): Promise<string> {
+  protected processCodeBlock(content: string, language: string): string {
     return `<pre><code class="language-${language}">${this.escapeHtml(
       content
     )}</code></pre>`;
@@ -25,7 +23,7 @@ export class HTMLRenderStrategy extends BaseRenderStrategy {
       .replace(/'/g, "&#039;");
   }
 
-  public override renderFile(file: File): string {
+  public override renderFile(file: FileNode): string {
     const rendered = super.renderFile(file);
     return this.processCodeBlock(rendered, file.extension.replace(".", ""));
   }
