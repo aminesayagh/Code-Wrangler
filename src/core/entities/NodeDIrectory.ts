@@ -1,5 +1,5 @@
-import { FileNode } from "./File";
-import { BaseNode } from "./BaseNode";
+import { NodeFile } from "./NodeFile";
+import { NodeBase } from "./NodeBase";
 import { RenderStrategy } from "../../services/renderer/RenderStrategy";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 
@@ -15,8 +15,8 @@ const defaultPropsDirectory: PropsDirectory = {
   deepLength: 0,
 };
 
-export abstract class DirectoryNode extends BaseNode {
-  public children: (FileNode | DirectoryNode)[] = [];
+export abstract class NodeDirectory extends NodeBase {
+  public children: (NodeFile | NodeDirectory)[] = [];
   private _propsDirectory: PropsDirectory = { ...defaultPropsDirectory };
   private _content: ContentType = [];
 
@@ -57,9 +57,9 @@ export abstract class DirectoryNode extends BaseNode {
   }
 
   public async addChild(
-    child: FileNode | DirectoryNode
-  ): Promise<DirectoryNode> {
-    if (!(child instanceof FileNode || child instanceof DirectoryNode)) {
+    child: NodeFile | NodeDirectory
+  ): Promise<NodeDirectory> {
+    if (!(child instanceof NodeFile || child instanceof NodeDirectory)) {
       throw new Error("Invalid child type");
     }
     this.children.push(child);
@@ -75,13 +75,13 @@ export abstract class DirectoryNode extends BaseNode {
 
     // set the length of the directory
     this.length = this.children.filter(
-      (child) => child instanceof FileNode
+      (child) => child instanceof NodeFile
     ).length;
 
     // set the deep length of the directory
     this.deepLength = this.children.reduce(
       (acc, child) =>
-        acc + (child instanceof DirectoryNode ? child.deepLength + 1 : 1),
+        acc + (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
       0
     );
 
@@ -95,7 +95,7 @@ export abstract class DirectoryNode extends BaseNode {
   public abstract override render(): void;
 }
 
-export class RenderableDirectory extends DirectoryNode {
+export class RenderableDirectory extends NodeDirectory {
   constructor(
     name: string,
     pathName: string,

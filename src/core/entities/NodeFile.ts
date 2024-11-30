@@ -1,5 +1,5 @@
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-import { BaseNode } from "./BaseNode";
+import { NodeBase } from "./NodeBase";
 import { RenderStrategy } from "../../services/renderer/RenderStrategy";
 
 interface PropsFile {
@@ -10,7 +10,7 @@ const defaultPropsFile: PropsFile = {
   extension: "",
 };
 
-export abstract class FileNode extends BaseNode {
+export abstract class NodeFile extends NodeBase {
   private _propsFile: PropsFile = { ...defaultPropsFile };
   private _content: string | null = null;
 
@@ -63,7 +63,7 @@ export abstract class FileNode extends BaseNode {
   public abstract override render(): void;
 }
 
-export class RenderableFile extends FileNode {
+export class RenderableFile extends NodeFile {
   constructor(
     name: string,
     pathName: string,

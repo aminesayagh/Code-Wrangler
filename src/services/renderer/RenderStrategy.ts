@@ -1,8 +1,8 @@
-import { FileNode } from "../../core/entities/File";
-import { DirectoryNode } from "../../core/entities/Directory";
+import { NodeFile } from "../../core/entities/NodeFile";
+import { NodeDirectory } from "../../core/entities/NodeDIrectory";
 import { Config, OutputFormatExtension } from "../../utils/config";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-import { Template } from "../../infrastructure/templates/Template";
+import { Template } from "../../infrastructure/templates/TemplateEngine";
 import {
   BaseTemplateSchema,
   FileTemplateSchema,
@@ -14,8 +14,8 @@ import {
 import { TemplateType } from "../../types/template";
 
 interface ContentRenderer {
-  renderFile(file: FileNode): string;
-  renderDirectory(directory: DirectoryNode): string;
+  renderFile(file: NodeFile): string;
+  renderDirectory(directory: NodeDirectory): string;
 }
 
 interface TemplateLoader {
@@ -23,7 +23,7 @@ interface TemplateLoader {
 }
 
 interface DocumentRenderer {
-  render(rootDirectory: DirectoryNode): Promise<string>;
+  render(rootDirectory: NodeDirectory): Promise<string>;
   dispose(): Promise<void>;
 }
 
@@ -76,7 +76,7 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
     };
   }
 
-  public renderFile(file: FileNode): string {
+  public renderFile(file: NodeFile): string {
     if (!this.templates.file) {
       throw new Error("File template is not loaded");
     }
@@ -88,11 +88,11 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
     });
   }
 
-  public renderDirectory(directory: DirectoryNode): string {
+  public renderDirectory(directory: NodeDirectory): string {
     const content = directory.children
       .map(
         (child) =>
-          child instanceof FileNode
+          child instanceof NodeFile
             ? this.renderFile(child)
             : this.renderDirectory(child) // save the rendering result on the object after bundling execution
       )
@@ -120,7 +120,7 @@ export abstract class BaseRenderStrategy implements RenderStrategy {
     });
   }
 
-  public async render(rootDirectory: DirectoryNode): Promise<string> {
+  public async render(rootDirectory: NodeDirectory): Promise<string> {
     const directoryContent = this.renderDirectory(rootDirectory);
     if (!this.templates.page) {
       throw new Error("Page template is not loaded");

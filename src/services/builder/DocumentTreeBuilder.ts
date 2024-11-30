@@ -1,6 +1,6 @@
 import { FileTreeBuilder, FileTreeNode } from "./FileTreeBuilder";
-import { RenderableDirectory } from "../../core/entities/Directory";
-import { RenderableFile } from "../../core/entities/File";
+import { RenderableDirectory } from "../../core/entities/NodeDIrectory";
+import { RenderableFile } from "../../core/entities/NodeFile";
 import { RenderStrategy } from "../renderer/RenderStrategy";
 import { Config } from "../../utils/config";
 import { logger } from "../../utils/logger";

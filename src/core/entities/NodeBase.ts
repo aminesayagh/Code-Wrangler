@@ -21,7 +21,7 @@ const defaultProps: PropsNode = {
   },
 };
 
-export abstract class BaseNode {
+export abstract class NodeBase {
   protected _props: PropsNode = { ...defaultProps };
 
   constructor(_name: string, _path: string) {
@@ -111,7 +111,7 @@ export abstract class BaseNode {
     this._props = { ...defaultProps };
   }
 
-  public async clone(): Promise<BaseNode> {
+  public async clone(): Promise<NodeBase> {
     return Object.assign(Object.create(this), this);
   }
 }
