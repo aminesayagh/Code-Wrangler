@@ -142,6 +142,14 @@ classDiagram
         +shouldExclude(fileName: string): boolean
     }
 
+    class BaseRenderStrategy {
+        <<abstract>>
+        -config: Config
+        -extension: OutputFormatExtension
+        -templates: Record~TemplateType, Template~
+        +constructor(config: Config, extension: OutputFormatExtension)
+    }
+
     %% Relationships
     NodeLifeCycle <|-- NodeBase: implements
     NodeBase <|-- NodeFile: extends
@@ -153,8 +161,9 @@ classDiagram
     FileStats .. FilePermissions: implements
     FileTreeBuilder o-- FileHidden: uses
     DocumentTreeBuilder o-- FileTreeBuilder: uses
-    RenderableFile o-- RenderStrategy: uses
-    RenderableDirectory o-- RenderStrategy: uses
+    RenderableFile o-- BaseRenderStrategy: extends
+    RenderableDirectory o-- BaseRenderStrategy: extends
+    BaseRenderStrategy <|-- RenderStrategy: implements
     NodeDirectory o-- NodeFile: contains
     NodeDirectory o-- NodeDirectory: contains
 ```
