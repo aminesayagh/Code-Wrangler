@@ -263,7 +263,7 @@ async function generateDocumentation(
 if (require.main === module) {
   generateDocumentation({
     pattern: /\.ts$/,
-    outputPath: "documentation.md",
+    outputPath: "demo.md",
     ignoreHidden: true,
     excludePatterns: [
       "node_modules/**",
