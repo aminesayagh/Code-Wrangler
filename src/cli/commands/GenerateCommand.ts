@@ -1,11 +1,11 @@
-import { Command, CommandOptions } from "./types";
+import { ICommand, ICommandOptions } from "./types";
 import { Config } from "../../utils/config/Config";
 import { logger } from "../../utils/logger/Logger";
 import { DocumentTreeBuilder } from "../../services/builder/DocumentTreeBuilder";
 import { MarkdownStrategy } from "../../services/renderer/strategies/MarkdownStrategy";
 import { HTMLRenderStrategy } from "../../services/renderer/strategies/HTMLStrategy";
 
-export class GenerateCommand implements Command {
+export class GenerateCommand implements ICommand {
   constructor(private config: Config) {}
 
   private logVerbose(): void {
@@ -23,7 +23,7 @@ export class GenerateCommand implements Command {
     logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
   }
 
-  async execute(args: string[], options: CommandOptions): Promise<void> {
+  async execute(args: string[], options: ICommandOptions): Promise<void> {
     try {
       // Override config with command options
       this.config.override({ ...options, pattern: args[0] });

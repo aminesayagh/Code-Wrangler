@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { Config } from "../utils/config/Config";
 import { GenerateCommand } from "./commands/GenerateCommand";
 import { ProgramBuilder } from "./program/ProgramBuilder";
-import { CommandOptions } from "./commands/types";
+import { ICommandOptions } from "./commands/types";
 
 export class CodeWrangler {
   private static instance: CodeWrangler | undefined;
@@ -20,7 +20,7 @@ export class CodeWrangler {
   }
 
   private setupCommands(): void {
-    this.program.action(async (pattern: string, options: CommandOptions) => {
+    this.program.action(async (pattern: string, options: ICommandOptions) => {
       await this.generateCommand.execute([pattern], options);
     });
   }

@@ -4,35 +4,35 @@ import { Config, OutputFormatExtension } from "../../utils/config";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import { Template } from "../../infrastructure/templates/TemplateEngine";
 import {
-  BaseTemplateSchema,
-  FileTemplateSchema,
-  DirectoryTemplateSchema,
   BaseTemplate,
-  FileTemplate,
+  BaseTemplateSchema,
   DirectoryTemplate,
+  DirectoryTemplateSchema,
+  FileTemplate,
+  FileTemplateSchema,
 } from "../../infrastructure/templates/zod";
 import { TemplateType } from "../../types/template";
 
-interface ContentRenderer {
+interface IContentRenderer {
   renderFile(file: NodeFile): string;
   renderDirectory(directory: NodeDirectory): string;
 }
 
-interface TemplateLoader {
+interface ITemplateLoader {
   loadTemplates(): Promise<void>;
 }
 
-interface DocumentRenderer {
+interface IDocumentRenderer {
   render(rootDirectory: NodeDirectory): Promise<string>;
   dispose(): Promise<void>;
 }
 
-export interface RenderStrategy
-  extends ContentRenderer,
-    TemplateLoader,
-    DocumentRenderer {}
+export interface IRenderStrategy
+  extends IContentRenderer,
+    ITemplateLoader,
+    IDocumentRenderer {}
 
-export abstract class BaseRenderStrategy implements RenderStrategy {
+export abstract class BaseRenderStrategy implements IRenderStrategy {
   protected extension: OutputFormatExtension;
   protected templates: Record<TemplateType, Template | null>;
   protected config: Config;

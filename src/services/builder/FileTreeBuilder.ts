@@ -1,16 +1,16 @@
 import { Config, ConfigOptions } from "../../utils/config";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import { FileType } from "../../types/type";
-import { minimatch } from "minimatch";
+import FileHidden from "./FileHidden";
 
-export interface FileTreeNode {
+export interface IFileTreeNode {
   name: string;
   path: string;
   type: FileType;
-  children?: FileTreeNode[];
+  children?: IFileTreeNode[];
 }
 
-export interface FileTreeBuilderOptions
+export interface IFileTreeBuilderOptions
   extends Pick<
     ConfigOptions,
     | "additionalIgnoreFiles"
@@ -23,38 +23,9 @@ export interface FileTreeBuilderOptions
   returnType: "paths" | "details";
 }
 
-class FileHidden {
-  private ignoreHiddenFiles: boolean;
-  private patterns: string[];
-  private additionalIgnoreFiles: string[];
-
-  constructor(config: Config) {
-    this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
-    this.patterns = [...config.get("excludePatterns")];
-    this.additionalIgnoreFiles = config.get("additionalIgnoreFiles");
-  }
-
-  public shouldExclude(fileName: string): boolean {
-    if (this.ignoreHiddenFiles && fileName.startsWith(".")) {
-      return true;
-    }
-
-    if (this.patterns.some((pattern) => minimatch(fileName, pattern))) {
-      return true;
-    }
-
-    if (this.additionalIgnoreFiles.some((file) => minimatch(fileName, file))) {
-      // Additional ignore files are always excluded
-      return true;
-    }
-
-    return false;
-  }
-}
-
 export class FileTreeBuilder {
   private config: Config;
-  private options: FileTreeBuilderOptions;
+  private options: IFileTreeBuilderOptions;
   private fileHidden: FileHidden;
 
   constructor(config: Config) {
@@ -63,7 +34,7 @@ export class FileTreeBuilder {
     this.fileHidden = new FileHidden(config);
   }
 
-  private initializeOptions(): FileTreeBuilderOptions {
+  private initializeOptions(): IFileTreeBuilderOptions {
     return {
       dir: this.config.get("dir"),
       pattern: new RegExp(this.config.get("pattern")),
@@ -74,7 +45,7 @@ export class FileTreeBuilder {
       followSymlinks: false,
     };
   }
-  public async build(): Promise<FileTreeNode> {
+  public async build(): Promise<IFileTreeNode> {
     const rootDir = this.options.dir;
     if (!DocumentFactory.exists(rootDir)) {
       throw new Error(`Directory ${rootDir} does not exist`);
@@ -85,15 +56,17 @@ export class FileTreeBuilder {
   private async buildTree(
     nodePath: string,
     depth: number = 0
-  ): Promise<FileTreeNode> {
+  ): Promise<IFileTreeNode> {
     const stats = await DocumentFactory.getStats(nodePath);
     const name = DocumentFactory.baseName(nodePath);
 
-    const node: FileTreeNode = {
+    console.log(name, stats);
+    const node: IFileTreeNode = {
       name,
       path: nodePath,
       type: stats.isDirectory ? FileType.Directory : FileType.File,
     };
+    console.log(node);
 
     if (stats.isDirectory) {
       // Check depth limit
@@ -106,7 +79,7 @@ export class FileTreeBuilder {
 
       // Read directory entries
       const entries = await DocumentFactory.readDir(nodePath);
-      const children: FileTreeNode[] = [];
+      const children: IFileTreeNode[] = [];
 
       for (const entry of entries) {
         const childPath = DocumentFactory.join(nodePath, entry);

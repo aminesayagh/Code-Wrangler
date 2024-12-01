@@ -1,21 +1,21 @@
 import { NodeFile } from "./NodeFile";
 import { NodeBase } from "./NodeBase";
-import { RenderStrategy } from "../../services/renderer/RenderStrategy";
+import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 
-interface PropsDirectory {
+interface IPropsDirectory {
   length: number;
   deepLength: number;
 }
 
-const defaultPropsDirectory: PropsDirectory = {
+const defaultPropsDirectory: IPropsDirectory = {
   length: 0,
   deepLength: 0,
 };
 
 export abstract class NodeDirectory extends NodeBase {
   public children: (NodeFile | NodeDirectory)[] = [];
-  private _propsDirectory: PropsDirectory = { ...defaultPropsDirectory };
+  private _propsDirectory: IPropsDirectory = { ...defaultPropsDirectory };
 
   public constructor(name: string, pathName: string) {
     super(name, pathName);
@@ -89,7 +89,7 @@ export class RenderableDirectory extends NodeDirectory {
   constructor(
     name: string,
     pathName: string,
-    private renderStrategy: RenderStrategy[]
+    private renderStrategy: IRenderStrategy[]
   ) {
     super(name, pathName);
   }

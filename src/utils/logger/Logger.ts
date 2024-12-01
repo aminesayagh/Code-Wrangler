@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import colors from "colors";
 import { Config } from "../config/Config";
 
@@ -23,13 +24,15 @@ export class Logger {
     }
     return Logger.instance;
   }
-  public setConfig(config: Config) {
+  public setConfig(config: Config): Logger {
     this.config = config;
+    return this;
   }
-  public setLogLevel(logLevel: LogLevelString) {
+  public setLogLevel(logLevel: LogLevelString): Logger {
     if (this.config) {
       this.config.set("logLevel", logLevel);
     }
+    return this;
   }
 
   private get logLevel(): LogLevel {
@@ -39,7 +42,7 @@ export class Logger {
     return configLogLevel ? LogLevel[configLogLevel] : LogLevel.ERROR;
   }
 
-  public error(message: string, error?: Error, ...other: unknown[]) {
+  public error(message: string, error?: Error, ...other: unknown[]): void {
     if (this.logLevel >= LogLevel.ERROR) {
       console.log(colors.red(`[ERROR] ${message}`), ...other);
       if (error instanceof Error && error.stack) {
@@ -48,29 +51,29 @@ export class Logger {
     }
   }
 
-  public warn(message: string) {
+  public warn(message: string): void {
     if (this.logLevel >= LogLevel.WARN) {
       console.log(colors.yellow(`[WARN] ${message}`));
     }
   }
 
-  public info(message: string) {
+  public info(message: string): void {
     if (this.logLevel >= LogLevel.INFO) {
       console.log(colors.blue(`[INFO] ${message}`));
     }
   }
 
-  public debug(message: string) {
+  public debug(message: string): void {
     if (this.logLevel >= LogLevel.DEBUG) {
       console.log(colors.gray(`[DEBUG] ${message}`));
     }
   }
 
-  public success(message: string) {
+  public success(message: string): void {
     console.log(colors.green(message));
   }
 
-  public log(message: string) {
+  public log(message: string): void {
     console.log(message);
   }
 }

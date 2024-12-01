@@ -3,21 +3,13 @@ import { NodeFile } from "../NodeFile";
 import { mockPath } from "../../../__mocks__/mockFileSystem";
 
 class TestDirectory extends NodeDirectory {
-  constructor(name: string, pathName: string) {
-    super(name, pathName);
-  }
   render(): string {
     return "render";
   }
 }
 
 class TestFile extends NodeFile {
-  constructor(name: string, pathName: string) {
-    super(name, pathName);
-  }
-  public render(): void {
-    console.log("render");
-  }
+  public render(): void {}
 }
 
 describe("Directory", () => {

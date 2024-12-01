@@ -96,6 +96,21 @@ describe("NodeBase", () => {
       expect(node.size).toBe(0);
       expect(node.name).toBe("");
       expect(node.path).toBe("");
+      expect(node.stats).toEqual(
+        expect.objectContaining({
+          size: expect.any(Number),
+          isDirectory: false,
+          isFile: false,
+          created: expect.any(Date),
+          accessed: expect.any(Date),
+          modified: expect.any(Date),
+          permissions: {
+            executable: false,
+            readable: false,
+            writable: false,
+          },
+        })
+      );
     });
 
     it("should clone correctly", async () => {
