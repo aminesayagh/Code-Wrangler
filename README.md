@@ -6,6 +6,7 @@ CodeWrangler is an extensible documentation automation platform that transforms 
 
 - [Overview](#overview)
 - [Key Features](#key-features)
+- [Demo](#demo)
 - [Quick Start](#quick-start)
 - [Template System](#template-system)
 - [Command Line Interface](#command-line-interface)
@@ -27,6 +28,12 @@ CodeWrangler streamlines the process of generating comprehensive documentation f
 - 📦 **Template Engine**: Flexible template system supporting multiple output formats and custom variables
 - ⚡ **High Performance**: Parallel processing and caching capabilities for efficient handling of large repositories
 - 🔄 **Incremental Updates**: Smart change detection for efficient documentation maintenance
+
+## Development Status and Demo
+
+This library is currently in active development. The core functionality has been implemented, but there are still some features and improvements that are in progress. We welcome any feedback or contributions from the community as we work towards a stable release.
+
+![Demo](./demo.md)
 
 ## Quick Start
 
