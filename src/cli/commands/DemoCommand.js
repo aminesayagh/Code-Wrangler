@@ -353,7 +353,6 @@ if (require.main === module) {
         excludePatterns: [
             "node_modules/**",
             "**/dist/**",
-            "**/*.test.ts",
             "coverage/**",
         ],
     }).catch(console.error);

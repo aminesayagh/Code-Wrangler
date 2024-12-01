@@ -1,7 +1,7 @@
 import { Config, ConfigOptions } from "../../utils/config";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import { FileType } from "../../types/type";
-import { minimatch } from "minimatch";
+import FileHidden from "./FileHidden";
 
 export interface IFileTreeNode {
   name: string;
@@ -21,35 +21,6 @@ export interface IFileTreeBuilderOptions
   > {
   pattern: RegExp;
   returnType: "paths" | "details";
-}
-
-class FileHidden {
-  private ignoreHiddenFiles: boolean;
-  private patterns: string[];
-  private additionalIgnoreFiles: string[];
-
-  constructor(config: Config) {
-    this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
-    this.patterns = [...config.get("excludePatterns")];
-    this.additionalIgnoreFiles = config.get("additionalIgnoreFiles");
-  }
-
-  public shouldExclude(fileName: string): boolean {
-    if (this.ignoreHiddenFiles && fileName.startsWith(".")) {
-      return true;
-    }
-
-    if (this.patterns.some((pattern) => minimatch(fileName, pattern))) {
-      return true;
-    }
-
-    if (this.additionalIgnoreFiles.some((file) => minimatch(fileName, file))) {
-      // Additional ignore files are always excluded
-      return true;
-    }
-
-    return false;
-  }
 }
 
 export class FileTreeBuilder {
@@ -89,11 +60,13 @@ export class FileTreeBuilder {
     const stats = await DocumentFactory.getStats(nodePath);
     const name = DocumentFactory.baseName(nodePath);
 
+    console.log(name, stats);
     const node: IFileTreeNode = {
       name,
       path: nodePath,
       type: stats.isDirectory ? FileType.Directory : FileType.File,
     };
+    console.log(node);
 
     if (stats.isDirectory) {
       // Check depth limit
