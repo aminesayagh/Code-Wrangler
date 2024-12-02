@@ -13,13 +13,14 @@ concurrency:
 
 jobs:
   test:
-    name: Test on Node ${{ matrix.node }} and ${{ matrix.os }}
+    name: Test on Node ${{ matrix.node }} and ${{ matrix.os }} (${{ matrix.typescript }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         node: [18.x, 20.x]
         os: [ubuntu-latest, windows-latest, macOS-latest]
         typescript: [4.9.x, 5.5.x, 5.6.x]
+      fail-fast: false # run all tests even if some fail
 
     env:
       ESLINT_USE_FLAT_CONFIG: true
@@ -34,8 +35,14 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: "npm"
 
+      - name: Cache TypeScript
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm/typescript
+          key: typescript-${{ matrix.typescript }}
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Install TypeScript
         run: npm install -g typescript@${{ matrix.typescript }}
@@ -47,7 +54,16 @@ jobs:
         run: npm run build
 
       - name: Run tests with coverage
-        run: npm run test -- --coverage
+        run: npm run test -- --coverage --coverageThreshold='{"global":{"branches":80,"functions":80,"lines":80,"statements":80}}'
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}-node-${{ matrix.node }}-ts-${{ matrix.typescript }}
+          path: |
+            coverage/
+            junit.xml
+          if-no-files-found: warn
 
   build:
     name: Build package
@@ -76,3 +92,10 @@ jobs:
           name: dist
           path: dist/
           if-no-files-found: error
+
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: build-${{ github.sha }}

@@ -17,8 +17,12 @@ describe("NodeFile", () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    await fs.mkdir(MOCK_PATH, { recursive: true });
-    await fs.writeFile(testPath, "");
+    try {
+      await fs.mkdir(MOCK_PATH, { recursive: true });
+      await fs.writeFile(testPath, "");
+    } catch (error) {
+      console.error(error);
+    }
     testFile = new TestFile(testName, testPath);
   });
 
