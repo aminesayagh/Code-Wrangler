@@ -39,6 +39,8 @@ This library is currently in active development. The core functionality has been
 
 ### Installation
 
+Supports Node.js 18.x and above
+
 ```bash
 npm install -g codewrangler
 ```

@@ -7,14 +7,21 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Test on Node ${{ matrix.node }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: [16.x, 18.x, 20.x]
+        node: [18.x, 20.x]
         os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    env:
+      ESLINT_USE_FLAT_CONFIG: true
 
     steps:
       - name: Checkout repository
