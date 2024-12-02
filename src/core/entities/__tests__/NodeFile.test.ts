@@ -44,21 +44,21 @@ describe("NodeFile", () => {
       });
     });
 
-      it("Bundle method sets content correctly", async () => {
+    it("Bundle method sets content correctly", async () => {
       await testFile.bundle();
       const content = "";
       expect(testFile.content).toBe(content);
     });
 
     it("Check props value after bundle", async () => {
-    await testFile.bundle();
-    const props = testFile.props;
-    expect(props).toMatchObject({
-      name: expect.any(String),
-      path: expect.any(String),
-      deep: expect.any(Number),
-      size: expect.any(Number),
-      extension: expect.any(String)
+      await testFile.bundle();
+      const props = testFile.props;
+      expect(props).toMatchObject({
+        name: expect.any(String),
+        path: expect.any(String),
+        deep: expect.any(Number),
+        size: expect.any(Number),
+        extension: expect.any(String)
       });
     });
   });

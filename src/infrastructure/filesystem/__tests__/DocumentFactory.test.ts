@@ -116,10 +116,9 @@ describe("DocumentFactory", () => {
     });
 
     it("should read file with custom escoding", async () => {
-      const content = await DocumentFactory.readFile(
-        testFilePath,
-        { encoding: "utf-8" }
-      );
+      const content = await DocumentFactory.readFile(testFilePath, {
+        encoding: "utf-8"
+      });
       expect(content).toBeDefined();
       expect(content).toBeTruthy();
       expect(typeof content).toBe("string");
@@ -259,10 +258,7 @@ describe("DocumentFactory", () => {
     });
 
     it("should copy a file", async () => {
-      await DocumentFactory.copy(
-        testFilePath,
-        path.join(tempDir, "file1.ts")
-      );
+      await DocumentFactory.copy(testFilePath, path.join(tempDir, "file1.ts"));
       expect(await DocumentFactory.exists(path.join(tempDir, "file1.ts"))).toBe(
         true
       );
