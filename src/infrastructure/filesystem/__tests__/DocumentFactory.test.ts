@@ -1,24 +1,32 @@
 import * as path from "path";
 import * as fs from "fs/promises";
 
-import { MOCK_PATH } from "../../../__mocks__/mockFileSystem";
 import { DocumentFactory } from "../DocumentFactory";
 import { FileType } from "../../../types/type";
 
 describe("DocumentFactory", () => {
+  const pwd = process.cwd();
+  const MOCK_PATH = path.resolve(`${pwd}/__mocks__`);
   const tempDir = path.join(MOCK_PATH, "temp_test");
   const testFilePath = path.join(tempDir, "test.txt");
+  const emptyFilePath = path.join(tempDir, "empty.txt");
   const testContent = "test content";
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
+    await fs.mkdir(MOCK_PATH, { recursive: true });
+    await fs.mkdir(tempDir, { recursive: true });
+    await fs.writeFile(testFilePath, testContent);
+    await fs.writeFile(emptyFilePath, "");
+  });
+
+  afterEach(async () => {
+    await fs.rm(MOCK_PATH, { recursive: true });
   });
 
   describe("type", () => {
     it('should return "file" for a file path', async () => {
-      const result = await DocumentFactory.type(
-        path.join(MOCK_PATH, "file1.ts")
-      );
+      const result = await DocumentFactory.type(testFilePath);
       expect(result).toBe(FileType.File);
     });
 
@@ -44,9 +52,7 @@ describe("DocumentFactory", () => {
 
   describe("size", () => {
     it("should return the size of a file", async () => {
-      const result = await DocumentFactory.size(
-        path.join(MOCK_PATH, "file1.ts")
-      );
+      const result = await DocumentFactory.size(testFilePath);
       expect(result).toStrictEqual(expect.any(Number));
     });
 
@@ -63,17 +69,13 @@ describe("DocumentFactory", () => {
     });
 
     it("should throw a zero size if the file is empty", async () => {
-      const result = await DocumentFactory.size(
-        path.join(MOCK_PATH, "empty.txt")
-      );
+      const result = await DocumentFactory.size(emptyFilePath);
       expect(result).toBe(0);
     });
   });
   describe("getStats", () => {
     it("should return complete file statistics", async () => {
-      const stats = await DocumentFactory.getStats(
-        path.join(MOCK_PATH, "file1.ts")
-      );
+      const stats = await DocumentFactory.getStats(testFilePath);
       expect(stats).toMatchObject({
         size: expect.any(Number),
         created: expect.any(Object),
@@ -107,9 +109,7 @@ describe("DocumentFactory", () => {
 
   describe("readFile", () => {
     it("should read file content iwth default options", async () => {
-      const content = await DocumentFactory.readFile(
-        path.join(MOCK_PATH, "file1.ts")
-      );
+      const content = await DocumentFactory.readFile(testFilePath);
       expect(content).toBeDefined();
       expect(content).toBeTruthy();
       expect(typeof content).toBe("string");
@@ -117,7 +117,7 @@ describe("DocumentFactory", () => {
 
     it("should read file with custom escoding", async () => {
       const content = await DocumentFactory.readFile(
-        path.join(MOCK_PATH, "file1.ts"),
+        testFilePath,
         { encoding: "utf-8" }
       );
       expect(content).toBeDefined();
@@ -166,7 +166,7 @@ describe("DocumentFactory", () => {
 
   describe("exists", () => {
     it("should return true for existing file", () => {
-      const exists = DocumentFactory.exists(path.join(MOCK_PATH, "file1.ts"));
+      const exists = DocumentFactory.exists(testFilePath);
       expect(exists).toBe(true);
     });
 
@@ -260,7 +260,7 @@ describe("DocumentFactory", () => {
 
     it("should copy a file", async () => {
       await DocumentFactory.copy(
-        path.join(MOCK_PATH, "file1.ts"),
+        testFilePath,
         path.join(tempDir, "file1.ts")
       );
       expect(await DocumentFactory.exists(path.join(tempDir, "file1.ts"))).toBe(
