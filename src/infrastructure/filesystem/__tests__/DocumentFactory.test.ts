@@ -6,7 +6,9 @@ import { FileType } from "../../../types/type";
 
 describe("DocumentFactory", () => {
   const pwd = process.cwd();
-  const MOCK_PATH = path.resolve(`${pwd}/__mocks__`);
+  const MOCK_PATH = path.resolve(
+    `${pwd}/src/infrastructure/filesystem/__tests__/__mocks__`
+  );
   const tempDir = path.join(MOCK_PATH, "temp_test");
   const testFilePath = path.join(tempDir, "test.txt");
   const emptyFilePath = path.join(tempDir, "empty.txt");

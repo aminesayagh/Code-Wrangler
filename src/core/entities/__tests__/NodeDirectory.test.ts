@@ -16,9 +16,12 @@ class TestFile extends NodeFile {
 describe("Directory", () => {
   let testDirectory: TestDirectory;
   const pwd = process.cwd();
-  const MOCK_PATH = path.resolve(`${pwd}/__mocks__`);
+  const MOCK_PATH = path.resolve(
+    `${pwd}/src/core/entities/__tests__/__mocks__`
+  );
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     await fs.mkdir(MOCK_PATH, { recursive: true });
     await fs.mkdir(path.join(MOCK_PATH, "dir"), { recursive: true });
     testDirectory = new TestDirectory("dir", path.join(MOCK_PATH, "dir"));

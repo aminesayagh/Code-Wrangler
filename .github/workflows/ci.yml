@@ -19,6 +19,7 @@ jobs:
       matrix:
         node: [18.x, 20.x]
         os: [ubuntu-latest, windows-latest, macOS-latest]
+        typescript: [4.9.x, 5.5.x, 5.6.x]
 
     env:
       ESLINT_USE_FLAT_CONFIG: true
@@ -28,16 +29,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
+
+      - name: Install TypeScript
+        run: npm install -g typescript@${{ matrix.typescript }}
 
       - name: Run linting
         run: npm run lint
+
+      - name: Run build
+        run: npm run build
 
       - name: Run tests with coverage
         run: npm run test -- --coverage

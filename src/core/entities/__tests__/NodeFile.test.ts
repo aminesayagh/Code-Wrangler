@@ -9,15 +9,17 @@ class TestFile extends NodeFile {
 describe("NodeFile", () => {
   let testFile: TestFile;
   const pwd = process.cwd();
-  const MOCK_PATH = path.resolve(`${pwd}/__mocks__`);
+  const MOCK_PATH = path.resolve(
+    `${pwd}/src/core/entities/__tests__/__mocks__`
+  );
   const testName = "file1.ts";
   const testPath = path.join(MOCK_PATH, testName);
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     await fs.mkdir(MOCK_PATH, { recursive: true });
     await fs.writeFile(testPath, "");
     testFile = new TestFile(testName, testPath);
-    jest.clearAllMocks();
   });
 
   afterEach(async () => {

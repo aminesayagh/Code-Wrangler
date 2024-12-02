@@ -40,7 +40,7 @@ describe("NodeBase", () => {
     it("should throw error for non-existent path", () => {
       (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
       expect(() => new TestNode("test", "/invalid/path")).toThrow(
-        "Path does not exist"
+        "Path /invalid/path does not exist"
       );
     });
 
