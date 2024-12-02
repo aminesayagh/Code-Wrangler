@@ -10,7 +10,7 @@ describe("NodeFile", () => {
   let testFile: TestFile;
   const pwd = process.cwd();
   const MOCK_PATH = path.resolve(
-    `${pwd}/src/core/entities/__tests__/__mocks__`
+    `${pwd}/src/core/entities/__tests__/__node_file_mocks__`
   );
   const testName = "file1.ts";
   const testPath = path.join(MOCK_PATH, testName);

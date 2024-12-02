@@ -17,7 +17,7 @@ describe("Directory", () => {
   let testDirectory: TestDirectory;
   const pwd = process.cwd();
   const MOCK_PATH = path.resolve(
-    `${pwd}/src/core/entities/__tests__/__mocks__`
+    `${pwd}/src/core/entities/__tests__/__node_directory_mocks__`
   );
 
   beforeEach(async () => {
