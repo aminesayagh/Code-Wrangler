@@ -42,13 +42,6 @@ jobs:
       - name: Run tests with coverage
         run: npm run test -- --coverage
 
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: matrix.os == 'ubuntu-latest' && matrix.node == '20.x'
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
-
   build:
     name: Build package
     needs: test
