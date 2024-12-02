@@ -1,10 +1,9 @@
-
-import { Command } from 'commander';
-import { Config } from '../../utils/config/Config';
+import { Command } from "commander";
+import { Config } from "../../utils/config/Config";
 
 export class ProgramBuilder {
   private program: Command;
-  
+
   constructor(
     private config: Config,
     private version: string

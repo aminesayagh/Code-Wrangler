@@ -2,8 +2,7 @@ import { NodeFile } from "../NodeFile";
 import { getContent, mockPath } from "../../../__mocks__/mockFileSystem";
 
 class TestFile extends NodeFile {
-  public render(): void {
-  }
+  public render(): void {}
 }
 
 describe("NodeFile", () => {
@@ -28,7 +27,7 @@ describe("NodeFile", () => {
       path: testPath,
       deep: 0,
       size: 0,
-      extension: ".ts",
+      extension: ".ts"
     });
   });
 
@@ -46,7 +45,7 @@ describe("NodeFile", () => {
       path: expect.any(String),
       deep: expect.any(Number),
       size: expect.any(Number),
-      extension: expect.any(String),
+      extension: expect.any(String)
     });
   });
 });

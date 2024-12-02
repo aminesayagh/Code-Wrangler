@@ -6,9 +6,9 @@ import { logger } from "../../logger/Logger";
 jest.mock("../../../infrastructure/filesystem/DocumentFactory");
 jest.mock("../../logger/Logger", () => ({
   logger: {
-    error: jest.fn(),
+    error: jest.fn()
   },
-  LOG_VALUES: ["ERROR", "WARN", "INFO", "DEBUG"],
+  LOG_VALUES: ["ERROR", "WARN", "INFO", "DEBUG"]
 }));
 
 describe("Config", () => {
@@ -66,7 +66,7 @@ describe("Config", () => {
     it("loads and merges custom config when file exists", async () => {
       const customConfig = {
         outputFile: "custom-output",
-        logLevel: "DEBUG" as const,
+        logLevel: "DEBUG" as const
       };
 
       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
@@ -136,7 +136,7 @@ describe("Config", () => {
         const overrides = {
           outputFile: "custom-output",
           logLevel: "DEBUG" as const,
-          maxFileSize: 2048576,
+          maxFileSize: 2048576
         };
 
         config.override(overrides);

@@ -1,6 +1,6 @@
 export const FileType = {
   File: "file",
-  Directory: "directory",
+  Directory: "directory"
 } as const;
 
 export type FileType = (typeof FileType)[keyof typeof FileType];

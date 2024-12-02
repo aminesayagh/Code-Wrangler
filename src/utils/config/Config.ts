@@ -5,7 +5,7 @@ import {
   ConfigKeys,
   ConfigOptions,
   ConfigSchema,
-  DEFAULT_CONFIG,
+  DEFAULT_CONFIG
 } from "./schema";
 
 export class Config {
@@ -49,7 +49,7 @@ export class Config {
         // Validate and merge configurations
         const validatedConfig = ConfigSchema.parse({
           ...this.config,
-          ...userConfig,
+          ...userConfig
         });
 
         this.config = validatedConfig;
@@ -57,7 +57,7 @@ export class Config {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const details = error.errors
-          .map((err) => `${err.path.join(".")}: ${err.message}`)
+          .map(err => `${err.path.join(".")}: ${err.message}`)
           .join(", ");
         throw new Error(`Configuration validation failed: ${details}`);
       }

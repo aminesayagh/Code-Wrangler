@@ -1,4 +1,4 @@
-import { NodeDirectory } from "../NodeDIrectory";
+import { NodeDirectory } from "../NodeDirectory";
 import { NodeFile } from "../NodeFile";
 import { mockPath } from "../../../__mocks__/mockFileSystem";
 
@@ -35,7 +35,7 @@ describe("Directory", () => {
     const props = testDirectory.props;
     expect(props).toMatchObject({
       name: "dir",
-      path: mockPath() + "/dir",
+      path: mockPath() + "/dir"
     });
   });
 

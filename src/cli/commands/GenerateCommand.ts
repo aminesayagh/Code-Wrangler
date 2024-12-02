@@ -35,7 +35,7 @@ export class GenerateCommand implements ICommand {
 
       // Execute document tree building
       const outputFormat = this.config.get("outputFormat");
-      const renderStrategies = outputFormat.map((format) => {
+      const renderStrategies = outputFormat.map(format => {
         switch (format) {
           case "markdown":
             return new MarkdownStrategy(this.config);

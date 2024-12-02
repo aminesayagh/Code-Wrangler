@@ -42,7 +42,7 @@ export class FileTreeBuilder {
       excludePatterns: this.config.get("excludePatterns"),
       additionalIgnoreFiles: this.config.get("additionalIgnoreFiles"),
       returnType: "details",
-      followSymlinks: false,
+      followSymlinks: false
     };
   }
   public async build(): Promise<IFileTreeNode> {
@@ -60,13 +60,11 @@ export class FileTreeBuilder {
     const stats = await DocumentFactory.getStats(nodePath);
     const name = DocumentFactory.baseName(nodePath);
 
-    console.log(name, stats);
     const node: IFileTreeNode = {
       name,
       path: nodePath,
-      type: stats.isDirectory ? FileType.Directory : FileType.File,
+      type: stats.isDirectory ? FileType.Directory : FileType.File
     };
-    console.log(node);
 
     if (stats.isDirectory) {
       // Check depth limit

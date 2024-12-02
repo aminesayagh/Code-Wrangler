@@ -1,3 +1,4 @@
 #!/bin/bash
 
-tsc ./src/cli/commands/DemoCommand.ts && node ./src/cli/commands/DemoCommand.js
+tsc ./src/cli/commands/DemoCommand.ts --outDir ./dist/cli/commands
+node ./dist/cli/commands/DemoCommand.js

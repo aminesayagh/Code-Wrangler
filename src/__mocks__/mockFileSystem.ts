@@ -12,9 +12,9 @@ export const mockFileSystem: IFileSystem = {
     "file2.js": `export const test = "test 2";`,
     dir: {
       "file3.ts": `export const test = "test 3";`,
-      "file4.js": `export const test = "test 4";`,
-    },
-  },
+      "file4.js": `export const test = "test 4";`
+    }
+  }
 };
 
 export const mockPath = (): string => path.resolve("src/__mocks__/root");

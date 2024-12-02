@@ -10,7 +10,7 @@ interface IPropsDirectory {
 
 const defaultPropsDirectory: IPropsDirectory = {
   length: 0,
-  deepLength: 0,
+  deepLength: 0
 };
 
 export abstract class NodeDirectory extends NodeBase {
@@ -42,7 +42,7 @@ export abstract class NodeDirectory extends NodeBase {
   }
   public get secondaryProps(): Record<string, unknown> {
     return {
-      ...this._propsDirectory,
+      ...this._propsDirectory
     };
   }
 
@@ -61,11 +61,11 @@ export abstract class NodeDirectory extends NodeBase {
     this.deep = deep;
 
     // bundle all children
-    await Promise.all(this.children.map((child) => child.bundle(deep + 1)));
+    await Promise.all(this.children.map(child => child.bundle(deep + 1)));
 
     // set the length of the directory
     this.length = this.children.filter(
-      (child) => child instanceof NodeFile
+      child => child instanceof NodeFile
     ).length;
 
     // set the deep length of the directory
@@ -95,6 +95,6 @@ export class RenderableDirectory extends NodeDirectory {
   }
 
   public render(): void {
-    this.renderStrategy.map((strategy) => strategy.renderDirectory(this));
+    this.renderStrategy.map(strategy => strategy.renderDirectory(this));
   }
 }

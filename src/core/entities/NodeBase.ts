@@ -16,9 +16,9 @@ const defaultProps: IPropsNode = {
     permissions: {
       readable: false,
       writable: false,
-      executable: false,
-    },
-  },
+      executable: false
+    }
+  }
 };
 
 interface INodeLifeCycle {
@@ -107,7 +107,8 @@ export abstract class NodeBase implements INodeLifeCycle {
 
   // props
   get props(): IPropsNode {
-    return { ...this._props, ...this.secondaryProps };
+    const props = { ...this._props, ...this.secondaryProps };
+    return props;
   }
 
   public async dispose(): Promise<void> {

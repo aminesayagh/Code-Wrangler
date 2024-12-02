@@ -3,7 +3,7 @@ import { LOG_VALUES } from "../logger/Logger";
 
 export const OUTPUT_FORMATS = {
   markdown: "md",
-  html: "html",
+  html: "html"
 } as const;
 
 export type OutputFormats = typeof OUTPUT_FORMATS;
@@ -19,7 +19,7 @@ export type FileExtension = z.infer<typeof FileExtensionSchema>;
 
 export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
   markdown: "md",
-  html: "html",
+  html: "html"
 };
 
 export const ConfigSchema = z
@@ -46,7 +46,7 @@ export const ConfigSchema = z
     codeConfigFile: z
       .string()
       .regex(/\.json$/, "Config file must end with .json")
-      .default("public/codewrangler.json"),
+      .default("public/codewrangler.json")
   })
   .strict();
 
@@ -69,5 +69,5 @@ export const DEFAULT_CONFIG: ConfigOptions = {
   followSymlinks: false,
   ignoreHiddenFiles: true, // Default value
   additionalIgnoreFiles: [],
-  excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"],
+  excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"]
 };

@@ -1,5 +1,5 @@
 import { NodeFile } from "../../core/entities/NodeFile";
-import { NodeDirectory } from "../../core/entities/NodeDIrectory";
+import { NodeDirectory } from "../../core/entities/NodeDirectory";
 import { Config, OutputFormatExtension } from "../../utils/config";
 import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import { Template } from "../../infrastructure/templates/TemplateEngine";
@@ -9,7 +9,7 @@ import {
   DirectoryTemplate,
   DirectoryTemplateSchema,
   FileTemplate,
-  FileTemplateSchema,
+  FileTemplateSchema
 } from "../../infrastructure/templates/zod";
 import { TemplateType } from "../../types/template";
 
@@ -42,7 +42,7 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
     this.templates = {
       page: null,
       file: null,
-      directory: null,
+      directory: null
     };
     this.extension = extension;
   }
@@ -72,7 +72,7 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
         "directory",
         DirectoryTemplateSchema,
         DocumentFactory.join(templateDir, `directory.${this.extension}`)
-      ),
+      )
     };
   }
 
@@ -85,13 +85,14 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
       FILE_EXTENSION: file.extension,
       FILE_SIZE: file.size,
       FILE_CONTENTS: file.content || "",
+      ...file.props
     });
   }
 
   public renderDirectory(directory: NodeDirectory): string {
     const content = directory.children
       .map(
-        (child) =>
+        child =>
           child instanceof NodeFile
             ? this.renderFile(child)
             : this.renderDirectory(child) // save the rendering result on the object after bundling execution
@@ -104,7 +105,8 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
       DIRECTORY_NAME: directory.name,
       DIRECTORY_PATH: directory.path,
       DIRECTORY_SIZE: directory.size,
-      CONTENT: content,
+      DIRECTORY_CONTENT: content,
+      ...directory.props
     });
   }
 
@@ -133,7 +135,7 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
       TOTAL_FILES: rootDirectory.length,
       TOTAL_DIRECTORIES: rootDirectory.deepLength,
       TOTAL_SIZE: rootDirectory.size,
-      CONTENT: directoryContent,
+      CONTENT: directoryContent
     });
   }
 
@@ -141,7 +143,7 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
     this.templates = {
       page: null,
       file: null,
-      directory: null,
+      directory: null
     };
   }
 }

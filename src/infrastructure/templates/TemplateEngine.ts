@@ -37,7 +37,7 @@ export class Template<
     const tokens = this.getTemplateTokens();
     const requiredFields = Object.keys(this.schema.shape);
     const missingRequired = requiredFields.filter(
-      (field) => !tokens.includes(field)
+      field => !tokens.includes(field)
     );
 
     if (missingRequired.length > 0) {
@@ -86,7 +86,7 @@ export class Template<
       if (error instanceof z.ZodError) {
         throw new Error(
           `Template content validation failed for ${this.type}: ${error.errors
-            .map((e) => `${e.path.join(".")}: ${e.message}`)
+            .map(e => `${e.path.join(".")}: ${e.message}`)
             .join(", ")}`
         );
       }

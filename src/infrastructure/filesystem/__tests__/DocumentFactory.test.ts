@@ -84,8 +84,8 @@ describe("DocumentFactory", () => {
         permissions: {
           readable: true,
           writable: expect.any(Boolean),
-          executable: expect.any(Boolean),
-        },
+          executable: expect.any(Boolean)
+        }
       });
     });
 
@@ -94,7 +94,7 @@ describe("DocumentFactory", () => {
       expect(stats).toMatchObject({
         size: expect.any(Number),
         isDirectory: true,
-        isFile: false,
+        isFile: false
       });
     });
 
@@ -143,10 +143,10 @@ describe("DocumentFactory", () => {
       const contents = await DocumentFactory.readDirectory(MOCK_PATH);
       expect(Array.isArray(contents)).toBe(true);
       expect(contents.length).toBeGreaterThan(0);
-      contents.forEach((item) => {
+      contents.forEach(item => {
         expect(item).toMatchObject({
           name: expect.any(String),
-          type: expect.stringMatching(/^(file|directory)$/),
+          type: expect.stringMatching(/^(file|directory)$/)
         });
       });
     });
@@ -287,7 +287,7 @@ describe("DocumentFactory", () => {
 
     it("should read file with custom encoding", () => {
       const content = DocumentFactory.readFileSync(testFilePath, {
-        encoding: "utf8",
+        encoding: "utf8"
       });
       expect(content).toBe(testContent);
     });
@@ -327,7 +327,7 @@ describe("DocumentFactory", () => {
       const newFile = path.join(tempDir, "encoded.txt");
 
       await DocumentFactory.writeFile(newFile, newContent, {
-        encoding: "utf8",
+        encoding: "utf8"
       });
       const content = await fs.readFile(newFile, "utf8");
       expect(content).toBe(newContent);
@@ -403,7 +403,7 @@ describe("DocumentFactory", () => {
 
     it("should support withFileTypes option", async () => {
       const contents = await DocumentFactory.readDir(tempDir, {
-        withFileTypes: true,
+        withFileTypes: true
       });
       expect(contents).toHaveLength(3);
     });
@@ -536,6 +536,134 @@ describe("DocumentFactory", () => {
       expect(await DocumentFactory.exists(specialFile)).toBe(true);
       const stats = await DocumentFactory.getStats(specialFile);
       expect(stats.isFile).toBe(true);
+    });
+  });
+
+  // Test for line 33 (error handling in type method)
+  describe("type error handling", () => {
+    it("should handle system errors correctly", async () => {
+      // Mock the entire fs module
+      jest.mock("fs/promises", () => ({
+        ...jest.requireActual("fs/promises"),
+        stat: jest.fn().mockRejectedValue(new Error("System error"))
+      }));
+
+      await expect(DocumentFactory.type("/some/path")).rejects.toThrow(
+        "Document error at /some/path: File not found"
+      );
+    });
+  });
+
+  describe("checkAccess", () => {
+    it("should handle access check failures", async () => {
+      const result = await DocumentFactory.checkAccess("/nonexistent/path");
+      expect(result).toEqual({
+        readable: false,
+        writable: false,
+        executable: false
+      });
+    });
+  });
+
+  // Tests for lines 137-159 (readJsonSync method)
+  describe("readJsonSync", () => {
+    const jsonFilePath = path.join(tempDir, "test.json");
+
+    beforeEach(async () => {
+      await fs.writeFile(jsonFilePath, JSON.stringify({ key: "value" }));
+    });
+
+    it("should successfully read and parse JSON file", async () => {
+      const result = await DocumentFactory.readJsonSync(jsonFilePath);
+      expect(result).toEqual({ key: "value" });
+    });
+
+    it("should throw error for non-existent file", async () => {
+      await expect(
+        DocumentFactory.readJsonSync("/nonexistent.json")
+      ).rejects.toThrow(
+        "Document error at /nonexistent.json: Error: File not found: /nonexistent.json"
+      );
+    });
+
+    it("should throw error for empty file", async () => {
+      await fs.writeFile(jsonFilePath, "");
+      await expect(DocumentFactory.readJsonSync(jsonFilePath)).rejects.toThrow(
+        `File is empty: ${jsonFilePath}`
+      );
+    });
+
+    it("should throw error for invalid JSON", async () => {
+      await fs.writeFile(jsonFilePath, "invalid json");
+      await expect(DocumentFactory.readJsonSync(jsonFilePath)).rejects.toThrow(
+        `Invalid JSON in file ${jsonFilePath}`
+      );
+    });
+  });
+
+  // Test for line 337 (error handling in appendFile)
+  describe("appendFile error handling", () => {
+    it("should handle appendFile errors", async () => {
+      const invalidPath = path.join(tempDir, "nonexistent", "test.txt");
+      await expect(
+        DocumentFactory.appendFile(invalidPath, "content")
+      ).rejects.toThrow("Document error at");
+    });
+  });
+
+  // Tests for lines 383-389 (directory copying edge cases)
+  describe("copyDir edge cases", () => {
+    const tempDir = path.join(MOCK_PATH, "temp_edge");
+    const sourceDir = path.join(tempDir, "source");
+    const targetDir = path.join(tempDir, "target");
+
+    beforeEach(async () => {
+      // Clean up before each test
+      await fs.rm(tempDir, { recursive: true, force: true });
+      await fs.mkdir(tempDir, { recursive: true });
+    });
+
+    afterEach(async () => {
+      // Cleanup after each test
+      await fs.rm(tempDir, { recursive: true, force: true });
+    });
+
+    it("should handle errors during directory creation while copying", async () => {
+      // Create a source directory with content
+      await fs.mkdir(sourceDir);
+      await fs.writeFile(path.join(sourceDir, "test.txt"), "test content");
+
+      // Mock ensureDirectory to simulate failure
+      const originalEnsureDirectory = DocumentFactory.ensureDirectory;
+      DocumentFactory.ensureDirectory = jest
+        .fn()
+        .mockRejectedValue(new Error("Permission denied"));
+
+      await expect(
+        DocumentFactory.copyDir(sourceDir, targetDir)
+      ).rejects.toThrow();
+
+      DocumentFactory.ensureDirectory = originalEnsureDirectory;
+    });
+
+    it("should handle nested directory structures correctly", async () => {
+      const nestedDir = path.join(sourceDir, "nested");
+
+      await fs.mkdir(sourceDir);
+      await fs.mkdir(nestedDir);
+      await fs.writeFile(path.join(sourceDir, "test1.txt"), "content1");
+      await fs.writeFile(path.join(nestedDir, "test2.txt"), "content2");
+
+      await DocumentFactory.copyDir(sourceDir, targetDir);
+
+      expect(
+        await DocumentFactory.exists(path.join(targetDir, "test1.txt"))
+      ).toBe(true);
+      expect(
+        await DocumentFactory.exists(
+          path.join(targetDir, "nested", "test2.txt")
+        )
+      ).toBe(true);
     });
   });
 });
