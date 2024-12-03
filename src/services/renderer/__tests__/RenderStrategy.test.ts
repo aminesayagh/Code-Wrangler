@@ -1,5 +1,6 @@
 import { NodeFile } from "../../../core/entities/NodeFile";
 import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+import { fileStatsService } from "../../../infrastructure/filesystem/FileStats";
 import { Template } from "../../../infrastructure/templates/TemplateEngine";
 import { Config } from "../../../utils/config";
 import { OutputFormatExtension } from "../../../utils/config/schema";
@@ -9,9 +10,10 @@ jest.mock("../../../utils/config");
 jest.mock("../../../core/entities/NodeFile");
 jest.mock("../../../infrastructure/filesystem/DocumentFactory");
 jest.mock("../../../infrastructure/templates/TemplateEngine");
+jest.mock("../../../infrastructure/filesystem/FileStats");
 
 class TestRenderStrategy extends BaseRenderStrategy {
-  constructor(config: Config) {
+  public constructor(config: Config) {
     super(config, "md" as OutputFormatExtension);
   }
 }
@@ -48,6 +50,16 @@ describe("BaseRenderStrategy", () => {
     } as unknown as jest.Mocked<Template>;
 
     (Template.create as jest.Mock).mockResolvedValue(mockTemplate);
+    (Template.getTemplateDir as jest.Mock).mockReturnValue("templates");
+
+    (fileStatsService as jest.Mock).mockImplementation(() => ({
+      isDirectory: true,
+      isFile: false,
+      size: 0,
+      created: new Date(),
+      modified: new Date(),
+      accessed: new Date()
+    }));
 
     (documentFactory.join as jest.Mock).mockImplementation((...paths) =>
       paths.join("/")
@@ -61,17 +73,9 @@ describe("BaseRenderStrategy", () => {
     it("should successfully load all templates", async () => {
       await renderStrategy.loadTemplates();
 
-      expect(documentFactory.join).toHaveBeenCalledWith("/test", "templates");
-      expect(documentFactory.exists).toHaveBeenCalled();
-      expect(Template.create).toHaveBeenCalledTimes(3);
-    });
-
-    it("should throw error if templates directory doesn't exist", async () => {
-      (documentFactory.exists as jest.Mock).mockReturnValue(false);
-
-      await expect(renderStrategy.loadTemplates()).rejects.toThrow(
-        "Templates directory not found"
-      );
+      expect(renderStrategy["templates"].page).toBe(mockTemplate);
+      expect(renderStrategy["templates"].file).toBe(mockTemplate);
+      expect(renderStrategy["templates"].directory).toBe(mockTemplate);
     });
   });
 

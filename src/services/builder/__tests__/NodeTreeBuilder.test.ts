@@ -1,4 +1,5 @@
 import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+import { fileStatsService } from "../../../infrastructure/filesystem/FileStats";
 import { FILE_TYPE } from "../../../types/type";
 import { Config } from "../../../utils/config";
 import FileHidden from "../FileHidden";
@@ -7,7 +8,7 @@ import { NodeTreeBuilder } from "../NodeTreeBuilder";
 jest.mock("../../../utils/config");
 jest.mock("../../../infrastructure/filesystem/DocumentFactory");
 jest.mock("../FileHidden");
-
+jest.mock("../../../infrastructure/filesystem/FileStats");
 describe("NodeTreeBuilder", () => {
   let mockConfig: jest.Mocked<Config>;
   let nodeTreeBuilder: NodeTreeBuilder;
@@ -66,7 +67,7 @@ describe("NodeTreeBuilder", () => {
 
     it("should build root node with no children if directory is empty", async () => {
       (documentFactory.exists as jest.Mock).mockReturnValue(true);
-      (documentFactory.getStats as jest.Mock).mockResolvedValue({
+      (fileStatsService as jest.Mock).mockResolvedValue({
         isDirectory: true,
         isFile: false,
         size: 0,
@@ -109,7 +110,7 @@ describe("NodeTreeBuilder", () => {
         [`${SUBDIR_PATH}/file2.txt`, { isDirectory: false, isFile: true }]
       ]);
 
-      (documentFactory.getStats as jest.Mock).mockImplementation(path => ({
+      (fileStatsService as jest.Mock).mockImplementation(path => ({
         ...mockStats.get(path),
         size: 1000,
         created: new Date(),
@@ -168,7 +169,7 @@ describe("NodeTreeBuilder", () => {
         [SUBDIR_PATH, { isDirectory: true, isFile: false }]
       ]);
 
-      (documentFactory.getStats as jest.Mock).mockImplementation(path => ({
+      (fileStatsService as jest.Mock).mockImplementation(path => ({
         ...mockStats.get(path),
         size: 1000,
         created: new Date(),
@@ -220,7 +221,7 @@ describe("NodeTreeBuilder", () => {
 
       (FileHidden as jest.Mock).mockImplementation(() => mockFileHidden);
 
-      (documentFactory.getStats as jest.Mock).mockImplementation(path => ({
+      (fileStatsService as jest.Mock).mockImplementation(path => ({
         isDirectory: path === "/test/dir",
         isFile: path !== "/test/dir",
         size: 1000,

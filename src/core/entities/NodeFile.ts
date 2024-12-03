@@ -1,5 +1,6 @@
 import { INodeContent, NodeBase } from "./NodeBase";
 import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
 import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
 
 interface IPropsFile {
@@ -50,7 +51,7 @@ export abstract class NodeFile extends NodeBase {
     // set the content of the file
     this.content = await documentFactory.readFile(this.path);
     // set the stats of the file
-    this.stats = await documentFactory.getStats(this.path);
+    this.stats = await fileStatsService(this.path);
   }
 
   // render

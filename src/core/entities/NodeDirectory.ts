@@ -1,6 +1,6 @@
 import { INodeContent, NodeBase } from "./NodeBase";
 import { NodeFile } from "./NodeFile";
-import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
 import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
 
 interface IPropsDirectory {
@@ -71,7 +71,7 @@ export abstract class NodeDirectory extends NodeBase {
     this.size = this.children.reduce((acc, child) => acc + child.size, 0);
 
     // set stats
-    this.stats = await documentFactory.getStats(this.path);
+    this.stats = await fileStatsService(this.path);
   }
 
   public abstract override render(strategy: IRenderStrategy): INodeContent;

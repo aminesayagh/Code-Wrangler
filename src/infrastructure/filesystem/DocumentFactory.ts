@@ -3,12 +3,12 @@ import * as fsSync from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
 
+import { fileStatsService } from "./FileStats";
 import { DocumentError, FileNotFoundError } from "../../core/errors";
 import {
   FILE_TYPE,
   FileType,
   IDirectoryOptions,
-  IFileStats,
   IReadOptions,
   IWriteOptions
 } from "../../types/type";
@@ -45,7 +45,7 @@ export const documentFactory = {
     if (isDirectory) {
       throw new DocumentError("Path is a directory", filePath);
     }
-    const stats = await this.getStats(filePath);
+    const stats = await fileStatsService(filePath);
     return stats.size;
   },
 
@@ -56,39 +56,6 @@ export const documentFactory = {
    */
   resolve(filePath: string): string {
     return path.resolve(filePath);
-  },
-
-  /**
-   * Gets detailed file statistics
-   * @param filePath - The path to get stats for
-   * @returns Detailed file statistics including size, dates, and permissions
-   * @throws {FileNotFoundError} If the path doesn't exist
-   * @throws {DocumentError} For other file system errors
-   */
-  async getStats(filePath: string): Promise<IFileStats> {
-    try {
-      const stats = await fs.stat(filePath);
-      const accessFlags = await this.checkAccess(filePath);
-
-      return {
-        size: stats.size,
-        created: stats.birthtime,
-        modified: stats.mtime,
-        accessed: stats.atime,
-        isDirectory: stats.isDirectory(),
-        isFile: stats.isFile(),
-        permissions: {
-          readable: accessFlags.readable,
-          writable: accessFlags.writable,
-          executable: accessFlags.executable
-        }
-      };
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        throw new FileNotFoundError(filePath);
-      }
-      throw new DocumentError(String(error), filePath);
-    }
   },
 
   /**
@@ -130,33 +97,6 @@ export const documentFactory = {
       encoding: options.encoding ?? "utf-8",
       flag: options.flag
     });
-  },
-
-  async readJsonSync(filePath: string): Promise<object> {
-    try {
-      // Resolve the absolute path
-      const absolutePath = this.resolve(filePath);
-
-      // Check if file exists first
-      if (!this.exists(absolutePath)) {
-        throw new Error(`File not found: ${filePath}`);
-      }
-
-      const fileContents = await fs.readFile(absolutePath, "utf-8");
-      if (!fileContents) {
-        throw new Error(`File is empty: ${filePath}`);
-      }
-
-      try {
-        return JSON.parse(fileContents);
-      } catch (parseError) {
-        throw new Error(
-          `Invalid JSON in file ${filePath}: ${String(parseError)}`
-        );
-      }
-    } catch (error) {
-      throw new DocumentError(String(error), filePath);
-    }
   },
 
   /**

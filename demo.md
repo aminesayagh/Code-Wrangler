@@ -25,7 +25,9 @@ codewrangler
     │       └── index.ts
     ├── infrastructure
     │   ├── filesystem
-    │   │   └── DocumentFactory.ts
+    │   │   ├── DocumentFactory.ts
+    │   │   ├── FileStats.ts
+    │   │   └── JsonReader.ts
     │   └── templates
     │       ├── TemplateEngine.ts
     │       └── zod.ts
@@ -249,107 +251,116 @@ codewrangler
 156 | const generateFileSection = (
 157 | file: IFileInfo,
 158 | compress: boolean = false
-159 | ): string => !compress
-160 | ? `
-161 | ## File: ${file.name}
-162 | - Path: \`${file.path}\`
-163 | - Size: ${formatSize(Number(file.size))}
-164 | - Extension: ${file.ext}
-165 | - Lines of code: ${file.lines}
-166 | - Content:
-167 | \`\`\`${file.ext.slice(1) || "plaintext"}
-168 | ${formatContentWithLineNumbers(file.content)}
-169 | \`\`\`
-170 | ---------------------------------------------------------------------------
-171 | `
-172 | : `
-173 | ## File: ${file.name}, Path: \`${file.path}\`
-174 | \`\`\`${file.ext.slice(1) || "plaintext"}
-175 | ${formatContentWithLineNumbers(file.content)}
-176 | \`\`\``;
-177 | const generateMarkdownContent = (
-178 | files: IFileInfo[],
-179 | treeContent: string,
-180 | compress: boolean
-181 | ): string => !compress
-182 | ? `
-183 | # Code Documentation
-184 | Generated on: ${new Date().toISOString()}
-185 | Total files: ${files.length}
-186 | ## Project Structure
-187 | \`\`\`
-188 | ${treeContent}
+159 | ): string =>
+160 | !compress
+161 | ? `
+162 | ## File: ${file.name}
+163 | - Path: \`${file.path}\`
+164 | - Size: ${formatSize(Number(file.size))}
+165 | - Extension: ${file.ext}
+166 | - Lines of code: ${file.lines}
+167 | - Content:
+168 | \`\`\`${file.ext.slice(1) || "plaintext"}
+169 | ${formatContentWithLineNumbers(file.content)}
+170 | \`\`\`
+171 | ---------------------------------------------------------------------------
+172 | `
+173 | : `
+174 | ## File: ${file.name}, Path: \`${file.path}\`
+175 | \`\`\`${file.ext.slice(1) || "plaintext"}
+176 | ${formatContentWithLineNumbers(file.content)}
+177 | \`\`\``;
+178 | const generateMarkdownContent = (
+179 | files: IFileInfo[],
+180 | treeContent: string,
+181 | compress: boolean
+182 | ): string =>
+183 | !compress
+184 | ? `
+185 | # Code Documentation
+186 | Generated on: ${new Date().toISOString()}
+187 | Total files: ${files.length}
+188 | ## Project Structure
 189 | \`\`\`
-190 | ${files.map(file => generateFileSection(file)).join("\n")}
-191 | `
-192 | : `
-193 | # Code documentation
-194 | ${treeContent}
-195 | ${files.map(file => generateFileSection(file, true)).join("\n")}
-196 | `;
-197 | const compressContent = (content: string): string => content
-198 | .split("\n")
-199 | .map(line => line.trim())
-200 | .filter(line => line !== "")
-201 | .filter(line => !line.startsWith("//"))
-202 | .join("\n");
-203 | async function generateFileInfo(filePath: string, stats: Stats, compress: boolean): Promise<IFileInfo> {
-204 | const content = await fs.readFile(filePath, "utf-8");
-205 | return {
-206 | name: path.basename(filePath),
-207 | path: filePath,
-208 | content: compress ? compressContent(content) : content,
-209 | ext: path.extname(filePath),
-210 | size: stats.size,
-211 | lines: content.split("\n").filter(line => line.trim() !== "").length
-212 | }
-213 | }
-214 | async function generateDocumentation(
-215 | userConfig: Partial<IDocumentConfig> = {}
-216 | ): Promise<void> {
-217 | try {
-218 | const config: IDocumentConfig = { ...DEFAULT_CONFIG, ...userConfig };
-219 | const files: IFileInfo[] = [];
-220 | const rootNode = await createTreeNode(config.rootDir, config);
-221 | const treeContent = rootNode
-222 | ? renderTreeNode(rootNode).join("\n")
-223 | : "No matching files found";
-224 | for await (const filePath of walkDirectory(config.rootDir)) {
-225 | if (isMatchingFile(filePath, config)) {
-226 | const stats = await fs.stat(filePath);
-227 | if (stats.size <= config.maxFileSize) {
-228 | const fileInfo = await generateFileInfo(filePath, stats, config.compress);
-229 | files.push(fileInfo);
-230 | }
-231 | }
-232 | }
-233 | const markdownContent = generateMarkdownContent(
-234 | files,
-235 | treeContent,
-236 | config.compress
-237 | );
-238 | await fs.writeFile(config.outputPath, markdownContent, "utf-8");
-239 | } catch (error) {
-240 | console.error("Error generating documentation", error);
-241 | throw error;
-242 | }
-243 | }
-244 | if (require.main === module) {
-245 | generateDocumentation({
-246 | pattern: /\.ts$/,
-247 | outputPath: "demo.md",
-248 | ignoreHidden: true,
-249 | excludePatterns: [
-250 | "node_modules",
-251 | "dist",
-252 | "documentation",
-253 | "coverage",
-254 | "**/__tests__",
-255 | "**/*.test.ts"
-256 | ],
-257 | compress: true
-258 | }).catch(console.error);
-259 | }
+190 | ${treeContent}
+191 | \`\`\`
+192 | ${files.map(file => generateFileSection(file)).join("\n")}
+193 | `
+194 | : `
+195 | # Code documentation
+196 | ${treeContent}
+197 | ${files.map(file => generateFileSection(file, true)).join("\n")}
+198 | `;
+199 | const compressContent = (content: string): string =>
+200 | content
+201 | .split("\n")
+202 | .map(line => line.trim())
+203 | .filter(line => line !== "")
+204 | .filter(line => !line.startsWith("//"))
+205 | .join("\n");
+206 | async function generateFileInfo(
+207 | filePath: string,
+208 | stats: Stats,
+209 | compress: boolean
+210 | ): Promise<IFileInfo> {
+211 | const content = await fs.readFile(filePath, "utf-8");
+212 | return {
+213 | name: path.basename(filePath),
+214 | path: filePath,
+215 | content: compress ? compressContent(content) : content,
+216 | ext: path.extname(filePath),
+217 | size: stats.size,
+218 | lines: content.split("\n").filter(line => line.trim() !== "").length
+219 | };
+220 | }
+221 | async function generateDocumentation(
+222 | userConfig: Partial<IDocumentConfig> = {}
+223 | ): Promise<void> {
+224 | try {
+225 | const config: IDocumentConfig = { ...DEFAULT_CONFIG, ...userConfig };
+226 | const files: IFileInfo[] = [];
+227 | const rootNode = await createTreeNode(config.rootDir, config);
+228 | const treeContent = rootNode
+229 | ? renderTreeNode(rootNode).join("\n")
+230 | : "No matching files found";
+231 | for await (const filePath of walkDirectory(config.rootDir)) {
+232 | if (!isMatchingFile(filePath, config)) {
+233 | continue;
+234 | }
+235 | const stats = await fs.stat(filePath);
+236 | if (stats.size > config.maxFileSize) {
+237 | continue;
+238 | }
+239 | const fileInfo = await generateFileInfo(filePath, stats, config.compress);
+240 | files.push(fileInfo);
+241 | }
+242 | const markdownContent = generateMarkdownContent(
+243 | files,
+244 | treeContent,
+245 | config.compress
+246 | );
+247 | await fs.writeFile(config.outputPath, markdownContent, "utf-8");
+248 | } catch (error) {
+249 | console.error("Error generating documentation", error);
+250 | throw error;
+251 | }
+252 | }
+253 | if (require.main === module) {
+254 | generateDocumentation({
+255 | pattern: /\.ts$/,
+256 | outputPath: "demo.md",
+257 | ignoreHidden: true,
+258 | excludePatterns: [
+259 | "node_modules",
+260 | "dist",
+261 | "documentation",
+262 | "coverage",
+263 | "**/__tests__",
+264 | "**/*.test.ts"
+265 | ],
+266 | compress: true
+267 | }).catch(console.error);
+268 | }
 ```
 
 ## File: GenerateCommand.ts, Path: `/root/git/codewrangler/src/cli/commands/GenerateCommand.ts`
@@ -362,45 +373,48 @@ codewrangler
  6 | import { logger } from "../../utils/logger/Logger";
  7 | export class GenerateCommand implements ICommand {
  8 | constructor(private config: Config) {}
- 9 | public async execute(args: string[], options: ICommandOptions): Promise<void> {
-10 | try {
-11 | this.config.override({ ...options, pattern: args[0] });
-12 | if (options.verbose) {
-13 | this.logVerbose();
-14 | }
-15 | const outputFormat = this.config.get("outputFormat");
-16 | const renderStrategies = outputFormat.map(format => {
-17 | switch (format) {
-18 | case "markdown":
-19 | return new MarkdownStrategy(this.config);
-20 | case "html":
-21 | return new HTMLRenderStrategy(this.config);
-22 | default:
-23 | throw new Error(`Unsupported output format: ${format}`);
-24 | }
-25 | });
-26 | const builder = new DocumentTreeBuilder(this.config, renderStrategies);
-27 | await builder.build();
-28 | } catch (error) {
-29 | logger.error("Generation failed:", error as Error);
-30 | throw error;
-31 | }
-32 | }
-33 | private logVerbose(): void {
-34 | logger.debug(
-35 | `Searching for file matching pattern: ${this.config.get("pattern")}`
-36 | );
+ 9 | public async execute(
+10 | args: string[],
+11 | options: ICommandOptions
+12 | ): Promise<void> {
+13 | try {
+14 | this.config.override({ ...options, pattern: args[0] });
+15 | if (options.verbose) {
+16 | this.logVerbose();
+17 | }
+18 | const outputFormat = this.config.get("outputFormat");
+19 | outputFormat.map(format => {
+20 | switch (format) {
+21 | case "markdown":
+22 | return new MarkdownStrategy(this.config);
+23 | case "html":
+24 | return new HTMLRenderStrategy(this.config);
+25 | default:
+26 | throw new Error(`Unsupported output format: ${format}`);
+27 | }
+28 | });
+29 | const builder = new DocumentTreeBuilder(this.config);
+30 | await builder.build();
+31 | } catch (error) {
+32 | logger.error("Generation failed:", error as Error);
+33 | throw error;
+34 | }
+35 | }
+36 | private logVerbose(): void {
 37 | logger.debug(
-38 | `Excluding patterns: ${(
-39 | this.config.get("excludePatterns") as string[]
-40 | ).join(", ")}`
-41 | );
-42 | logger.debug(
-43 | `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
+38 | `Searching for file matching pattern: ${this.config.get("pattern")}`
+39 | );
+40 | logger.debug(
+41 | `Excluding patterns: ${(
+42 | this.config.get("excludePatterns") as string[]
+43 | ).join(", ")}`
 44 | );
-45 | logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
-46 | }
-47 | }
+45 | logger.debug(
+46 | `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
+47 | );
+48 | logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
+49 | }
+50 | }
 ```
 
 ## File: types.ts, Path: `/root/git/codewrangler/src/cli/commands/types.ts`
@@ -447,59 +461,47 @@ codewrangler
  2 | import { Config } from "../../utils/config/Config";
  3 | export class ProgramBuilder {
  4 | private program: Command;
- 5 | constructor(
+ 5 | public constructor(
  6 | private config: Config,
  7 | private version: string
  8 | ) {
  9 | this.program = new Command();
 10 | }
-11 | build(): Command {
-12 | return this.program
-13 | .version(this.version)
-14 | .description("CodeWrangler is a tool for generating code")
-15 | .argument(
-16 | "<pattern>",
-17 | 'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
-18 | )
-19 | .option("-d, --dir <dir>", "Directory to search", this.config.get("dir"))
-20 | .option(
-21 | "-o, --output <output>",
-22 | "Output file",
-23 | this.config.get("outputFile")
-24 | )
-25 | .option(
-26 | "-c, --config <config>",
-27 | "Config file",
-28 | this.config.get("codeConfigFile")
-29 | )
-30 | .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
-31 | .option(
-32 | "-f, --format <format>",
-33 | "Output format",
-34 | this.config.get("outputFormat")
-35 | )
-36 | .option(
-37 | "-s, --max-size <max-size>",
-38 | "Max file size",
-39 | this.config.get("maxFileSize").toString()
-40 | )
-41 | .option(
-42 | "-e, --exclude <exclude>",
-43 | "Exclude patterns",
-44 | this.config.get("excludePatterns")
-45 | )
-46 | .option(
-47 | "-i, --ignore-hidden",
-48 | "Ignore hidden files",
-49 | this.config.get("ignoreHiddenFiles")
-50 | )
-51 | .option(
-52 | "-a, --additional-ignore <additional-ignore>",
-53 | "Additional ignore patterns",
-54 | this.config.get("additionalIgnoreFiles")
-55 | );
-56 | }
-57 | }
+11 | public build(): Command {
+12 | this.buildVersion()
+13 | .buildDescription()
+14 | .buildArguments()
+15 | .buildOptions();
+16 | return this.program;
+17 | }
+18 | private buildVersion(): ProgramBuilder {
+19 | this.program.version(this.version);
+20 | return this;
+21 | }
+22 | private buildDescription(): ProgramBuilder {
+23 | this.program.description("CodeWrangler is a tool for generating code");
+24 | return this;
+25 | }
+26 | private buildArguments(): ProgramBuilder {
+27 | this.program.argument(
+28 | "<pattern>",
+29 | 'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
+30 | );
+31 | return this;
+32 | }
+33 | private buildOptions(): ProgramBuilder {
+34 | this.program
+35 | .option("-d, --dir <dir>", "Directory to search", this.config.get("dir"))
+36 | .option("-c, --config <config>", "Config file", this.config.get("codeConfigFile"))
+37 | .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
+38 | .option("-f, --format <format>", "Output format", this.config.get("outputFormat"))
+39 | .option("-o, --output <output>", "Output file", this.config.get("outputFile"))
+40 | .option("-e, --exclude <exclude>", "Exclude patterns", this.config.get("excludePatterns"))
+41 | .option("-i, --ignore-hidden", "Ignore hidden files", this.config.get("ignoreHiddenFiles"))
+42 | .option("-a, --additional-ignore <additional-ignore>", "Additional ignore patterns", this.config.get("additionalIgnoreFiles"));
+43 | return this;
+44 | }
+45 | }
 ```
 
 ## File: NodeBase.ts, Path: `/root/git/codewrangler/src/core/entities/NodeBase.ts`
@@ -646,42 +648,40 @@ codewrangler
 34 | ...this._propsDirectory
 35 | };
 36 | }
-37 | public addChild(
-38 | child: NodeFile | NodeDirectory
-39 | ): NodeDirectory {
-40 | if (!(child instanceof NodeFile || child instanceof NodeDirectory)) {
-41 | throw new Error("Invalid child type");
-42 | }
-43 | this.children.push(child);
-44 | return this;
-45 | }
-46 | public async bundle(deep: number = 0): Promise<void> {
-47 | this.deep = deep;
-48 | await Promise.all(this.children.map(child => child.bundle(deep + 1)));
-49 | this.length = this.children.filter(
-50 | child => child instanceof NodeFile
-51 | ).length;
-52 | this.deepLength = this.children.reduce(
-53 | (acc, child) =>
-54 | acc + (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
-55 | 0
-56 | );
-57 | this.size = this.children.reduce((acc, child) => acc + child.size, 0);
-58 | this.stats = await documentFactory.getStats(this.path);
-59 | }
-60 | public abstract override render(strategy: IRenderStrategy): INodeContent;
-61 | private initDirectory(): void {
-62 | this.children = [];
-63 | this._propsDirectory = { ...defaultPropsDirectory };
-64 | }
-65 | }
-66 | export class RenderableDirectory extends NodeDirectory {
-67 | public override render(strategy: IRenderStrategy): INodeContent {
-68 | return {
-69 | content: strategy.renderDirectory(this)
-70 | };
-71 | }
-72 | }
+37 | public addChild(child: NodeFile | NodeDirectory): NodeDirectory {
+38 | if (!(child instanceof NodeFile || child instanceof NodeDirectory)) {
+39 | throw new Error("Invalid child type");
+40 | }
+41 | this.children.push(child);
+42 | return this;
+43 | }
+44 | public async bundle(deep: number = 0): Promise<void> {
+45 | this.deep = deep;
+46 | await Promise.all(this.children.map(child => child.bundle(deep + 1)));
+47 | this.length = this.children.filter(
+48 | child => child instanceof NodeFile
+49 | ).length;
+50 | this.deepLength = this.children.reduce(
+51 | (acc, child) =>
+52 | acc + (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
+53 | 0
+54 | );
+55 | this.size = this.children.reduce((acc, child) => acc + child.size, 0);
+56 | this.stats = await documentFactory.getStats(this.path);
+57 | }
+58 | public abstract override render(strategy: IRenderStrategy): INodeContent;
+59 | private initDirectory(): void {
+60 | this.children = [];
+61 | this._propsDirectory = { ...defaultPropsDirectory };
+62 | }
+63 | }
+64 | export class RenderableDirectory extends NodeDirectory {
+65 | public override render(strategy: IRenderStrategy): INodeContent {
+66 | return {
+67 | content: strategy.renderDirectory(this)
+68 | };
+69 | }
+70 | }
 ```
 
 ## File: NodeFile.ts, Path: `/root/git/codewrangler/src/core/entities/NodeFile.ts`
@@ -772,7 +772,7 @@ codewrangler
 ```ts
 1 | import { DocumentError } from "./DocumentError";
 2 | export class FileNotFoundError extends DocumentError {
-3 | constructor(path: string) {
+3 | public constructor(path: string) {
 4 | super("File not found", path);
 5 | this.name = "FileNotFoundError";
 6 | }
@@ -792,12 +792,12 @@ codewrangler
   2 | import * as fsSync from "fs";
   3 | import * as fs from "fs/promises";
   4 | import * as path from "path";
-  5 | import { DocumentError, FileNotFoundError } from "../../core/errors";
-  6 | import {
-  7 | FILE_TYPE,
-  8 | FileType,
-  9 | IDirectoryOptions,
- 10 | IFileStats,
+  5 | import { fileStatsService } from "./FileStats";
+  6 | import { DocumentError, FileNotFoundError } from "../../core/errors";
+  7 | import {
+  8 | FILE_TYPE,
+  9 | FileType,
+ 10 | IDirectoryOptions,
  11 | IReadOptions,
  12 | IWriteOptions
  13 | } from "../../types/type";
@@ -832,7 +832,7 @@ codewrangler
  42 | if (isDirectory) {
  43 | throw new DocumentError("Path is a directory", filePath);
  44 | }
- 45 | const stats = await this.getStats(filePath);
+ 45 | const stats = await fileStatsService(filePath);
  46 | return stats.size;
  47 | },
  48 | /**
@@ -844,318 +844,381 @@ codewrangler
  54 | return path.resolve(filePath);
  55 | },
  56 | /**
- 57 | * Gets detailed file statistics
- 58 | * @param filePath - The path to get stats for
- 59 | * @returns Detailed file statistics including size, dates, and permissions
- 60 | * @throws {FileNotFoundError} If the path doesn't exist
- 61 | * @throws {DocumentError} For other file system errors
- 62 | */
- 63 | async getStats(filePath: string): Promise<IFileStats> {
- 64 | try {
- 65 | const stats = await fs.stat(filePath);
- 66 | const accessFlags = await this.checkAccess(filePath);
- 67 | return {
- 68 | size: stats.size,
- 69 | created: stats.birthtime,
- 70 | modified: stats.mtime,
- 71 | accessed: stats.atime,
- 72 | isDirectory: stats.isDirectory(),
- 73 | isFile: stats.isFile(),
- 74 | permissions: {
- 75 | readable: accessFlags.readable,
- 76 | writable: accessFlags.writable,
- 77 | executable: accessFlags.executable
- 78 | }
+ 57 | * Checks various access flags for a path
+ 58 | * @private
+ 59 | * @param filePath - The path to check access for
+ 60 | * @returns An object containing readable, writable, and executable permission flags
+ 61 | */
+ 62 | async checkAccess(filePath: string): Promise<{
+ 63 | readable: boolean;
+ 64 | writable: boolean;
+ 65 | executable: boolean;
+ 66 | }> {
+ 67 | const check = async (mode: number): Promise<boolean> => {
+ 68 | try {
+ 69 | await fs.access(filePath, mode);
+ 70 | return true;
+ 71 | } catch {
+ 72 | return false;
+ 73 | }
+ 74 | };
+ 75 | return {
+ 76 | readable: await check(fs.constants.R_OK),
+ 77 | writable: await check(fs.constants.W_OK),
+ 78 | executable: await check(fs.constants.X_OK)
  79 | };
- 80 | } catch (error) {
- 81 | if ((error as NodeJS.ErrnoException).code === "ENOENT") {
- 82 | throw new FileNotFoundError(filePath);
- 83 | }
- 84 | throw new DocumentError(String(error), filePath);
- 85 | }
- 86 | },
- 87 | /**
- 88 | * Checks various access flags for a path
- 89 | * @private
- 90 | * @param filePath - The path to check access for
- 91 | * @returns An object containing readable, writable, and executable permission flags
- 92 | */
- 93 | async checkAccess(filePath: string): Promise<{
- 94 | readable: boolean;
- 95 | writable: boolean;
- 96 | executable: boolean;
- 97 | }> {
- 98 | const check = async (mode: number): Promise<boolean> => {
- 99 | try {
-100 | await fs.access(filePath, mode);
-101 | return true;
-102 | } catch {
-103 | return false;
-104 | }
-105 | };
-106 | return {
-107 | readable: await check(fs.constants.R_OK),
-108 | writable: await check(fs.constants.W_OK),
-109 | executable: await check(fs.constants.X_OK)
-110 | };
-111 | },
-112 | /**
-113 | * Reads the entire contents of a file synchronously
-114 | * @param filePath - The path to the file
-115 | * @param options - The options for the read operation
-116 | * @returns The contents of the file as a string
-117 | * @throws {Error} If the file cannot be read
-118 | */
-119 | readFileSync(filePath: string, options: IReadOptions = {}): string {
-120 | return fsSync.readFileSync(filePath, {
-121 | encoding: options.encoding ?? "utf-8",
-122 | flag: options.flag
-123 | });
-124 | },
-125 | async readJsonSync(filePath: string): Promise<object> {
-126 | try {
-127 | const absolutePath = this.resolve(filePath);
-128 | if (!this.exists(absolutePath)) {
-129 | throw new Error(`File not found: ${filePath}`);
-130 | }
-131 | const fileContents = await fs.readFile(absolutePath, "utf-8");
-132 | if (!fileContents) {
-133 | throw new Error(`File is empty: ${filePath}`);
-134 | }
-135 | try {
-136 | return JSON.parse(fileContents);
-137 | } catch (parseError) {
-138 | throw new Error(
-139 | `Invalid JSON in file ${filePath}: ${String(parseError)}`
-140 | );
-141 | }
-142 | } catch (error) {
-143 | throw new DocumentError(String(error), filePath);
-144 | }
-145 | },
-146 | /**
-147 | * Reads the entire contents of a file
-148 | * @param filePath - The path to the file
-149 | * @param options - The options for the read operation
-150 | * @returns The contents of the file as a string
-151 | * @throws {FileNotFoundError} If the file doesn't exist
-152 | * @throws {DocumentError} For other file system errors
-153 | */
-154 | async readFile(
-155 | filePath: string,
-156 | options: IReadOptions = {}
-157 | ): Promise<string> {
-158 | try {
-159 | return await fs.readFile(filePath, {
-160 | encoding: options.encoding ?? "utf-8",
-161 | flag: options.flag
-162 | });
-163 | } catch (error) {
-164 | if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-165 | throw new FileNotFoundError(filePath);
-166 | }
-167 | throw new DocumentError(String(error), filePath);
-168 | }
-169 | },
-170 | /**
-171 | * Writes data to a file, replacing the file if it already exists
-172 | * @param filePath - The path to the file
-173 | * @param data - The data to write
-174 | * @param options - The options for the write operation
-175 | * @throws {DocumentError} For file system errors
-176 | */
-177 | async writeFile(
-178 | filePath: string,
-179 | data: string | Buffer,
-180 | options: IWriteOptions = {}
-181 | ): Promise<void> {
-182 | try {
-183 | await fs.writeFile(filePath, data, {
-184 | encoding: options.encoding ?? "utf-8",
-185 | mode: options.mode,
-186 | flag: options.flag
-187 | });
-188 | } catch (error) {
-189 | throw new DocumentError(String(error), filePath);
-190 | }
+ 80 | },
+ 81 | /**
+ 82 | * Reads the entire contents of a file synchronously
+ 83 | * @param filePath - The path to the file
+ 84 | * @param options - The options for the read operation
+ 85 | * @returns The contents of the file as a string
+ 86 | * @throws {Error} If the file cannot be read
+ 87 | */
+ 88 | readFileSync(filePath: string, options: IReadOptions = {}): string {
+ 89 | return fsSync.readFileSync(filePath, {
+ 90 | encoding: options.encoding ?? "utf-8",
+ 91 | flag: options.flag
+ 92 | });
+ 93 | },
+ 94 | /**
+ 95 | * Reads the entire contents of a file
+ 96 | * @param filePath - The path to the file
+ 97 | * @param options - The options for the read operation
+ 98 | * @returns The contents of the file as a string
+ 99 | * @throws {FileNotFoundError} If the file doesn't exist
+100 | * @throws {DocumentError} For other file system errors
+101 | */
+102 | async readFile(
+103 | filePath: string,
+104 | options: IReadOptions = {}
+105 | ): Promise<string> {
+106 | try {
+107 | return await fs.readFile(filePath, {
+108 | encoding: options.encoding ?? "utf-8",
+109 | flag: options.flag
+110 | });
+111 | } catch (error) {
+112 | if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+113 | throw new FileNotFoundError(filePath);
+114 | }
+115 | throw new DocumentError(String(error), filePath);
+116 | }
+117 | },
+118 | /**
+119 | * Writes data to a file, replacing the file if it already exists
+120 | * @param filePath - The path to the file
+121 | * @param data - The data to write
+122 | * @param options - The options for the write operation
+123 | * @throws {DocumentError} For file system errors
+124 | */
+125 | async writeFile(
+126 | filePath: string,
+127 | data: string | Buffer,
+128 | options: IWriteOptions = {}
+129 | ): Promise<void> {
+130 | try {
+131 | await fs.writeFile(filePath, data, {
+132 | encoding: options.encoding ?? "utf-8",
+133 | mode: options.mode,
+134 | flag: options.flag
+135 | });
+136 | } catch (error) {
+137 | throw new DocumentError(String(error), filePath);
+138 | }
+139 | },
+140 | /**
+141 | * Appends data to a file
+142 | * @param filePath - The path to the file
+143 | * @param content - The content to append
+144 | * @param options - The options for the write operation
+145 | * @throws {DocumentError} For file system errors
+146 | */
+147 | async appendFile(
+148 | filePath: string,
+149 | content: string,
+150 | options: IWriteOptions = {}
+151 | ): Promise<void> {
+152 | try {
+153 | await fs.appendFile(filePath, content, {
+154 | encoding: options.encoding ?? "utf-8",
+155 | mode: options.mode,
+156 | flag: options.flag
+157 | });
+158 | } catch (error) {
+159 | throw new DocumentError(String(error), filePath);
+160 | }
+161 | },
+162 | /**
+163 | * Reads the contents of a directory
+164 | * @param dirPath - The path to the directory
+165 | * @param options - The options for the read operation
+166 | * @returns An array of file and directory names in the directory
+167 | * @throws {Error} If the directory cannot be read
+168 | */
+169 | async readDir(
+170 | dirPath: string,
+171 | options?: { withFileTypes?: boolean }
+172 | ): Promise<string[]> {
+173 | return await fs.readdir(dirPath, options as ObjectEncodingOptions);
+174 | },
+175 | /**
+176 | * Creates a directory if it doesn't exist
+177 | * @param dirPath - The path where to create the directory
+178 | * @param recursive - Whether to create parent directories if they don't exist
+179 | * @throws {DocumentError} For file system errors
+180 | */
+181 | async createDir(dirPath: string, recursive = true): Promise<void> {
+182 | await fs.mkdir(dirPath, { recursive });
+183 | },
+184 | /**
+185 | * Gets the base name of a file
+186 | * @param filePath - The path to the file
+187 | * @returns The base name of the file (last portion of the path)
+188 | */
+189 | baseName(filePath: string): string {
+190 | return path.basename(filePath);
 191 | },
 192 | /**
-193 | * Appends data to a file
+193 | * Gets the extension of a file
 194 | * @param filePath - The path to the file
-195 | * @param content - The content to append
-196 | * @param options - The options for the write operation
-197 | * @throws {DocumentError} For file system errors
-198 | */
-199 | async appendFile(
-200 | filePath: string,
-201 | content: string,
-202 | options: IWriteOptions = {}
-203 | ): Promise<void> {
-204 | try {
-205 | await fs.appendFile(filePath, content, {
-206 | encoding: options.encoding ?? "utf-8",
-207 | mode: options.mode,
-208 | flag: options.flag
-209 | });
-210 | } catch (error) {
-211 | throw new DocumentError(String(error), filePath);
-212 | }
-213 | },
-214 | /**
-215 | * Reads the contents of a directory
-216 | * @param dirPath - The path to the directory
-217 | * @param options - The options for the read operation
-218 | * @returns An array of file and directory names in the directory
-219 | * @throws {Error} If the directory cannot be read
-220 | */
-221 | async readDir(
-222 | dirPath: string,
-223 | options?: { withFileTypes?: boolean }
-224 | ): Promise<string[]> {
-225 | return await fs.readdir(dirPath, options as ObjectEncodingOptions);
-226 | },
-227 | /**
-228 | * Creates a directory if it doesn't exist
-229 | * @param dirPath - The path where to create the directory
-230 | * @param recursive - Whether to create parent directories if they don't exist
-231 | * @throws {DocumentError} For file system errors
-232 | */
-233 | async createDir(dirPath: string, recursive = true): Promise<void> {
-234 | await fs.mkdir(dirPath, { recursive });
-235 | },
-236 | /**
-237 | * Gets the base name of a file
-238 | * @param filePath - The path to the file
-239 | * @returns The base name of the file (last portion of the path)
-240 | */
-241 | baseName(filePath: string): string {
-242 | return path.basename(filePath);
-243 | },
-244 | /**
-245 | * Gets the extension of a file
-246 | * @param filePath - The path to the file
-247 | * @returns The extension of the file including the dot (e.g., '.txt')
-248 | */
-249 | extension(filePath: string): string {
-250 | return path.extname(filePath);
-251 | },
-252 | /**
-253 | * Checks if a file or directory exists
-254 | * @param filePath - The path to check
-255 | * @returns True if the file or directory exists, false otherwise
-256 | */
-257 | exists(filePath: string): boolean {
-258 | try {
-259 | fsSync.accessSync(filePath);
-260 | return true;
-261 | } catch {
-262 | return false;
-263 | }
-264 | },
-265 | /**
-266 | * Checks if a path is absolute
-267 | * @param filePath - The path to check
-268 | * @returns True if the path is absolute, false otherwise
-269 | */
-270 | isAbsolute(filePath: string): boolean {
-271 | return path.isAbsolute(filePath);
-272 | },
-273 | /**
-274 | * Gets directory contents with type information
-275 | * @param dirPath - The path to the directory
-276 | * @returns An array of objects containing name and type information for each entry
-277 | * @throws {DocumentError} If path is not a directory or other errors occur
-278 | */
-279 | async readDirectory(
-280 | dirPath: string
-281 | ): Promise<Array<{ name: string; type: FileType }>> {
-282 | try {
-283 | const entries = await fs.readdir(dirPath, { withFileTypes: true });
-284 | return entries.map(entry => ({
-285 | name: entry.name,
-286 | type: entry.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File
-287 | }));
-288 | } catch (error) {
-289 | throw new DocumentError(String(error), dirPath);
-290 | }
-291 | },
-292 | /**
-293 | * Creates a directory if it doesn't exist
-294 | * @param dirPath - The path where to create the directory
-295 | * @param options - Options for directory creation including recursive and mode
-296 | * @throws {DocumentError} For file system errors
-297 | */
-298 | async ensureDirectory(
-299 | dirPath: string,
-300 | options: IDirectoryOptions = {}
-301 | ): Promise<void> {
-302 | try {
-303 | if (!this.exists(dirPath)) {
-304 | await fs.mkdir(dirPath, {
-305 | recursive: options.recursive ?? true,
-306 | mode: options.mode
-307 | });
-308 | }
-309 | } catch (error) {
-310 | throw new DocumentError(String(error), dirPath);
-311 | }
-312 | },
-313 | /**
-314 | * Removes a file or directory
-315 | * @param filePath - The path to remove
-316 | * @throws {DocumentError} For file system errors
-317 | */
-318 | async remove(filePath: string): Promise<void> {
-319 | const stats = await fs.stat(filePath);
-320 | if (stats.isDirectory()) {
-321 | await fs.rm(filePath, { recursive: true, force: true });
-322 | } else {
-323 | await fs.unlink(filePath);
-324 | }
-325 | },
-326 | /**
-327 | * Copies a file or directory
-328 | * @param src - The source path
-329 | * @param dest - The destination path
-330 | * @throws {DocumentError} For file system errors
-331 | */
-332 | async copy(src: string, dest: string): Promise<void> {
-333 | const stats = await fs.stat(src);
-334 | if (stats.isDirectory()) {
-335 | await this.copyDir(src, dest);
-336 | } else {
-337 | await fs.copyFile(src, dest);
-338 | }
-339 | },
-340 | /**
-341 | * Copies a directory recursively
-342 | * @private
-343 | * @param src - The source directory path
-344 | * @param dest - The destination directory path
-345 | * @throws {DocumentError} For file system errors
-346 | */
-347 | async copyDir(src: string, dest: string): Promise<void> {
-348 | await this.ensureDirectory(dest);
-349 | const entries = await fs.readdir(src, { withFileTypes: true });
-350 | for (const entry of entries) {
-351 | const srcPath = path.join(src, entry.name);
-352 | const destPath = path.join(dest, entry.name);
-353 | if (entry.isDirectory()) {
-354 | await this.copyDir(srcPath, destPath);
-355 | } else {
-356 | await fs.copyFile(srcPath, destPath);
-357 | }
-358 | }
-359 | },
-360 | /**
-361 | * Joins an array of paths into a single path
-362 | * @param paths - The paths to join
-363 | * @returns The joined path
-364 | */
-365 | join(...paths: string[]): string {
-366 | return path.join(...paths);
-367 | }
-368 | };
+195 | * @returns The extension of the file including the dot (e.g., '.txt')
+196 | */
+197 | extension(filePath: string): string {
+198 | return path.extname(filePath);
+199 | },
+200 | /**
+201 | * Checks if a file or directory exists
+202 | * @param filePath - The path to check
+203 | * @returns True if the file or directory exists, false otherwise
+204 | */
+205 | exists(filePath: string): boolean {
+206 | try {
+207 | fsSync.accessSync(filePath);
+208 | return true;
+209 | } catch {
+210 | return false;
+211 | }
+212 | },
+213 | /**
+214 | * Checks if a path is absolute
+215 | * @param filePath - The path to check
+216 | * @returns True if the path is absolute, false otherwise
+217 | */
+218 | isAbsolute(filePath: string): boolean {
+219 | return path.isAbsolute(filePath);
+220 | },
+221 | /**
+222 | * Gets directory contents with type information
+223 | * @param dirPath - The path to the directory
+224 | * @returns An array of objects containing name and type information for each entry
+225 | * @throws {DocumentError} If path is not a directory or other errors occur
+226 | */
+227 | async readDirectory(
+228 | dirPath: string
+229 | ): Promise<Array<{ name: string; type: FileType }>> {
+230 | try {
+231 | const entries = await fs.readdir(dirPath, { withFileTypes: true });
+232 | return entries.map(entry => ({
+233 | name: entry.name,
+234 | type: entry.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File
+235 | }));
+236 | } catch (error) {
+237 | throw new DocumentError(String(error), dirPath);
+238 | }
+239 | },
+240 | /**
+241 | * Creates a directory if it doesn't exist
+242 | * @param dirPath - The path where to create the directory
+243 | * @param options - Options for directory creation including recursive and mode
+244 | * @throws {DocumentError} For file system errors
+245 | */
+246 | async ensureDirectory(
+247 | dirPath: string,
+248 | options: IDirectoryOptions = {}
+249 | ): Promise<void> {
+250 | try {
+251 | if (!this.exists(dirPath)) {
+252 | await fs.mkdir(dirPath, {
+253 | recursive: options.recursive ?? true,
+254 | mode: options.mode
+255 | });
+256 | }
+257 | } catch (error) {
+258 | throw new DocumentError(String(error), dirPath);
+259 | }
+260 | },
+261 | /**
+262 | * Removes a file or directory
+263 | * @param filePath - The path to remove
+264 | * @throws {DocumentError} For file system errors
+265 | */
+266 | async remove(filePath: string): Promise<void> {
+267 | const stats = await fs.stat(filePath);
+268 | if (stats.isDirectory()) {
+269 | await fs.rm(filePath, { recursive: true, force: true });
+270 | } else {
+271 | await fs.unlink(filePath);
+272 | }
+273 | },
+274 | /**
+275 | * Copies a file or directory
+276 | * @param src - The source path
+277 | * @param dest - The destination path
+278 | * @throws {DocumentError} For file system errors
+279 | */
+280 | async copy(src: string, dest: string): Promise<void> {
+281 | const stats = await fs.stat(src);
+282 | if (stats.isDirectory()) {
+283 | await this.copyDir(src, dest);
+284 | } else {
+285 | await fs.copyFile(src, dest);
+286 | }
+287 | },
+288 | /**
+289 | * Copies a directory recursively
+290 | * @private
+291 | * @param src - The source directory path
+292 | * @param dest - The destination directory path
+293 | * @throws {DocumentError} For file system errors
+294 | */
+295 | async copyDir(src: string, dest: string): Promise<void> {
+296 | await this.ensureDirectory(dest);
+297 | const entries = await fs.readdir(src, { withFileTypes: true });
+298 | for (const entry of entries) {
+299 | const srcPath = path.join(src, entry.name);
+300 | const destPath = path.join(dest, entry.name);
+301 | if (entry.isDirectory()) {
+302 | await this.copyDir(srcPath, destPath);
+303 | } else {
+304 | await fs.copyFile(srcPath, destPath);
+305 | }
+306 | }
+307 | },
+308 | /**
+309 | * Joins an array of paths into a single path
+310 | * @param paths - The paths to join
+311 | * @returns The joined path
+312 | */
+313 | join(...paths: string[]): string {
+314 | return path.join(...paths);
+315 | }
+316 | };
+```
+
+## File: FileStats.ts, Path: `/root/git/codewrangler/src/infrastructure/filesystem/FileStats.ts`
+```ts
+ 1 | import { Stats } from "fs";
+ 2 | import fs from "fs/promises";
+ 3 | import { DocumentError } from "../../core/errors/DocumentError";
+ 4 | import { FileNotFoundError } from "../../core/errors/FileNotFoundError";
+ 5 | import { IAccessFlags, IFileStats } from "../../types/type";
+ 6 | class FileStatsService {
+ 7 | public async getStats(filePath: string): Promise<IFileStats> {
+ 8 | const stats = await this.getBasicStats(filePath);
+ 9 | const accessFlags = await this.checkAccess(filePath);
+10 | return this.mapStatsToFileInfo(stats, accessFlags);
+11 | }
+12 | private async getBasicStats(filePath: string): Promise<Stats> {
+13 | try {
+14 | return await fs.stat(filePath);
+15 | } catch (error) {
+16 | this.handleStatError(error as NodeJS.ErrnoException, filePath);
+17 | throw error; // TypeScript requires this
+18 | }
+19 | }
+20 | private handleStatError(
+21 | error: NodeJS.ErrnoException,
+22 | filePath: string
+23 | ): never {
+24 | if (error.code === "ENOENT") {
+25 | throw new FileNotFoundError(filePath);
+26 | }
+27 | throw new DocumentError(String(error), filePath);
+28 | }
+29 | private async checkAccess(filePath: string): Promise<IAccessFlags> {
+30 | const check = async (mode: number): Promise<boolean> => {
+31 | try {
+32 | await fs.access(filePath, mode);
+33 | return true;
+34 | } catch {
+35 | return false;
+36 | }
+37 | };
+38 | return {
+39 | readable: await check(fs.constants.R_OK),
+40 | writable: await check(fs.constants.W_OK),
+41 | executable: await check(fs.constants.X_OK)
+42 | };
+43 | }
+44 | private mapStatsToFileInfo(stats: Stats, accessFlags: IAccessFlags): IFileStats {
+45 | return {
+46 | size: stats.size,
+47 | created: stats.birthtime,
+48 | modified: stats.mtime,
+49 | accessed: stats.atime,
+50 | isDirectory: stats.isDirectory(),
+51 | isFile: stats.isFile(),
+52 | permissions: accessFlags
+53 | };
+54 | }
+55 | }
+56 | export const fileStatsService = async (
+57 | filePath: string
+58 | ): Promise<IFileStats> => {
+59 | const fileStatsService = new FileStatsService();
+60 | return await fileStatsService.getStats(filePath);
+61 | };
+```
+
+## File: JsonReader.ts, Path: `/root/git/codewrangler/src/infrastructure/filesystem/JsonReader.ts`
+```ts
+ 1 | import fs from "fs/promises";
+ 2 | import { documentFactory } from "./DocumentFactory";
+ 3 | import { DocumentError } from "../../core/errors/DocumentError";
+ 4 | import { FileNotFoundError } from "../../core/errors/FileNotFoundError";
+ 5 | export class JsonReader {
+ 6 | public async readJsonSync(filePath: string): Promise<object> {
+ 7 | try {
+ 8 | const absolutePath = this.validatePath(filePath);
+ 9 | const content = await this.readFileContent(absolutePath, filePath)
+10 | return this.parseJsonContent(content, filePath);
+11 | } catch (error) {
+12 | if (error instanceof DocumentError) {
+13 | throw error;
+14 | }
+15 | throw new DocumentError(String(error), filePath);
+16 | }
+17 | }
+18 | private validatePath(filePath: string): string {
+19 | const absolutePath = documentFactory.resolve(filePath);
+20 | if (!documentFactory.exists(absolutePath)) {
+21 | throw new FileNotFoundError(filePath);
+22 | }
+23 | return absolutePath;
+24 | }
+25 | private async readFileContent(
+26 | absolutePath: string,
+27 | filePath: string
+28 | ): Promise<string> {
+29 | const content = await fs.readFile(absolutePath, "utf-8");
+30 | if (!content) {
+31 | throw new DocumentError(`File is empty`, filePath);
+32 | }
+33 | return content;
+34 | }
+35 | private parseJsonContent(content: string, filePath: string): object {
+36 | try {
+37 | return JSON.parse(content);
+38 | } catch (error) {
+39 | throw new DocumentError(`Invalid JSON: ${String(error)}`, filePath);
+40 | }
+41 | }
+42 | }
+43 | export const jsonReader = async (path: string): Promise<object> => {
+44 | const jsonReader = new JsonReader();
+45 | return await jsonReader.readJsonSync(path);
+46 | };
 ```
 
 ## File: TemplateEngine.ts, Path: `/root/git/codewrangler/src/infrastructure/templates/TemplateEngine.ts`
@@ -1317,46 +1380,39 @@ codewrangler
  4 | import { FILE_TYPE } from "../../types/type";
  5 | import { Config } from "../../utils/config";
  6 | import { logger } from "../../utils/logger";
- 7 | import { IRenderStrategy } from "../renderer/RenderStrategy";
- 8 | export class DocumentTreeBuilder {
- 9 | private root: RenderableDirectory | RenderableFile | undefined;
-10 | private builder: NodeTreeBuilder;
-11 | constructor(
-12 | config: Config,
-13 | private renderStrategy: IRenderStrategy[]
-14 | ) {
-15 | this.builder = new NodeTreeBuilder(config);
-16 | }
-17 | async build(): Promise<void> {
-18 | try {
-19 | const fileTree = await this.builder.build();
-20 | this.root = await this.createDocumentStructure(fileTree);
-21 | await this.root.bundle();
-22 | } catch (error) {
-23 | logger.error("Error building document tree", error as Error);
-24 | throw error;
-25 | }
-26 | }
-27 | private async createDocumentStructure(
-28 | node: INodeTree
-29 | ): Promise<RenderableDirectory | RenderableFile> {
-30 | if (node.type === FILE_TYPE.Directory) {
-31 | const directory = new RenderableDirectory(
-32 | node.name,
-33 | node.path
-34 | );
-35 | if (node.children) {
-36 | for (const child of node.children) {
-37 | const childDocument = await this.createDocumentStructure(child);
-38 | await directory.addChild(childDocument);
+ 7 | export class DocumentTreeBuilder {
+ 8 | private root: RenderableDirectory | RenderableFile | undefined;
+ 9 | private builder: NodeTreeBuilder;
+10 | constructor(config: Config) {
+11 | this.builder = new NodeTreeBuilder(config);
+12 | }
+13 | async build(): Promise<void> {
+14 | try {
+15 | const fileTree = await this.builder.build();
+16 | this.root = await this.createDocumentStructure(fileTree);
+17 | await this.root.bundle();
+18 | } catch (error) {
+19 | logger.error("Error building document tree", error as Error);
+20 | throw error;
+21 | }
+22 | }
+23 | private async createDocumentStructure(
+24 | node: INodeTree
+25 | ): Promise<RenderableDirectory | RenderableFile> {
+26 | if (node.type === FILE_TYPE.Directory) {
+27 | const directory = new RenderableDirectory(node.name, node.path);
+28 | if (node.children) {
+29 | for (const child of node.children) {
+30 | const childDocument = await this.createDocumentStructure(child);
+31 | directory.addChild(childDocument);
+32 | }
+33 | }
+34 | return directory;
+35 | } else {
+36 | return new RenderableFile(node.name, node.path);
+37 | }
+38 | }
 39 | }
-40 | }
-41 | return directory;
-42 | } else {
-43 | return new RenderableFile(node.name, node.path);
-44 | }
-45 | }
-46 | }
 ```
 
 ## File: FileHidden.ts, Path: `/root/git/codewrangler/src/services/builder/FileHidden.ts`
@@ -1680,44 +1736,45 @@ codewrangler
  3 | Directory: "directory"
  4 | } as const;
  5 | export type FileType = (typeof FILE_TYPE)[keyof typeof FILE_TYPE];
- 6 | export interface IFileStats {
- 7 | size: number;
- 8 | created: Date;
- 9 | modified: Date;
-10 | accessed: Date;
-11 | isDirectory: boolean;
-12 | isFile: boolean;
-13 | permissions: {
-14 | readable: boolean;
-15 | writable: boolean;
-16 | executable: boolean;
-17 | };
-18 | }
-19 | export interface IReadOptions {
-20 | encoding?: BufferEncoding;
-21 | flag?: string;
-22 | }
-23 | export interface IWriteOptions extends IReadOptions {
-24 | mode?: number;
-25 | flag?: string;
-26 | }
-27 | export interface IDirectoryOptions {
-28 | recursive?: boolean;
-29 | mode?: number;
-30 | }
-31 | export interface IFileTreeItem {
-32 | path: string;
-33 | type: FileType;
-34 | stats?: IFileStats;
-35 | }
-36 | export interface IPropsNode {
-37 | name: string;
-38 | path: string;
-39 | deep: number;
-40 | size: number;
-41 | extension?: string;
-42 | stats?: IFileStats;
-43 | }
+ 6 | export interface IAccessFlags {
+ 7 | readable: boolean;
+ 8 | writable: boolean;
+ 9 | executable: boolean;
+10 | }
+11 | export interface IFileStats {
+12 | size: number;
+13 | created: Date;
+14 | modified: Date;
+15 | accessed: Date;
+16 | isDirectory: boolean;
+17 | isFile: boolean;
+18 | permissions: IAccessFlags;
+19 | }
+20 | export interface IReadOptions {
+21 | encoding?: BufferEncoding;
+22 | flag?: string;
+23 | }
+24 | export interface IWriteOptions extends IReadOptions {
+25 | mode?: number;
+26 | flag?: string;
+27 | }
+28 | export interface IDirectoryOptions {
+29 | recursive?: boolean;
+30 | mode?: number;
+31 | }
+32 | export interface IFileTreeItem {
+33 | path: string;
+34 | type: FileType;
+35 | stats?: IFileStats;
+36 | }
+37 | export interface IPropsNode {
+38 | name: string;
+39 | path: string;
+40 | deep: number;
+41 | size: number;
+42 | extension?: string;
+43 | stats?: IFileStats;
+44 | }
 ```
 
 ## File: Config.ts, Path: `/root/git/codewrangler/src/utils/config/Config.ts`
@@ -1730,96 +1787,82 @@ codewrangler
  6 | configSchema
  7 | } from "./schema";
  8 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
- 9 | import { logger } from "../logger/Logger";
-10 | export class Config {
-11 | private static instance: Config | undefined;
-12 | private config: ConfigOptions;
-13 | private constructor() {
-14 | this.config = configSchema.parse(DEFAULT_CONFIG);
-15 | }
-16 | public static async load(): Promise<Config> {
-17 | if (!Config.instance) {
-18 | Config.instance = new Config();
-19 | await Config.instance.initialize();
-20 | }
-21 | return Config.instance;
-22 | }
-23 | public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
-24 | return this.config[key] as ConfigOptions[T];
+ 9 | import { JsonReader } from "../../infrastructure/filesystem/JsonReader";
+10 | import { logger } from "../logger/Logger";
+11 | export class Config {
+12 | private static instance: Config | undefined;
+13 | private config: ConfigOptions;
+14 | private jsonReader: JsonReader;
+15 | private constructor() {
+16 | this.jsonReader = new JsonReader();
+17 | this.config = configSchema.parse(DEFAULT_CONFIG);
+18 | }
+19 | public static async load(): Promise<Config> {
+20 | if (!Config.instance) {
+21 | Config.instance = new Config();
+22 | await Config.instance.loadUserConfig();
+23 | }
+24 | return Config.instance;
 25 | }
-26 | public set(
-27 | key: keyof ConfigOptions,
-28 | value: ConfigOptions[keyof ConfigOptions]
-29 | ): void {
-30 | const updatedConfig = { ...this.config, [key]: value };
-31 | try {
-32 | configSchema.parse(updatedConfig);
-33 | this.config = updatedConfig;
-34 | } catch (error) {
-35 | if (error instanceof z.ZodError) {
-36 | logger.error(`Invalid configuration value: ${error.errors}`);
-37 | }
-38 | throw error;
-39 | }
+26 | public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
+27 | return this.config[key] as ConfigOptions[T];
+28 | }
+29 | public set(
+30 | key: keyof ConfigOptions,
+31 | value: ConfigOptions[keyof ConfigOptions]
+32 | ): void {
+33 | const updatedConfig = { ...this.config, [key]: value };
+34 | try {
+35 | configSchema.parse(updatedConfig);
+36 | this.config = updatedConfig;
+37 | } catch (error) {
+38 | if (error instanceof z.ZodError) {
+39 | logger.error(`Invalid configuration value: ${error.errors}`);
 40 | }
-41 | public getAll(): ConfigOptions {
-42 | return this.config;
+41 | throw error;
+42 | }
 43 | }
-44 | public reset(): void {
-45 | this.config = DEFAULT_CONFIG;
+44 | public getAll(): ConfigOptions {
+45 | return this.config;
 46 | }
-47 | public static destroy(): void {
-48 | Config.instance = undefined;
+47 | public reset(): void {
+48 | this.config = DEFAULT_CONFIG;
 49 | }
-50 | public override(config: Partial<ConfigOptions>): void {
-51 | const newOverrideConfig = { ...this.config, ...config };
-52 | try {
-53 | configSchema.parse(newOverrideConfig);
-54 | this.config = newOverrideConfig;
-55 | } catch (error) {
-56 | if (error instanceof z.ZodError) {
-57 | logger.error(`Invalid configuration value: ${error.errors}`);
-58 | }
-59 | throw error;
-60 | }
+50 | public static destroy(): void {
+51 | Config.instance = undefined;
+52 | }
+53 | public override(config: Partial<ConfigOptions>): void {
+54 | const newOverrideConfig = { ...this.config, ...config };
+55 | try {
+56 | configSchema.parse(newOverrideConfig);
+57 | this.config = newOverrideConfig;
+58 | } catch (error) {
+59 | if (error instanceof z.ZodError) {
+60 | logger.error(`Invalid configuration value: ${error.errors}`);
 61 | }
-62 | private async initialize(): Promise<Config> {
-63 | try {
-64 | const currentDirConfig = documentFactory.join(
-65 | process.cwd(),
-66 | this.config.codeConfigFile
-67 | );
-68 | if (documentFactory.exists(currentDirConfig)) {
-69 | const fileContent = await documentFactory.readFile(currentDirConfig);
-70 | if (!fileContent.trim()) {
-71 | throw new Error(`Configuration file is empty: ${currentDirConfig}`);
-72 | }
-73 | let userConfig;
-74 | try {
-75 | userConfig = JSON.parse(fileContent);
-76 | } catch {
-77 | throw new Error(
-78 | `Invalid JSON in configuration file: ${currentDirConfig}`
-79 | );
-80 | }
-81 | const validatedConfig = configSchema.parse({
-82 | ...this.config,
-83 | ...userConfig
-84 | });
-85 | this.config = validatedConfig;
-86 | }
-87 | } catch (error) {
-88 | if (error instanceof z.ZodError) {
-89 | const details = error.errors
-90 | .map(err => `${err.path.join(".")}: ${err.message}`)
-91 | .join(", ");
-92 | throw new Error(`Configuration validation failed: ${details}`);
-93 | }
-94 | throw error;
-95 | }
-96 | return this;
-97 | }
-98 | }
+62 | throw error;
+63 | }
+64 | }
+65 | private async loadUserConfig(): Promise<void> {
+66 | try {
+67 | const configPath = documentFactory.resolve(this.config.codeConfigFile);
+68 | const userConfig = await this.jsonReader.readJsonSync(configPath);
+69 | console.log(userConfig);
+70 | this.config = configSchema.parse({ ...this.config, ...userConfig });
+71 | } catch (error) {
+72 | this.handleConfigError(error);
+73 | }
+74 | }
+75 | private handleConfigError(error: unknown): void {
+76 | if (error instanceof z.ZodError) {
+77 | const details = error.errors
+78 | .map(err => `${err.path.join(".")}: ${err.message}`)
+79 | .join(", ");
+80 | throw new Error(`Configuration validation failed: ${details}`);
+81 | }
+82 | throw error;
+83 | }
+84 | }
 ```
 
 ## File: index.ts, Path: `/root/git/codewrangler/src/utils/config/index.ts`

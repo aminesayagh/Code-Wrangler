@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { Stats } from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
