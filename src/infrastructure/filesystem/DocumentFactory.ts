@@ -140,19 +140,19 @@ export const DocumentFactory = {
 
       // Check if file exists first
       if (!this.exists(absolutePath)) {
-        throw new Error(`File not found: ${absolutePath}`);
+        throw new Error(`File not found: ${filePath}`);
       }
 
       const fileContents = await fs.readFile(absolutePath, "utf-8");
       if (!fileContents) {
-        throw new Error(`File is empty: ${absolutePath}`);
+        throw new Error(`File is empty: ${filePath}`);
       }
 
       try {
         return JSON.parse(fileContents);
       } catch (parseError) {
         throw new Error(
-          `Invalid JSON in file ${absolutePath}: ${String(parseError)}`
+          `Invalid JSON in file ${filePath}: ${String(parseError)}`
         );
       }
     } catch (error) {
