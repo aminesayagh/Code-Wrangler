@@ -460,7 +460,11 @@ describe("DocumentFactory", () => {
       const newDir = path.join(tempDir, "mode-test");
       await DocumentFactory.ensureDirectory(newDir, { mode: 0o755 });
       const stats = await fs.stat(newDir);
-      expect(stats.mode & 0o777).toBe(0o755);
+      const expectedMode =
+        process.platform === "win32" // on windows, the default mode is 0o666
+          ? 0o666
+          : 0o755;
+      expect(stats.mode & 0o777).toBe(expectedMode);
     });
   });
 
