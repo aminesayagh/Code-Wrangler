@@ -1,13 +1,12 @@
-import { DocumentTreeBuilder } from "../DocumentTreeBuilder";
-import { FileTreeBuilder } from "../FileTreeBuilder";
 import { RenderableDirectory } from "../../../core/entities/NodeDirectory";
 import { RenderableFile } from "../../../core/entities/NodeFile";
-import { IRenderStrategy } from "../../renderer/RenderStrategy";
+import { FILE_TYPE } from "../../../types/type";
 import { Config } from "../../../utils/config";
 import { logger } from "../../../utils/logger";
-import { FileType } from "../../../types/type";
+import { DocumentTreeBuilder } from "../DocumentTreeBuilder";
+import { NodeTreeBuilder } from "../NodeTreeBuilder";
 
-jest.mock("../FileTreeBuilder");
+jest.mock("../NodeTreeBuilder");
 jest.mock("../../../core/entities/NodeDirectory");
 jest.mock("../../../core/entities/NodeFile");
 jest.mock("../../../utils/logger");
@@ -15,9 +14,9 @@ jest.mock("../../../utils/config");
 
 describe("DocumentTreeBuilder", () => {
   let mockConfig: jest.Mocked<Config>;
-  let mockRenderStrategy: jest.Mocked<IRenderStrategy>;
   let documentTreeBuilder: DocumentTreeBuilder;
-  let mockFileTreeBuilder: jest.Mocked<FileTreeBuilder>;
+  let mockNodeTreeBuilder: jest.Mocked<NodeTreeBuilder>;
+  const TEMPLATE_PATH = "/test/test.txt";
 
   beforeEach(() => {
     // Reset all mocks
@@ -28,39 +27,28 @@ describe("DocumentTreeBuilder", () => {
       get: jest.fn()
     } as unknown as jest.Mocked<Config>;
 
-    // Set up mock render strategy
-    mockRenderStrategy = {
-      renderFile: jest.fn(),
-      renderDirectory: jest.fn(),
-      loadTemplates: jest.fn(),
-      render: jest.fn(),
-      dispose: jest.fn()
-    };
-
-    // Set up mock FileTreeBuilder
-    mockFileTreeBuilder = {
+    // Set up mock NodeTreeBuilder
+    mockNodeTreeBuilder = {
       build: jest.fn()
-    } as unknown as jest.Mocked<FileTreeBuilder>;
+    } as unknown as jest.Mocked<NodeTreeBuilder>;
 
-    (FileTreeBuilder as jest.Mock).mockImplementation(
-      () => mockFileTreeBuilder
+    (NodeTreeBuilder as jest.Mock).mockImplementation(
+      () => mockNodeTreeBuilder
     );
 
     // Create instance of DocumentTreeBuilder
-    documentTreeBuilder = new DocumentTreeBuilder(mockConfig, [
-      mockRenderStrategy
-    ]);
+    documentTreeBuilder = new DocumentTreeBuilder(mockConfig);
   });
 
   describe("build", () => {
     it("should successfully build a document tree with a single file", async () => {
       const mockFileNode = {
         name: "test.txt",
-        path: "/test/test.txt",
-        type: FileType.File
+        path: TEMPLATE_PATH,
+        type: FILE_TYPE.File
       };
 
-      mockFileTreeBuilder.build.mockResolvedValue(mockFileNode);
+      mockNodeTreeBuilder.build.mockResolvedValue(mockFileNode);
 
       (RenderableFile as jest.Mock).mockImplementation(() => ({
         bundle: jest.fn().mockResolvedValue(undefined)
@@ -68,41 +56,37 @@ describe("DocumentTreeBuilder", () => {
 
       await documentTreeBuilder.build();
 
-      expect(mockFileTreeBuilder.build).toHaveBeenCalledTimes(1);
-      expect(RenderableFile).toHaveBeenCalledWith(
-        "test.txt",
-        "/test/test.txt",
-        [mockRenderStrategy]
-      );
+      expect(mockNodeTreeBuilder.build).toHaveBeenCalledTimes(1);
+      expect(RenderableFile).toHaveBeenCalledWith("test.txt", TEMPLATE_PATH);
     });
 
     it("should successfully build a document tree with a directory structure", async () => {
       const mockTree = {
         name: "root",
         path: "/test",
-        type: FileType.Directory,
+        type: FILE_TYPE.Directory,
         children: [
           {
             name: "test.txt",
-            path: "/test/test.txt",
-            type: FileType.File
+            path: TEMPLATE_PATH,
+            type: FILE_TYPE.File
           },
           {
             name: "subdir",
             path: "/test/subdir",
-            type: FileType.Directory,
+            type: FILE_TYPE.Directory,
             children: [
               {
                 name: "subfile.txt",
                 path: "/test/subdir/subfile.txt",
-                type: FileType.File
+                type: FILE_TYPE.File
               }
             ]
           }
         ]
       };
 
-      mockFileTreeBuilder.build.mockResolvedValue(mockTree);
+      mockNodeTreeBuilder.build.mockResolvedValue(mockTree);
 
       const mockDirectory = {
         addChild: jest.fn().mockResolvedValue(undefined),
@@ -118,7 +102,7 @@ describe("DocumentTreeBuilder", () => {
 
       await documentTreeBuilder.build();
 
-      expect(mockFileTreeBuilder.build).toHaveBeenCalledTimes(1);
+      expect(mockNodeTreeBuilder.build).toHaveBeenCalledTimes(1);
       expect(RenderableDirectory).toHaveBeenCalledTimes(2);
       expect(RenderableFile).toHaveBeenCalledTimes(2);
       expect(mockDirectory.addChild).toHaveBeenCalledTimes(3);
@@ -126,7 +110,7 @@ describe("DocumentTreeBuilder", () => {
 
     it("should handle errors during tree building", async () => {
       const error = new Error("Build failed");
-      mockFileTreeBuilder.build.mockRejectedValue(error);
+      mockNodeTreeBuilder.build.mockRejectedValue(error);
 
       await expect(documentTreeBuilder.build()).rejects.toThrow("Build failed");
       expect(logger.error).toHaveBeenCalledWith(
@@ -139,17 +123,17 @@ describe("DocumentTreeBuilder", () => {
       const mockTree = {
         name: "root",
         path: "/test",
-        type: FileType.Directory,
+        type: FILE_TYPE.Directory,
         children: [
           {
             name: "test.txt",
-            path: "/test/test.txt",
-            type: FileType.File
+            path: TEMPLATE_PATH,
+            type: FILE_TYPE.File
           }
         ]
       };
 
-      mockFileTreeBuilder.build.mockResolvedValue(mockTree);
+      mockNodeTreeBuilder.build.mockResolvedValue(mockTree);
       (RenderableDirectory as jest.Mock).mockImplementation(() => {
         throw new Error("Failed to create directory");
       });
@@ -164,11 +148,11 @@ describe("DocumentTreeBuilder", () => {
       const mockTree = {
         name: "root",
         path: "/test",
-        type: FileType.Directory,
+        type: FILE_TYPE.Directory,
         children: []
       };
 
-      mockFileTreeBuilder.build.mockResolvedValue(mockTree);
+      mockNodeTreeBuilder.build.mockResolvedValue(mockTree);
 
       const mockDirectory = {
         addChild: jest.fn().mockResolvedValue(undefined),
@@ -189,11 +173,11 @@ describe("DocumentTreeBuilder", () => {
       const mockTree = {
         name: "root",
         path: "/test",
-        type: FileType.Directory,
+        type: FILE_TYPE.Directory,
         children: []
       };
 
-      mockFileTreeBuilder.build.mockResolvedValue(mockTree);
+      mockNodeTreeBuilder.build.mockResolvedValue(mockTree);
 
       const mockDirectory = {
         addChild: jest.fn().mockResolvedValue(undefined),

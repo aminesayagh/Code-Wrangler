@@ -1,19 +1,20 @@
 import { z } from "zod";
-import { logger } from "../logger/Logger";
-import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+
 import {
   ConfigKeys,
   ConfigOptions,
-  ConfigSchema,
-  DEFAULT_CONFIG
+  DEFAULT_CONFIG,
+  configSchema
 } from "./schema";
+import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+import { logger } from "../logger/Logger";
 
 export class Config {
   private static instance: Config | undefined;
   private config: ConfigOptions;
 
   private constructor() {
-    this.config = ConfigSchema.parse(DEFAULT_CONFIG);
+    this.config = configSchema.parse(DEFAULT_CONFIG);
   }
 
   public static async load(): Promise<Config> {
@@ -22,48 +23,6 @@ export class Config {
       await Config.instance.initialize();
     }
     return Config.instance;
-  }
-  private async initialize(): Promise<Config> {
-    try {
-      const currentDirConfig = DocumentFactory.join(
-        process.cwd(),
-        this.config.codeConfigFile
-      );
-
-      if (DocumentFactory.exists(currentDirConfig)) {
-        const fileContent = await DocumentFactory.readFile(currentDirConfig);
-
-        if (!fileContent.trim()) {
-          throw new Error(`Configuration file is empty: ${currentDirConfig}`);
-        }
-
-        let userConfig;
-        try {
-          userConfig = JSON.parse(fileContent);
-        } catch {
-          throw new Error(
-            `Invalid JSON in configuration file: ${currentDirConfig}`
-          );
-        }
-
-        // Validate and merge configurations
-        const validatedConfig = ConfigSchema.parse({
-          ...this.config,
-          ...userConfig
-        });
-
-        this.config = validatedConfig;
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const details = error.errors
-          .map(err => `${err.path.join(".")}: ${err.message}`)
-          .join(", ");
-        throw new Error(`Configuration validation failed: ${details}`);
-      }
-      throw error;
-    }
-    return this;
   }
 
   public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
@@ -76,7 +35,7 @@ export class Config {
   ): void {
     const updatedConfig = { ...this.config, [key]: value };
     try {
-      ConfigSchema.parse(updatedConfig);
+      configSchema.parse(updatedConfig);
       this.config = updatedConfig;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -97,7 +56,7 @@ export class Config {
   public override(config: Partial<ConfigOptions>): void {
     const newOverrideConfig = { ...this.config, ...config };
     try {
-      ConfigSchema.parse(newOverrideConfig);
+      configSchema.parse(newOverrideConfig);
       this.config = newOverrideConfig;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -105,5 +64,47 @@ export class Config {
       }
       throw error;
     }
+  }
+  private async initialize(): Promise<Config> {
+    try {
+      const currentDirConfig = documentFactory.join(
+        process.cwd(),
+        this.config.codeConfigFile
+      );
+
+      if (documentFactory.exists(currentDirConfig)) {
+        const fileContent = await documentFactory.readFile(currentDirConfig);
+
+        if (!fileContent.trim()) {
+          throw new Error(`Configuration file is empty: ${currentDirConfig}`);
+        }
+
+        let userConfig;
+        try {
+          userConfig = JSON.parse(fileContent);
+        } catch {
+          throw new Error(
+            `Invalid JSON in configuration file: ${currentDirConfig}`
+          );
+        }
+
+        // Validate and merge configurations
+        const validatedConfig = configSchema.parse({
+          ...this.config,
+          ...userConfig
+        });
+
+        this.config = validatedConfig;
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const details = error.errors
+          .map(err => `${err.path.join(".")}: ${err.message}`)
+          .join(", ");
+        throw new Error(`Configuration validation failed: ${details}`);
+      }
+      throw error;
+    }
+    return this;
   }
 }

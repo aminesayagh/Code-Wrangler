@@ -84,12 +84,10 @@ describe("FileHidden", () => {
     describe("additional ignore files handling", () => {
       it("should exclude files matching additional ignore patterns", () => {
         mockConfig.get.mockImplementation((key: string) => {
-          switch (key) {
-            case "additionalIgnoreFiles":
-              return ["*.log", "temp/**"];
-            default:
-              return [];
+          if (key === "additionalIgnoreFiles") {
+            return ["*.log", "temp/**"];
           }
+          return [];
         });
         fileHidden = new FileHidden(mockConfig);
 
@@ -99,12 +97,10 @@ describe("FileHidden", () => {
 
       it("should not exclude files not matching additional ignore patterns", () => {
         mockConfig.get.mockImplementation((key: string) => {
-          switch (key) {
-            case "additionalIgnoreFiles":
-              return ["*.log", "temp/**"];
-            default:
-              return [];
+          if (key === "additionalIgnoreFiles") {
+            return ["*.log", "temp/**"];
           }
+          return [];
         });
         fileHidden = new FileHidden(mockConfig);
 

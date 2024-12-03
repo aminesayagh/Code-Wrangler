@@ -11,5 +11,5 @@ export interface ICommandOptions {
 }
 
 export interface ICommand {
-  execute(args: string[], options: ICommandOptions): Promise<void>;
+  execute: (args: string[], options: ICommandOptions) => Promise<void>;
 }

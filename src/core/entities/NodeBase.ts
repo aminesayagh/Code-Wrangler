@@ -1,5 +1,6 @@
+import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
 import { IFileStats, IPropsNode } from "../../types/type";
-import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 
 const defaultProps: IPropsNode = {
   name: "",
@@ -21,55 +22,50 @@ const defaultProps: IPropsNode = {
   }
 };
 
+export interface INodeContent {
+  content: string;
+}
+
 interface INodeLifeCycle {
-  validate(): boolean;
-  bundle(deep: number): Promise<void>;
-  render(): void;
-  dispose(): Promise<void>;
-  clone(): Promise<NodeBase>;
+  validate: () => boolean;
+  bundle: (deep: number) => Promise<void>;
+  render: (strategy: IRenderStrategy) => INodeContent;
+  dispose: () => void;
+  clone: () => NodeBase;
 }
 
 export abstract class NodeBase implements INodeLifeCycle {
   protected _props: IPropsNode = { ...defaultProps };
 
-  constructor(_name: string, _path: string) {
-    // check if path is absolute or a valid path
-    this.initNode(_name, _path);
+  public constructor(
+    _name: string,
+    private originalPath: string
+  ) {
+    this.initNode(_name, originalPath);
     this.validate();
   }
 
-  private validatePath(path: string): boolean {
-    if (!DocumentFactory.exists(path)) {
-      throw new Error(`Path ${path} does not exist`);
+  public validate(): boolean {
+    if (!documentFactory.exists(this.path)) {
+      throw new Error(`Path ${this.originalPath} does not exist`);
     }
-    if (!DocumentFactory.isAbsolute(path)) {
-      throw new Error("Path is not absolute");
+    if (!documentFactory.isAbsolute(this.path)) {
+      throw new Error(`Path ${this.originalPath} is not absolute`);
     }
     return true;
   }
 
-  public validate(): boolean {
-    return this.validatePath(this.path);
-  }
-
-  private initNode(name: string, path: string): void {
-    this.deep = 0;
-    this.size = 0;
-    this.name = name;
-    this.path = DocumentFactory.resolve(path);
-  }
-
   // abstract methods
-  abstract bundle(deep: number): Promise<void>;
-  abstract render(): void;
-  abstract get secondaryProps(): Record<string, unknown> | undefined;
+  public abstract bundle(deep: number): Promise<void>;
+  public abstract render(strategy: IRenderStrategy): INodeContent;
+  public abstract get secondaryProps(): Record<string, unknown> | undefined;
 
   // getters and setters
   // deep
   get deep(): number {
     return this._props.deep;
   }
-  protected set deep(deep: number) {
+  set deep(deep: number) {
     this._props.deep = deep;
   }
 
@@ -77,7 +73,7 @@ export abstract class NodeBase implements INodeLifeCycle {
   get size(): number {
     return this._props.size;
   }
-  protected set size(size: number) {
+  set size(size: number) {
     this._props.size = size;
   }
 
@@ -85,7 +81,7 @@ export abstract class NodeBase implements INodeLifeCycle {
   get name(): string {
     return this._props.name;
   }
-  protected set name(name: string) {
+  set name(name: string) {
     this._props.name = name;
   }
 
@@ -93,7 +89,7 @@ export abstract class NodeBase implements INodeLifeCycle {
   get path(): string {
     return this._props.path;
   }
-  protected set path(path: string) {
+  set path(path: string) {
     this._props.path = path;
   }
 
@@ -101,21 +97,30 @@ export abstract class NodeBase implements INodeLifeCycle {
   get stats(): IFileStats | undefined {
     return this._props.stats;
   }
-  protected set stats(stats: IFileStats | undefined) {
+  set stats(stats: IFileStats | undefined) {
     this._props.stats = stats;
   }
 
   // props
   get props(): IPropsNode {
-    const props = { ...this._props, ...this.secondaryProps };
-    return props;
+    return {
+      ...this._props,
+      ...this.secondaryProps
+    };
   }
 
-  public async dispose(): Promise<void> {
+  public dispose(): void {
     this._props = { ...defaultProps };
   }
 
-  public async clone(): Promise<NodeBase> {
+  public clone(): NodeBase {
     return Object.assign(Object.create(this), this);
+  }
+
+  private initNode(name: string, path: string): void {
+    this.deep = 0;
+    this.size = 0;
+    this.name = name;
+    this.path = documentFactory.resolve(path);
   }
 }

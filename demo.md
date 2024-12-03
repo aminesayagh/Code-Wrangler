@@ -1,28 +1,9 @@
 
-# Code Documentation
-Generated on: 2024-12-02T09:21:53.304Z
-Total files: 43
-
-## Project Structure
-
-```
+# Code documentation
 codewrangler
-├── coverage
-├── dist
-├── documentation
-├── node_modules
 ├── public
 │   └── templates
 └── src
-    ├── __mocks__
-    │   ├── mockFileSystem.ts
-    │   └── root
-    │       ├── dir
-    │       │   └── file3.ts
-    │       ├── file1.ts
-    │       └── temp_test
-    │           ├── ensure
-    │           └── mode-test
     ├── cli
     │   ├── CodeWrangler.ts
     │   ├── commands
@@ -36,11 +17,7 @@ codewrangler
     │   ├── entities
     │   │   ├── NodeBase.ts
     │   │   ├── NodeDirectory.ts
-    │   │   ├── NodeFile.ts
-    │   │   └── __tests__
-    │   │       ├── NodeBase.test.ts
-    │   │       ├── NodeDIrectory.test.ts
-    │   │       └── NodeFile.test.ts
+    │   │   └── NodeFile.ts
     │   └── errors
     │       ├── DirectoryNotFoundError.ts
     │       ├── DocumentError.ts
@@ -48,26 +25,17 @@ codewrangler
     │       └── index.ts
     ├── infrastructure
     │   ├── filesystem
-    │   │   ├── DocumentFactory.ts
-    │   │   └── __tests__
-    │   │       └── DocumentFactory.test.ts
+    │   │   └── DocumentFactory.ts
     │   └── templates
     │       ├── TemplateEngine.ts
-    │       ├── __tests__
     │       └── zod.ts
     ├── services
     │   ├── builder
     │   │   ├── DocumentTreeBuilder.ts
     │   │   ├── FileHidden.ts
-    │   │   ├── FileTreeBuilder.ts
-    │   │   └── __tests__
-    │   │       ├── DocumentTreeBuild.test.ts
-    │   │       ├── FileHidden.test.ts
-    │   │       └── FileTreeBuilder.test.ts
+    │   │   └── NodeTreeBuilder.ts
     │   └── renderer
     │       ├── RenderStrategy.ts
-    │       ├── __tests__
-    │       │   └── RenderStrategy.test.ts
     │       └── strategies
     │           ├── HTMLStrategy.ts
     │           └── MarkdownStrategy.ts
@@ -77,4765 +45,1991 @@ codewrangler
     └── utils
         ├── config
         │   ├── Config.ts
-        │   ├── __tests__
-        │   │   └── Config.test.ts
         │   ├── index.ts
         │   └── schema.ts
         ├── helpers
         │   └── ProgressBar.ts
         └── logger
             ├── Logger.ts
-            ├── __tests__
-            │   └── Logger.test.ts
             └── index.ts
-```
 
-
-## File: mockFileSystem.ts
-- Path: `/root/git/codewrangler/src/__mocks__/mockFileSystem.ts`
-- Size: 1.36 KB
-- Extension: .ts
-- Lines of code: 38
-- Content:
-
-```ts
- 1 | import path from "path";
- 2 | 
- 3 | export interface IFileSystem {
- 4 |   [key: string]: string | IFileSystem;
- 5 | }
- 6 | 
- 7 | export const MOCK_PATH = path.resolve("src/__mocks__/root");
- 8 | 
- 9 | export const mockFileSystem: IFileSystem = {
-10 |   root: {
-11 |     "file1.ts": `export const test = "test 1";\n`,
-12 |     "file2.js": `export const test = "test 2";`,
-13 |     dir: {
-14 |       "file3.ts": `export const test = "test 3";`,
-15 |       "file4.js": `export const test = "test 4";`,
-16 |     },
-17 |   },
-18 | };
-19 | 
-20 | export const mockPath = (): string => path.resolve("src/__mocks__/root");
-21 | 
-22 | export function isDirectory(path: string): boolean {
-23 |   const parts = path.split("/").filter(Boolean);
-24 |   let current: IFileSystem | string = mockFileSystem;
-25 |   for (const part of parts) {
-26 |     const currentPart = (current as IFileSystem)[part] as IFileSystem | string;
-27 |     if (typeof currentPart === "string") return false;
-28 |     current = currentPart;
-29 |   }
-30 |   return true;
-31 | }
-32 | 
-33 | export function getContent(path: string): string | null {
-34 |   const parts = path.split("/").filter(Boolean);
-35 |   let current: IFileSystem | string = mockFileSystem;
-36 |   for (const part of parts) {
-37 |     if ((current as IFileSystem)[part] === undefined) {
-38 |       console.error("File not found: ", path, "on part: ", part);
-39 |       throw new Error(`File not found: ${path}`);
-40 |     }
-41 |     current = (current as IFileSystem)[part] as IFileSystem | string;
-42 |   }
-43 |   return typeof current === "string" ? current : null;
-44 | }
-45 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: file3.ts
-- Path: `/root/git/codewrangler/src/__mocks__/root/dir/file3.ts`
-- Size: 29.00 B
-- Extension: .ts
-- Lines of code: 1
-- Content:
-
-```ts
-1 | export const test = "test 3";
-```
-
----------------------------------------------------------------------------
-
-
-## File: file1.ts
-- Path: `/root/git/codewrangler/src/__mocks__/root/file1.ts`
-- Size: 30.00 B
-- Extension: .ts
-- Lines of code: 1
-- Content:
-
-```ts
-1 | export const test = "test 1";
-2 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: CodeWrangler.ts
-- Path: `/root/git/codewrangler/src/cli/CodeWrangler.ts`
-- Size: 1.21 KB
-- Extension: .ts
-- Lines of code: 32
-- Content:
-
+## File: CodeWrangler.ts, Path: `/root/git/codewrangler/src/cli/CodeWrangler.ts`
 ```ts
  1 | import { Command } from "commander";
- 2 | import { Config } from "../utils/config/Config";
- 3 | import { GenerateCommand } from "./commands/GenerateCommand";
+ 2 | import { GenerateCommand } from "./commands/GenerateCommand";
+ 3 | import { ICommandOptions } from "./commands/types";
  4 | import { ProgramBuilder } from "./program/ProgramBuilder";
- 5 | import { ICommandOptions } from "./commands/types";
- 6 | 
- 7 | export class CodeWrangler {
- 8 |   private static instance: CodeWrangler | undefined;
- 9 |   private readonly VERSION = "1.0.0";
-10 |   private config: Config;
-11 |   private program: Command;
-12 |   private generateCommand: GenerateCommand;
-13 | 
-14 |   private constructor(config: Config) {
-15 |     this.config = config;
-16 |     this.generateCommand = new GenerateCommand(this.config);
-17 |     this.program = new ProgramBuilder(this.config, this.VERSION).build();
-18 | 
-19 |     this.setupCommands();
-20 |   }
-21 | 
-22 |   private setupCommands(): void {
-23 |     this.program.action(async (pattern: string, options: ICommandOptions) => {
-24 |       await this.generateCommand.execute([pattern], options);
-25 |     });
-26 |   }
-27 | 
-28 |   public static async run(): Promise<boolean> {
-29 |     if (!CodeWrangler.instance) {
-30 |       const config = await Config.load();
-31 |       CodeWrangler.instance = new CodeWrangler(config);
-32 |       await CodeWrangler.instance.program.parseAsync(process.argv);
-33 |       return true;
-34 |     }
-35 |     throw new Error("CodeWrangler already initialized");
-36 |   }
-37 | }
-38 | 
+ 5 | import { Config } from "../utils/config/Config";
+ 6 | export class CodeWrangler {
+ 7 | private static instance: CodeWrangler | undefined;
+ 8 | private readonly VERSION = "1.0.0";
+ 9 | private config: Config;
+10 | private program: Command;
+11 | private generateCommand: GenerateCommand;
+12 | private constructor(config: Config) {
+13 | this.config = config;
+14 | this.generateCommand = new GenerateCommand(this.config);
+15 | this.program = new ProgramBuilder(this.config, this.VERSION).build();
+16 | this.setupCommands();
+17 | }
+18 | public static async run(): Promise<boolean> {
+19 | if (!CodeWrangler.instance) {
+20 | const config = await Config.load();
+21 | CodeWrangler.instance = new CodeWrangler(config);
+22 | await CodeWrangler.instance.program.parseAsync(process.argv);
+23 | return true;
+24 | }
+25 | throw new Error("CodeWrangler already initialized");
+26 | }
+27 | private setupCommands(): void {
+28 | this.program.action(async (pattern: string, options: ICommandOptions) => {
+29 | await this.generateCommand.execute([pattern], options);
+30 | });
+31 | }
+32 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: DemoCommand.ts
-- Path: `/root/git/codewrangler/src/cli/commands/DemoCommand.ts`
-- Size: 6.40 KB
-- Extension: .ts
-- Lines of code: 231
-- Content:
-
+## File: DemoCommand.ts, Path: `/root/git/codewrangler/src/cli/commands/DemoCommand.ts`
 ```ts
-  1 | import * as fs from "fs/promises";
-  2 | import * as path from "path";
-  3 | 
+  1 | import { Stats } from "fs";
+  2 | import * as fs from "fs/promises";
+  3 | import * as path from "path";
   4 | interface IFileInfo {
-  5 |   name: string;
-  6 |   path: string;
-  7 |   content: string;
-  8 |   ext: string;
-  9 |   size: number;
- 10 |   lines: number;
+  5 | name: string;
+  6 | path: string;
+  7 | content: string;
+  8 | ext: string;
+  9 | size: number;
+ 10 | lines: number;
  11 | }
- 12 | 
- 13 | interface ITreeNode {
- 14 |   name: string;
- 15 |   path: string;
- 16 |   type: "file" | "directory";
- 17 |   children: ITreeNode[];
- 18 | }
- 19 | 
- 20 | interface IDocumentConfig {
- 21 |   pattern: RegExp;
- 22 |   rootDir: string;
- 23 |   outputPath: string;
- 24 |   excludePatterns: string[];
- 25 |   maxFileSize: number;
- 26 |   ignoreHidden: boolean;
- 27 | }
- 28 | 
- 29 | const DEFAULT_CONFIG: IDocumentConfig = {
- 30 |   pattern: /.*/,
- 31 |   rootDir: process.cwd(),
- 32 |   outputPath: "documentation.md",
- 33 |   excludePatterns: ["node_modules/**", "**/dist/**", "**/*.test.ts"],
- 34 |   maxFileSize: 1024 * 1024, // 1MB
- 35 |   ignoreHidden: true,
- 36 | };
- 37 | 
- 38 | // Tree visualization functions
- 39 | const generateTreeSymbols = (depth: number, isLast: boolean[]): string => {
- 40 |   if (depth === 0) return "";
- 41 | 
- 42 |   return (
- 43 |     isLast
- 44 |       .slice(0, -1)
- 45 |       .map((last) => (last ? "    " : "│   "))
- 46 |       .join("") + (isLast[isLast.length - 1] ? "└── " : "├── ")
- 47 |   );
- 48 | };
- 49 | 
- 50 | const createTreeNode = async (
- 51 |   nodePath: string,
- 52 |   config: IDocumentConfig,
- 53 |   relativePath = ""
- 54 | ): Promise<ITreeNode | null> => {
- 55 |   const stats = await fs.stat(nodePath);
- 56 |   const name = path.basename(nodePath);
- 57 | 
- 58 |   if (!shouldInclude(nodePath, config)) {
- 59 |     return null;
- 60 |   }
- 61 | 
- 62 |   if (stats.isDirectory()) {
- 63 |     const entries = await fs.readdir(nodePath, { withFileTypes: true });
- 64 |     const children: ITreeNode[] = [];
- 65 | 
- 66 |     for (const entry of entries) {
- 67 |       const childNode = await createTreeNode(
- 68 |         path.join(nodePath, entry.name),
- 69 |         config,
- 70 |         path.join(relativePath, name)
- 71 |       );
- 72 |       if (childNode) children.push(childNode);
- 73 |     }
- 74 | 
- 75 |     return {
- 76 |       name,
- 77 |       path: relativePath || name,
- 78 |       type: "directory",
- 79 |       children,
- 80 |     };
- 81 |   } else if (isMatchingFile(nodePath, config)) {
- 82 |     return {
- 83 |       name,
- 84 |       path: relativePath || name,
- 85 |       type: "file",
- 86 |       children: [],
- 87 |     };
- 88 |   }
- 89 | 
- 90 |   return null;
- 91 | };
- 92 | 
- 93 | const renderTreeNode = (
- 94 |   node: ITreeNode,
- 95 |   isLast: boolean[] = [],
- 96 |   result: string[] = []
- 97 | ): string[] => {
- 98 |   const prefix = generateTreeSymbols(isLast.length, isLast);
- 99 |   result.push(prefix + node.name);
-100 | 
-101 |   if (node.type === "directory") {
-102 |     node.children.forEach((child, index) => {
-103 |       renderTreeNode(
-104 |         child,
-105 |         [...isLast, index === node.children.length - 1],
-106 |         result
-107 |       );
-108 |     });
-109 |   }
-110 | 
-111 |   return result;
-112 | };
-113 | 
-114 | const isHidden = (filePath: string): boolean => {
-115 |   const baseName = path.basename(filePath);
-116 |   return baseName.startsWith(".");
-117 | };
-118 | 
-119 | const shouldInclude = (
-120 |   filePath: string,
-121 |   { excludePatterns, ignoreHidden }: IDocumentConfig
-122 | ): boolean => {
-123 |   // Check for hidden files if ignoreHidden is enabled
-124 |   if (ignoreHidden && isHidden(filePath)) {
-125 |     return false;
-126 |   }
-127 | 
-128 |   // Check against exclude patterns
-129 |   const isExcluded = excludePatterns.some((pattern) =>
-130 |     new RegExp(pattern.replace(/\*/g, ".*")).test(filePath)
-131 |   );
-132 | 
-133 |   return !isExcluded;
+ 12 | interface ITreeNode {
+ 13 | name: string;
+ 14 | path: string;
+ 15 | type: "file" | "directory";
+ 16 | children: ITreeNode[];
+ 17 | }
+ 18 | interface IDocumentConfig {
+ 19 | pattern: RegExp;
+ 20 | rootDir: string;
+ 21 | outputPath: string;
+ 22 | excludePatterns: string[];
+ 23 | maxFileSize: number;
+ 24 | ignoreHidden: boolean;
+ 25 | compress: boolean;
+ 26 | }
+ 27 | const DEFAULT_CONFIG: IDocumentConfig = {
+ 28 | pattern: /.*/,
+ 29 | rootDir: process.cwd(),
+ 30 | outputPath: "documentation.md",
+ 31 | excludePatterns: ["node_modules/**", "**/dist/**", "**/*.test.ts"],
+ 32 | maxFileSize: 1024 * 1024, // 1MB
+ 33 | ignoreHidden: true,
+ 34 | compress: false
+ 35 | };
+ 36 | const generateTreeSymbols = (depth: number, isLast: boolean[]): string => {
+ 37 | if (depth === 0) return "";
+ 38 | return (
+ 39 | isLast
+ 40 | .slice(0, -1)
+ 41 | .map(last => (last ? "    " : "│   "))
+ 42 | .join("") + (isLast[isLast.length - 1] ? "└── " : "├── ")
+ 43 | );
+ 44 | };
+ 45 | const createTreeNode = async (
+ 46 | nodePath: string,
+ 47 | config: IDocumentConfig,
+ 48 | relativePath = ""
+ 49 | ): Promise<ITreeNode | null> => {
+ 50 | const stats = await fs.stat(nodePath);
+ 51 | const name = path.basename(nodePath);
+ 52 | if (!shouldInclude(nodePath, config)) {
+ 53 | return null;
+ 54 | }
+ 55 | if (stats.isDirectory()) {
+ 56 | const entries = await fs.readdir(nodePath, { withFileTypes: true });
+ 57 | const children: ITreeNode[] = [];
+ 58 | for (const entry of entries) {
+ 59 | const childNode = await createTreeNode(
+ 60 | path.join(nodePath, entry.name),
+ 61 | config,
+ 62 | path.join(relativePath, name)
+ 63 | );
+ 64 | if (childNode) children.push(childNode);
+ 65 | }
+ 66 | return {
+ 67 | name,
+ 68 | path: relativePath || name,
+ 69 | type: "directory",
+ 70 | children
+ 71 | };
+ 72 | } else if (isMatchingFile(nodePath, config)) {
+ 73 | return {
+ 74 | name,
+ 75 | path: relativePath || name,
+ 76 | type: "file",
+ 77 | children: []
+ 78 | };
+ 79 | }
+ 80 | return null;
+ 81 | };
+ 82 | const renderTreeNode = (
+ 83 | node: ITreeNode,
+ 84 | isLast: boolean[] = [],
+ 85 | result: string[] = []
+ 86 | ): string[] => {
+ 87 | const prefix = generateTreeSymbols(isLast.length, isLast);
+ 88 | result.push(prefix + node.name);
+ 89 | if (node.type === "directory") {
+ 90 | node.children.forEach((child, index) => {
+ 91 | renderTreeNode(
+ 92 | child,
+ 93 | [...isLast, index === node.children.length - 1],
+ 94 | result
+ 95 | );
+ 96 | });
+ 97 | }
+ 98 | return result;
+ 99 | };
+100 | const isHidden = (filePath: string): boolean => {
+101 | const baseName = path.basename(filePath);
+102 | return baseName.startsWith(".");
+103 | };
+104 | const shouldInclude = (
+105 | filePath: string,
+106 | { excludePatterns, ignoreHidden }: IDocumentConfig
+107 | ): boolean => {
+108 | if (ignoreHidden && isHidden(filePath)) {
+109 | return false;
+110 | }
+111 | const isExcluded = excludePatterns.some(pattern =>
+112 | new RegExp(pattern.replace(/\*/g, ".*")).test(filePath)
+113 | );
+114 | return !isExcluded;
+115 | };
+116 | const isMatchingFile = (filePath: string, config: IDocumentConfig): boolean => {
+117 | if (!config.pattern) {
+118 | throw new Error("Pattern is not defined in the config");
+119 | }
+120 | if (!shouldInclude(filePath, config)) {
+121 | return false;
+122 | }
+123 | return config.pattern.test(filePath);
+124 | };
+125 | const formatSize = (bytes: number): string => {
+126 | const units = ["B", "KB", "MB", "GB"];
+127 | let size = bytes;
+128 | let unitIndex = 0;
+129 | while (size >= 1024 && unitIndex < units.length - 1) {
+130 | size /= 1024;
+131 | unitIndex++;
+132 | }
+133 | return `${size.toFixed(2)} ${units[unitIndex]}`;
 134 | };
-135 | 
-136 | // Pure functions for file operations
-137 | const isMatchingFile = (filePath: string, config: IDocumentConfig): boolean => {
-138 |   if (!config.pattern) {
-139 |     throw new Error("Pattern is not defined in the config");
-140 |   }
-141 | 
-142 |   if (!shouldInclude(filePath, config)) {
-143 |     return false;
-144 |   }
-145 | 
-146 |   return config.pattern.test(filePath);
-147 | };
-148 | 
-149 | const formatSize = (bytes: number): string => {
-150 |   const units = ["B", "KB", "MB", "GB"];
-151 |   let size = bytes;
-152 |   let unitIndex = 0;
-153 | 
-154 |   while (size >= 1024 && unitIndex < units.length - 1) {
-155 |     size /= 1024;
-156 |     unitIndex++;
-157 |   }
-158 | 
-159 |   return `${size.toFixed(2)} ${units[unitIndex]}`;
-160 | };
-161 | 
-162 | // Core file processing functions
-163 | 
-164 | async function* walkDirectory(dir: string): AsyncGenerator<string> {
-165 |   const entries = await fs.readdir(dir, { withFileTypes: true });
-166 | 
-167 |   for (const entry of entries) {
-168 |     const fullPath = path.join(dir, entry.name);
-169 | 
-170 |     if (entry.isDirectory()) {
-171 |       yield* walkDirectory(fullPath);
-172 |     } else {
-173 |       yield fullPath;
-174 |     }
-175 |   }
-176 | }
-177 | 
-178 | const formatContentWithLineNumbers = (content: string): string => {
-179 |   const lines = content.split("\n");
-180 |   const lineNumberWidth = lines.length.toString().length;
-181 | 
-182 |   return lines
-183 |     .map((line, index) => {
-184 |       const lineNumber = (index + 1).toString().padStart(lineNumberWidth, " ");
-185 |       return `${lineNumber} | ${line}`;
-186 |     })
-187 |     .join("\n");
-188 | };
-189 | 
-190 | // Markdown generation functions
-191 | const generateFileSection = (file: IFileInfo): string => `
-192 | ## File: ${file.name}
-193 | - Path: \`${file.path}\`
-194 | - Size: ${formatSize(Number(file.size))}
-195 | - Extension: ${file.ext}
-196 | - Lines of code: ${file.lines}
-197 | - Content:
-198 | 
-199 | \`\`\`${file.ext.slice(1) || "plaintext"}
-200 | ${formatContentWithLineNumbers(file.content)}
-201 | \`\`\`
-202 | 
-203 | ---------------------------------------------------------------------------
-204 | `;
-205 | 
-206 | const generateMarkdownContent = (
-207 |   files: IFileInfo[],
-208 |   treeContent: string
-209 | ): string => `
-210 | # Code Documentation
-211 | Generated on: ${new Date().toISOString()}
-212 | Total files: ${files.length}
-213 | 
-214 | ## Project Structure
-215 | 
-216 | \`\`\`
-217 | ${treeContent}
-218 | \`\`\`
-219 | 
-220 | ${files.map(generateFileSection).join("\n")}
-221 | `;
-222 | 
-223 | // Main function
-224 | async function generateDocumentation(
-225 |   userConfig: Partial<IDocumentConfig> = {}
-226 | ): Promise<void> {
-227 |   try {
-228 |     const config: IDocumentConfig = { ...DEFAULT_CONFIG, ...userConfig };
-229 |     const files: IFileInfo[] = [];
-230 | 
-231 |     // Generate tree structure
-232 |     const rootNode = await createTreeNode(config.rootDir, config);
-233 |     const treeContent = rootNode
-234 |       ? renderTreeNode(rootNode).join("\n")
-235 |       : "No matching files found";
-236 | 
-237 |     for await (const filePath of walkDirectory(config.rootDir)) {
-238 |       if (isMatchingFile(filePath, config)) {
-239 |         const stats = await fs.stat(filePath);
-240 |         if (stats.size <= config.maxFileSize) {
-241 |           const content = await fs.readFile(filePath, "utf-8");
-242 |           files.push({
-243 |             name: path.basename(filePath),
-244 |             path: filePath,
-245 |             content,
-246 |             ext: path.extname(filePath),
-247 |             size: stats.size,
-248 |             lines: content.split("\n").filter((line) => line.trim() !== "")
-249 |               .length,
-250 |           });
-251 |         }
-252 |       }
-253 |     }
-254 | 
-255 |     const markdownContent = generateMarkdownContent(files, treeContent);
-256 |     await fs.writeFile(config.outputPath, markdownContent, "utf-8");
-257 |   } catch (error) {
-258 |     console.error("Error generating documentation", error);
-259 |     throw error;
-260 |   }
-261 | }
-262 | 
-263 | if (require.main === module) {
-264 |   generateDocumentation({
-265 |     pattern: /\.ts$/,
-266 |     outputPath: "demo.md",
-267 |     ignoreHidden: true,
-268 |     excludePatterns: [
-269 |       "node_modules/**",
-270 |       "**/dist/**",
-271 |       "coverage/**",
-272 |     ],
-273 |   }).catch(console.error);
-274 | }
-275 | 
+135 | async function* walkDirectory(dir: string): AsyncGenerator<string> {
+136 | const entries = await fs.readdir(dir, { withFileTypes: true });
+137 | for (const entry of entries) {
+138 | const fullPath = path.join(dir, entry.name);
+139 | if (entry.isDirectory()) {
+140 | yield* walkDirectory(fullPath);
+141 | } else {
+142 | yield fullPath;
+143 | }
+144 | }
+145 | }
+146 | const formatContentWithLineNumbers = (content: string): string => {
+147 | const lines = content.split("\n");
+148 | const lineNumberWidth = lines.length.toString().length;
+149 | return lines
+150 | .map((line, index) => {
+151 | const lineNumber = (index + 1).toString().padStart(lineNumberWidth, " ");
+152 | return `${lineNumber} | ${line}`;
+153 | })
+154 | .join("\n");
+155 | };
+156 | const generateFileSection = (
+157 | file: IFileInfo,
+158 | compress: boolean = false
+159 | ): string => !compress
+160 | ? `
+161 | ## File: ${file.name}
+162 | - Path: \`${file.path}\`
+163 | - Size: ${formatSize(Number(file.size))}
+164 | - Extension: ${file.ext}
+165 | - Lines of code: ${file.lines}
+166 | - Content:
+167 | \`\`\`${file.ext.slice(1) || "plaintext"}
+168 | ${formatContentWithLineNumbers(file.content)}
+169 | \`\`\`
+170 | ---------------------------------------------------------------------------
+171 | `
+172 | : `
+173 | ## File: ${file.name}, Path: \`${file.path}\`
+174 | \`\`\`${file.ext.slice(1) || "plaintext"}
+175 | ${formatContentWithLineNumbers(file.content)}
+176 | \`\`\``;
+177 | const generateMarkdownContent = (
+178 | files: IFileInfo[],
+179 | treeContent: string,
+180 | compress: boolean
+181 | ): string => !compress
+182 | ? `
+183 | # Code Documentation
+184 | Generated on: ${new Date().toISOString()}
+185 | Total files: ${files.length}
+186 | ## Project Structure
+187 | \`\`\`
+188 | ${treeContent}
+189 | \`\`\`
+190 | ${files.map(file => generateFileSection(file)).join("\n")}
+191 | `
+192 | : `
+193 | # Code documentation
+194 | ${treeContent}
+195 | ${files.map(file => generateFileSection(file, true)).join("\n")}
+196 | `;
+197 | const compressContent = (content: string): string => content
+198 | .split("\n")
+199 | .map(line => line.trim())
+200 | .filter(line => line !== "")
+201 | .filter(line => !line.startsWith("//"))
+202 | .join("\n");
+203 | async function generateFileInfo(filePath: string, stats: Stats, compress: boolean): Promise<IFileInfo> {
+204 | const content = await fs.readFile(filePath, "utf-8");
+205 | return {
+206 | name: path.basename(filePath),
+207 | path: filePath,
+208 | content: compress ? compressContent(content) : content,
+209 | ext: path.extname(filePath),
+210 | size: stats.size,
+211 | lines: content.split("\n").filter(line => line.trim() !== "").length
+212 | }
+213 | }
+214 | async function generateDocumentation(
+215 | userConfig: Partial<IDocumentConfig> = {}
+216 | ): Promise<void> {
+217 | try {
+218 | const config: IDocumentConfig = { ...DEFAULT_CONFIG, ...userConfig };
+219 | const files: IFileInfo[] = [];
+220 | const rootNode = await createTreeNode(config.rootDir, config);
+221 | const treeContent = rootNode
+222 | ? renderTreeNode(rootNode).join("\n")
+223 | : "No matching files found";
+224 | for await (const filePath of walkDirectory(config.rootDir)) {
+225 | if (isMatchingFile(filePath, config)) {
+226 | const stats = await fs.stat(filePath);
+227 | if (stats.size <= config.maxFileSize) {
+228 | const fileInfo = await generateFileInfo(filePath, stats, config.compress);
+229 | files.push(fileInfo);
+230 | }
+231 | }
+232 | }
+233 | const markdownContent = generateMarkdownContent(
+234 | files,
+235 | treeContent,
+236 | config.compress
+237 | );
+238 | await fs.writeFile(config.outputPath, markdownContent, "utf-8");
+239 | } catch (error) {
+240 | console.error("Error generating documentation", error);
+241 | throw error;
+242 | }
+243 | }
+244 | if (require.main === module) {
+245 | generateDocumentation({
+246 | pattern: /\.ts$/,
+247 | outputPath: "demo.md",
+248 | ignoreHidden: true,
+249 | excludePatterns: [
+250 | "node_modules",
+251 | "dist",
+252 | "documentation",
+253 | "coverage",
+254 | "**/__tests__",
+255 | "**/*.test.ts"
+256 | ],
+257 | compress: true
+258 | }).catch(console.error);
+259 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: GenerateCommand.ts
-- Path: `/root/git/codewrangler/src/cli/commands/GenerateCommand.ts`
-- Size: 1.88 KB
-- Extension: .ts
-- Lines of code: 50
-- Content:
-
+## File: GenerateCommand.ts, Path: `/root/git/codewrangler/src/cli/commands/GenerateCommand.ts`
 ```ts
  1 | import { ICommand, ICommandOptions } from "./types";
- 2 | import { Config } from "../../utils/config/Config";
- 3 | import { logger } from "../../utils/logger/Logger";
- 4 | import { DocumentTreeBuilder } from "../../services/builder/DocumentTreeBuilder";
- 5 | import { MarkdownStrategy } from "../../services/renderer/strategies/MarkdownStrategy";
- 6 | import { HTMLRenderStrategy } from "../../services/renderer/strategies/HTMLStrategy";
- 7 | 
- 8 | export class GenerateCommand implements ICommand {
- 9 |   constructor(private config: Config) {}
-10 | 
-11 |   private logVerbose(): void {
-12 |     logger.debug(
-13 |       `Searching for file matching pattern: ${this.config.get("pattern")}`
-14 |     );
-15 |     logger.debug(
-16 |       `Excluding patterns: ${(
-17 |         this.config.get("excludePatterns") as string[]
-18 |       ).join(", ")}`
-19 |     );
-20 |     logger.debug(
-21 |       `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
-22 |     );
-23 |     logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
-24 |   }
-25 | 
-26 |   async execute(args: string[], options: ICommandOptions): Promise<void> {
-27 |     try {
-28 |       // Override config with command options
-29 |       this.config.override({ ...options, pattern: args[0] });
-30 | 
-31 |       // Log verbose information if enabled
-32 |       if (options.verbose) {
-33 |         this.logVerbose();
-34 |       }
-35 | 
-36 |       // Execute document tree building
-37 |       const outputFormat = this.config.get("outputFormat");
-38 |       const renderStrategies = outputFormat.map((format) => {
-39 |         switch (format) {
-40 |           case "markdown":
-41 |             return new MarkdownStrategy(this.config);
-42 |           case "html":
-43 |             return new HTMLRenderStrategy(this.config);
-44 |           default:
-45 |             throw new Error(`Unsupported output format: ${format}`);
-46 |         }
-47 |       });
-48 |       const builder = new DocumentTreeBuilder(this.config, renderStrategies);
-49 |       await builder.build();
-50 |     } catch (error) {
-51 |       logger.error("Generation failed:", error as Error);
-52 |       throw error;
-53 |     }
-54 |   }
-55 | }
-56 | 
+ 2 | import { DocumentTreeBuilder } from "../../services/builder/DocumentTreeBuilder";
+ 3 | import { HTMLRenderStrategy } from "../../services/renderer/strategies/HTMLStrategy";
+ 4 | import { MarkdownStrategy } from "../../services/renderer/strategies/MarkdownStrategy";
+ 5 | import { Config } from "../../utils/config/Config";
+ 6 | import { logger } from "../../utils/logger/Logger";
+ 7 | export class GenerateCommand implements ICommand {
+ 8 | constructor(private config: Config) {}
+ 9 | public async execute(args: string[], options: ICommandOptions): Promise<void> {
+10 | try {
+11 | this.config.override({ ...options, pattern: args[0] });
+12 | if (options.verbose) {
+13 | this.logVerbose();
+14 | }
+15 | const outputFormat = this.config.get("outputFormat");
+16 | const renderStrategies = outputFormat.map(format => {
+17 | switch (format) {
+18 | case "markdown":
+19 | return new MarkdownStrategy(this.config);
+20 | case "html":
+21 | return new HTMLRenderStrategy(this.config);
+22 | default:
+23 | throw new Error(`Unsupported output format: ${format}`);
+24 | }
+25 | });
+26 | const builder = new DocumentTreeBuilder(this.config, renderStrategies);
+27 | await builder.build();
+28 | } catch (error) {
+29 | logger.error("Generation failed:", error as Error);
+30 | throw error;
+31 | }
+32 | }
+33 | private logVerbose(): void {
+34 | logger.debug(
+35 | `Searching for file matching pattern: ${this.config.get("pattern")}`
+36 | );
+37 | logger.debug(
+38 | `Excluding patterns: ${(
+39 | this.config.get("excludePatterns") as string[]
+40 | ).join(", ")}`
+41 | );
+42 | logger.debug(
+43 | `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
+44 | );
+45 | logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
+46 | }
+47 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: types.ts
-- Path: `/root/git/codewrangler/src/cli/commands/types.ts`
-- Size: 331.00 B
-- Extension: .ts
-- Lines of code: 14
-- Content:
-
+## File: types.ts, Path: `/root/git/codewrangler/src/cli/commands/types.ts`
 ```ts
  1 | export interface ICommandOptions {
- 2 |   dir?: string;
- 3 |   output?: string;
- 4 |   config?: string;
- 5 |   verbose?: boolean;
- 6 |   format?: string[];
- 7 |   maxSize?: number;
- 8 |   exclude?: string[];
- 9 |   ignoreHidden?: boolean;
-10 |   additionalIgnore?: string[];
+ 2 | dir?: string;
+ 3 | output?: string;
+ 4 | config?: string;
+ 5 | verbose?: boolean;
+ 6 | format?: string[];
+ 7 | maxSize?: number;
+ 8 | exclude?: string[];
+ 9 | ignoreHidden?: boolean;
+10 | additionalIgnore?: string[];
 11 | }
-12 | 
-13 | export interface ICommand {
-14 |   execute(args: string[], options: ICommandOptions): Promise<void>;
-15 | }
-16 | 
+12 | export interface ICommand {
+13 | execute: (args: string[], options: ICommandOptions) => Promise<void>;
+14 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: index.ts
-- Path: `/root/git/codewrangler/src/cli/index.ts`
-- Size: 416.00 B
-- Extension: .ts
-- Lines of code: 16
-- Content:
-
+## File: index.ts, Path: `/root/git/codewrangler/src/cli/index.ts`
 ```ts
  1 | #!/usr/bin/env node
  2 | import { CodeWrangler } from "./CodeWrangler";
  3 | import { logger } from "../utils/logger/Logger";
- 4 | 
- 5 | async function main(): Promise<void> {
- 6 |   try {
- 7 |     await CodeWrangler.run();
- 8 |   } catch (error) {
- 9 |     if (error instanceof Error) {
-10 |       logger.error(error.message);
-11 |     } else {
-12 |       logger.error("An unknown error occurred");
-13 |     }
-14 |     process.exit(1);
-15 |   }
-16 | }
-17 | 
-18 | main().catch(() => process.exit(1));
-19 | 
+ 4 | async function main(): Promise<void> {
+ 5 | try {
+ 6 | await CodeWrangler.run();
+ 7 | } catch (error) {
+ 8 | if (error instanceof Error) {
+ 9 | logger.error(error.message);
+10 | } else {
+11 | logger.error("An unknown error occurred");
+12 | }
+13 | process.exit(1);
+14 | }
+15 | }
+16 | main().catch(() => process.exit(1));
 ```
 
----------------------------------------------------------------------------
-
-
-## File: ProgramBuilder.ts
-- Path: `/root/git/codewrangler/src/cli/program/ProgramBuilder.ts`
-- Size: 1.57 KB
-- Extension: .ts
-- Lines of code: 57
-- Content:
-
+## File: ProgramBuilder.ts, Path: `/root/git/codewrangler/src/cli/program/ProgramBuilder.ts`
 ```ts
- 1 | 
- 2 | import { Command } from 'commander';
- 3 | import { Config } from '../../utils/config/Config';
- 4 | 
- 5 | export class ProgramBuilder {
- 6 |   private program: Command;
- 7 |   
- 8 |   constructor(
- 9 |     private config: Config,
-10 |     private version: string
-11 |   ) {
-12 |     this.program = new Command();
-13 |   }
-14 | 
-15 |   build(): Command {
-16 |     return this.program
-17 |       .version(this.version)
-18 |       .description("CodeWrangler is a tool for generating code")
-19 |       .argument(
-20 |         "<pattern>",
-21 |         'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
-22 |       )
-23 |       .option("-d, --dir <dir>", "Directory to search", this.config.get("dir"))
-24 |       .option(
-25 |         "-o, --output <output>",
-26 |         "Output file",
-27 |         this.config.get("outputFile")
-28 |       )
-29 |       .option(
-30 |         "-c, --config <config>",
-31 |         "Config file",
-32 |         this.config.get("codeConfigFile")
-33 |       )
-34 |       .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
-35 |       .option(
-36 |         "-f, --format <format>",
-37 |         "Output format",
-38 |         this.config.get("outputFormat")
-39 |       )
-40 |       .option(
-41 |         "-s, --max-size <max-size>",
-42 |         "Max file size",
-43 |         this.config.get("maxFileSize").toString()
-44 |       )
-45 |       .option(
-46 |         "-e, --exclude <exclude>",
-47 |         "Exclude patterns",
-48 |         this.config.get("excludePatterns")
-49 |       )
-50 |       .option(
-51 |         "-i, --ignore-hidden",
-52 |         "Ignore hidden files",
-53 |         this.config.get("ignoreHiddenFiles")
-54 |       )
-55 |       .option(
-56 |         "-a, --additional-ignore <additional-ignore>",
-57 |         "Additional ignore patterns",
-58 |         this.config.get("additionalIgnoreFiles")
-59 |       );
-60 |   }
-61 | }
-62 | 
+ 1 | import { Command } from "commander";
+ 2 | import { Config } from "../../utils/config/Config";
+ 3 | export class ProgramBuilder {
+ 4 | private program: Command;
+ 5 | constructor(
+ 6 | private config: Config,
+ 7 | private version: string
+ 8 | ) {
+ 9 | this.program = new Command();
+10 | }
+11 | build(): Command {
+12 | return this.program
+13 | .version(this.version)
+14 | .description("CodeWrangler is a tool for generating code")
+15 | .argument(
+16 | "<pattern>",
+17 | 'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
+18 | )
+19 | .option("-d, --dir <dir>", "Directory to search", this.config.get("dir"))
+20 | .option(
+21 | "-o, --output <output>",
+22 | "Output file",
+23 | this.config.get("outputFile")
+24 | )
+25 | .option(
+26 | "-c, --config <config>",
+27 | "Config file",
+28 | this.config.get("codeConfigFile")
+29 | )
+30 | .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
+31 | .option(
+32 | "-f, --format <format>",
+33 | "Output format",
+34 | this.config.get("outputFormat")
+35 | )
+36 | .option(
+37 | "-s, --max-size <max-size>",
+38 | "Max file size",
+39 | this.config.get("maxFileSize").toString()
+40 | )
+41 | .option(
+42 | "-e, --exclude <exclude>",
+43 | "Exclude patterns",
+44 | this.config.get("excludePatterns")
+45 | )
+46 | .option(
+47 | "-i, --ignore-hidden",
+48 | "Ignore hidden files",
+49 | this.config.get("ignoreHiddenFiles")
+50 | )
+51 | .option(
+52 | "-a, --additional-ignore <additional-ignore>",
+53 | "Additional ignore patterns",
+54 | this.config.get("additionalIgnoreFiles")
+55 | );
+56 | }
+57 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: NodeBase.ts
-- Path: `/root/git/codewrangler/src/core/entities/NodeBase.ts`
-- Size: 2.67 KB
-- Extension: .ts
-- Lines of code: 105
-- Content:
-
+## File: NodeBase.ts, Path: `/root/git/codewrangler/src/core/entities/NodeBase.ts`
 ```ts
-  1 | import { IFileStats, IPropsNode } from "../../types/type";
-  2 | import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-  3 | 
+  1 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+  2 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
+  3 | import { IFileStats, IPropsNode } from "../../types/type";
   4 | const defaultProps: IPropsNode = {
-  5 |   name: "",
-  6 |   path: "",
-  7 |   deep: 0,
-  8 |   size: 0, // size of the node from the children nodes
-  9 |   stats: {
- 10 |     size: 0, // size of the node from the file system
- 11 |     created: new Date(),
- 12 |     modified: new Date(),
- 13 |     accessed: new Date(),
- 14 |     isDirectory: false,
- 15 |     isFile: false,
- 16 |     permissions: {
- 17 |       readable: false,
- 18 |       writable: false,
- 19 |       executable: false,
- 20 |     },
- 21 |   },
+  5 | name: "",
+  6 | path: "",
+  7 | deep: 0,
+  8 | size: 0, // size of the node from the children nodes
+  9 | stats: {
+ 10 | size: 0, // size of the node from the file system
+ 11 | created: new Date(),
+ 12 | modified: new Date(),
+ 13 | accessed: new Date(),
+ 14 | isDirectory: false,
+ 15 | isFile: false,
+ 16 | permissions: {
+ 17 | readable: false,
+ 18 | writable: false,
+ 19 | executable: false
+ 20 | }
+ 21 | }
  22 | };
- 23 | 
- 24 | interface INodeLifeCycle {
- 25 |   validate(): boolean;
- 26 |   bundle(deep: number): Promise<void>;
- 27 |   render(): void;
- 28 |   dispose(): Promise<void>;
- 29 |   clone(): Promise<NodeBase>;
- 30 | }
- 31 | 
- 32 | export abstract class NodeBase implements INodeLifeCycle {
- 33 |   protected _props: IPropsNode = { ...defaultProps };
- 34 | 
- 35 |   constructor(_name: string, _path: string) {
- 36 |     // check if path is absolute or a valid path
- 37 |     this.initNode(_name, _path);
- 38 |     this.validate();
- 39 |   }
- 40 | 
- 41 |   private validatePath(path: string): boolean {
- 42 |     if (!DocumentFactory.exists(path)) {
- 43 |       throw new Error("Path does not exist");
- 44 |     }
- 45 |     if (!DocumentFactory.isAbsolute(path)) {
- 46 |       throw new Error("Path is not absolute");
- 47 |     }
- 48 |     return true;
- 49 |   }
- 50 | 
- 51 |   public validate(): boolean {
- 52 |     return this.validatePath(this.path);
- 53 |   }
- 54 | 
- 55 |   private initNode(name: string, path: string): void {
- 56 |     this.deep = 0;
- 57 |     this.size = 0;
- 58 |     this.name = name;
- 59 |     this.path = DocumentFactory.resolve(path);
- 60 |   }
- 61 | 
- 62 |   // abstract methods
- 63 |   abstract bundle(deep: number): Promise<void>;
- 64 |   abstract render(): void;
- 65 |   abstract get secondaryProps(): Record<string, unknown> | undefined;
- 66 | 
- 67 |   // getters and setters
- 68 |   // deep
- 69 |   get deep(): number {
- 70 |     return this._props.deep;
- 71 |   }
- 72 |   protected set deep(deep: number) {
- 73 |     this._props.deep = deep;
- 74 |   }
- 75 | 
- 76 |   // size
- 77 |   get size(): number {
- 78 |     return this._props.size;
- 79 |   }
- 80 |   protected set size(size: number) {
- 81 |     this._props.size = size;
- 82 |   }
- 83 | 
- 84 |   // name
- 85 |   get name(): string {
- 86 |     return this._props.name;
- 87 |   }
- 88 |   protected set name(name: string) {
- 89 |     this._props.name = name;
- 90 |   }
- 91 | 
- 92 |   // path
- 93 |   get path(): string {
- 94 |     return this._props.path;
- 95 |   }
- 96 |   protected set path(path: string) {
- 97 |     this._props.path = path;
- 98 |   }
- 99 | 
-100 |   // stats
-101 |   get stats(): IFileStats | undefined {
-102 |     return this._props.stats;
-103 |   }
-104 |   protected set stats(stats: IFileStats | undefined) {
-105 |     this._props.stats = stats;
-106 |   }
-107 | 
-108 |   // props
-109 |   get props(): IPropsNode {
-110 |     const props = { ...this._props, ...this.secondaryProps };
-111 |     return props;
-112 |   }
-113 | 
-114 |   public async dispose(): Promise<void> {
-115 |     this._props = { ...defaultProps };
-116 |   }
-117 | 
-118 |   public async clone(): Promise<NodeBase> {
-119 |     return Object.assign(Object.create(this), this);
-120 |   }
-121 | }
-122 | 
+ 23 | export interface INodeContent {
+ 24 | content: string;
+ 25 | }
+ 26 | interface INodeLifeCycle {
+ 27 | validate: () => boolean;
+ 28 | bundle: (deep: number) => Promise<void>;
+ 29 | render: (strategy: IRenderStrategy) => INodeContent;
+ 30 | dispose: () => void;
+ 31 | clone: () => NodeBase;
+ 32 | }
+ 33 | export abstract class NodeBase implements INodeLifeCycle {
+ 34 | protected _props: IPropsNode = { ...defaultProps };
+ 35 | public constructor(
+ 36 | _name: string,
+ 37 | private originalPath: string
+ 38 | ) {
+ 39 | this.initNode(_name, originalPath);
+ 40 | this.validate();
+ 41 | }
+ 42 | public validate(): boolean {
+ 43 | if (!documentFactory.exists(this.path)) {
+ 44 | throw new Error(`Path ${this.originalPath} does not exist`);
+ 45 | }
+ 46 | if (!documentFactory.isAbsolute(this.path)) {
+ 47 | throw new Error(`Path ${this.originalPath} is not absolute`);
+ 48 | }
+ 49 | return true;
+ 50 | }
+ 51 | public abstract bundle(deep: number): Promise<void>;
+ 52 | public abstract render(strategy: IRenderStrategy): INodeContent;
+ 53 | public abstract get secondaryProps(): Record<string, unknown> | undefined;
+ 54 | get deep(): number {
+ 55 | return this._props.deep;
+ 56 | }
+ 57 | set deep(deep: number) {
+ 58 | this._props.deep = deep;
+ 59 | }
+ 60 | get size(): number {
+ 61 | return this._props.size;
+ 62 | }
+ 63 | set size(size: number) {
+ 64 | this._props.size = size;
+ 65 | }
+ 66 | get name(): string {
+ 67 | return this._props.name;
+ 68 | }
+ 69 | set name(name: string) {
+ 70 | this._props.name = name;
+ 71 | }
+ 72 | get path(): string {
+ 73 | return this._props.path;
+ 74 | }
+ 75 | set path(path: string) {
+ 76 | this._props.path = path;
+ 77 | }
+ 78 | get stats(): IFileStats | undefined {
+ 79 | return this._props.stats;
+ 80 | }
+ 81 | set stats(stats: IFileStats | undefined) {
+ 82 | this._props.stats = stats;
+ 83 | }
+ 84 | get props(): IPropsNode {
+ 85 | return {
+ 86 | ...this._props,
+ 87 | ...this.secondaryProps
+ 88 | };
+ 89 | }
+ 90 | public dispose(): void {
+ 91 | this._props = { ...defaultProps };
+ 92 | }
+ 93 | public clone(): NodeBase {
+ 94 | return Object.assign(Object.create(this), this);
+ 95 | }
+ 96 | private initNode(name: string, path: string): void {
+ 97 | this.deep = 0;
+ 98 | this.size = 0;
+ 99 | this.name = name;
+100 | this.path = documentFactory.resolve(path);
+101 | }
+102 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: NodeDirectory.ts
-- Path: `/root/git/codewrangler/src/core/entities/NodeDirectory.ts`
-- Size: 2.60 KB
-- Extension: .ts
-- Lines of code: 84
-- Content:
-
+## File: NodeDirectory.ts, Path: `/root/git/codewrangler/src/core/entities/NodeDirectory.ts`
 ```ts
-  1 | import { NodeFile } from "./NodeFile";
-  2 | import { NodeBase } from "./NodeBase";
-  3 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
-  4 | import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-  5 | 
-  6 | interface IPropsDirectory {
-  7 |   length: number;
-  8 |   deepLength: number;
-  9 | }
- 10 | 
- 11 | const defaultPropsDirectory: IPropsDirectory = {
- 12 |   length: 0,
- 13 |   deepLength: 0,
- 14 | };
- 15 | 
- 16 | export abstract class NodeDirectory extends NodeBase {
- 17 |   public children: (NodeFile | NodeDirectory)[] = [];
- 18 |   private _propsDirectory: IPropsDirectory = { ...defaultPropsDirectory };
- 19 | 
- 20 |   public constructor(name: string, pathName: string) {
- 21 |     super(name, pathName);
- 22 |     this.initDirectory();
- 23 |   }
- 24 | 
- 25 |   private initDirectory(): void {
- 26 |     this.children = [];
- 27 |     this._propsDirectory = { ...defaultPropsDirectory };
- 28 |   }
- 29 | 
- 30 |   // getters and setters
- 31 |   public get length(): number {
- 32 |     return this._propsDirectory.length;
- 33 |   }
- 34 |   public set length(length: number) {
- 35 |     this._propsDirectory.length = length;
- 36 |   }
- 37 |   public get deepLength(): number {
- 38 |     return this._propsDirectory.deepLength;
- 39 |   }
- 40 |   public set deepLength(deepLength: number) {
- 41 |     this._propsDirectory.deepLength = deepLength;
- 42 |   }
- 43 |   public get secondaryProps(): Record<string, unknown> {
- 44 |     return {
- 45 |       ...this._propsDirectory,
- 46 |     };
- 47 |   }
- 48 | 
- 49 |   public async addChild(
- 50 |     child: NodeFile | NodeDirectory
- 51 |   ): Promise<NodeDirectory> {
- 52 |     if (!(child instanceof NodeFile || child instanceof NodeDirectory)) {
- 53 |       throw new Error("Invalid child type");
- 54 |     }
- 55 |     this.children.push(child);
- 56 |     return this;
- 57 |   }
- 58 | 
- 59 |   public async bundle(deep: number = 0): Promise<void> {
- 60 |     // set the deep of the directory
- 61 |     this.deep = deep;
- 62 | 
- 63 |     // bundle all children
- 64 |     await Promise.all(this.children.map((child) => child.bundle(deep + 1)));
- 65 | 
- 66 |     // set the length of the directory
- 67 |     this.length = this.children.filter(
- 68 |       (child) => child instanceof NodeFile
- 69 |     ).length;
- 70 | 
- 71 |     // set the deep length of the directory
- 72 |     this.deepLength = this.children.reduce(
- 73 |       (acc, child) =>
- 74 |         acc + (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
- 75 |       0
- 76 |     );
- 77 | 
- 78 |     // set the size of the directory
- 79 |     this.size = this.children.reduce((acc, child) => acc + child.size, 0);
- 80 | 
- 81 |     // set stats
- 82 |     this.stats = await DocumentFactory.getStats(this.path);
- 83 |   }
- 84 | 
- 85 |   public abstract override render(): void;
- 86 | }
- 87 | 
- 88 | export class RenderableDirectory extends NodeDirectory {
- 89 |   constructor(
- 90 |     name: string,
- 91 |     pathName: string,
- 92 |     private renderStrategy: IRenderStrategy[]
- 93 |   ) {
- 94 |     super(name, pathName);
- 95 |   }
- 96 | 
- 97 |   public render(): void {
- 98 |     this.renderStrategy.map((strategy) => strategy.renderDirectory(this));
- 99 |   }
-100 | }
-101 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: NodeFile.ts
-- Path: `/root/git/codewrangler/src/core/entities/NodeFile.ts`
-- Size: 2.17 KB
-- Extension: .ts
-- Lines of code: 76
-- Content:
-
-```ts
- 1 | import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
- 2 | import { NodeBase } from "./NodeBase";
- 3 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
- 4 | 
- 5 | interface IPropsFile {
- 6 |   extension: string;
- 7 | }
- 8 | 
- 9 | const defaultPropsFile: IPropsFile = {
-10 |   extension: "",
-11 | };
-12 | 
-13 | export abstract class NodeFile extends NodeBase {
-14 |   private _propsFile: IPropsFile = { ...defaultPropsFile };
-15 |   private _content: string | null = null;
-16 | 
-17 |   public constructor(name: string, pathName: string) {
-18 |     super(name, pathName);
-19 |     this.initFile(name);
-20 |   }
-21 | 
-22 |   private initFile(name: string): void {
-23 |     this._propsFile = { ...defaultPropsFile };
-24 |     this.extension = DocumentFactory.extension(name);
-25 |     this._content = null;
-26 |   }
-27 | 
-28 |   // getters and setters
-29 |   // extension
-30 |   public get extension(): string {
-31 |     return this._propsFile.extension;
-32 |   }
-33 |   protected set extension(extension: string) {
-34 |     this._propsFile.extension = extension;
-35 |   }
-36 |   // content
-37 |   public get content(): string | null {
-38 |     return this._content;
-39 |   }
-40 |   protected set content(content: string | null) {
-41 |     this._content = content;
-42 |   }
-43 |   // secondary props
-44 |   public get secondaryProps(): Record<string, unknown> | undefined {
-45 |     return {
-46 |       extension: this.extension,
-47 |     };
-48 |   }
-49 | 
-50 |   // bundle
-51 |   public async bundle(deep: number = 0): Promise<void> {
-52 |     // set the deep of the file
-53 |     this.deep = deep;
-54 |     // set the size of the file
-55 |     this.size = await DocumentFactory.size(this.path);
-56 |     // set the content of the file
-57 |     this.content = await DocumentFactory.readFile(this.path);
-58 |     // set the stats of the file
-59 |     this.stats = await DocumentFactory.getStats(this.path);
-60 |   }
-61 | 
-62 |   // render
-63 |   public abstract override render(): void;
+ 1 | import { INodeContent, NodeBase } from "./NodeBase";
+ 2 | import { NodeFile } from "./NodeFile";
+ 3 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+ 4 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
+ 5 | interface IPropsDirectory {
+ 6 | length: number;
+ 7 | deepLength: number;
+ 8 | }
+ 9 | const defaultPropsDirectory: IPropsDirectory = {
+10 | length: 0,
+11 | deepLength: 0
+12 | };
+13 | export abstract class NodeDirectory extends NodeBase {
+14 | public children: (NodeFile | NodeDirectory)[] = [];
+15 | private _propsDirectory: IPropsDirectory = { ...defaultPropsDirectory };
+16 | public constructor(name: string, pathName: string) {
+17 | super(name, pathName);
+18 | this.initDirectory();
+19 | }
+20 | public get length(): number {
+21 | return this._propsDirectory.length;
+22 | }
+23 | public set length(length: number) {
+24 | this._propsDirectory.length = length;
+25 | }
+26 | public get deepLength(): number {
+27 | return this._propsDirectory.deepLength;
+28 | }
+29 | public set deepLength(deepLength: number) {
+30 | this._propsDirectory.deepLength = deepLength;
+31 | }
+32 | public get secondaryProps(): Record<string, unknown> {
+33 | return {
+34 | ...this._propsDirectory
+35 | };
+36 | }
+37 | public addChild(
+38 | child: NodeFile | NodeDirectory
+39 | ): NodeDirectory {
+40 | if (!(child instanceof NodeFile || child instanceof NodeDirectory)) {
+41 | throw new Error("Invalid child type");
+42 | }
+43 | this.children.push(child);
+44 | return this;
+45 | }
+46 | public async bundle(deep: number = 0): Promise<void> {
+47 | this.deep = deep;
+48 | await Promise.all(this.children.map(child => child.bundle(deep + 1)));
+49 | this.length = this.children.filter(
+50 | child => child instanceof NodeFile
+51 | ).length;
+52 | this.deepLength = this.children.reduce(
+53 | (acc, child) =>
+54 | acc + (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
+55 | 0
+56 | );
+57 | this.size = this.children.reduce((acc, child) => acc + child.size, 0);
+58 | this.stats = await documentFactory.getStats(this.path);
+59 | }
+60 | public abstract override render(strategy: IRenderStrategy): INodeContent;
+61 | private initDirectory(): void {
+62 | this.children = [];
+63 | this._propsDirectory = { ...defaultPropsDirectory };
 64 | }
-65 | 
-66 | export class RenderableFile extends NodeFile {
-67 |   constructor(
-68 |     name: string,
-69 |     pathName: string,
-70 |     private renderStrategy: IRenderStrategy[]
-71 |   ) {
-72 |     super(name, pathName);
-73 |   }
-74 | 
-75 |   // render
-76 |   public render(): void {
-77 |     this.renderStrategy.map((strategy) => strategy.renderFile(this));
-78 |   }
-79 | 
-80 |   // dispose
-81 |   public override async dispose(): Promise<void> {
-82 |     await super.dispose();
-83 |     await Promise.all(
-84 |       this.renderStrategy.map((strategy) => strategy.dispose())
-85 |     );
-86 |   }
-87 | }
-88 | 
+65 | }
+66 | export class RenderableDirectory extends NodeDirectory {
+67 | public override render(strategy: IRenderStrategy): INodeContent {
+68 | return {
+69 | content: strategy.renderDirectory(this)
+70 | };
+71 | }
+72 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: NodeBase.test.ts
-- Path: `/root/git/codewrangler/src/core/entities/__tests__/NodeBase.test.ts`
-- Size: 3.25 KB
-- Extension: .ts
-- Lines of code: 109
-- Content:
-
+## File: NodeFile.ts, Path: `/root/git/codewrangler/src/core/entities/NodeFile.ts`
 ```ts
-  1 | import { NodeBase } from "../NodeBase";
-  2 | import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
-  3 | 
-  4 | // Mock DocumentFactory
-  5 | jest.mock("../../../infrastructure/filesystem/DocumentFactory", () => ({
-  6 |   DocumentFactory: {
-  7 |     exists: jest.fn(),
-  8 |     isAbsolute: jest.fn(),
-  9 |     resolve: jest.fn(),
- 10 |     extension: jest.fn(),
- 11 |     size: jest.fn(),
- 12 |     readFile: jest.fn(),
- 13 |     getStats: jest.fn(),
- 14 |   },
- 15 | }));
- 16 | 
- 17 | class TestNode extends NodeBase {
- 18 |   async bundle(): Promise<void> {}
- 19 |   render(): void {}
- 20 |   get secondaryProps(): Record<string, unknown> | undefined {
- 21 |     return {};
- 22 |   }
- 23 | }
- 24 | 
- 25 | describe("NodeBase", () => {
- 26 |   beforeEach(() => {
- 27 |     jest.clearAllMocks();
- 28 |     (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
- 29 |     (DocumentFactory.isAbsolute as jest.Mock).mockReturnValue(true);
- 30 |     (DocumentFactory.resolve as jest.Mock).mockImplementation((path) => path);
- 31 |   });
- 32 | 
- 33 |   describe("constructor", () => {
- 34 |     it("should initialize node with correct props", () => {
- 35 |       const testNode = new TestNode("test", "/test/path");
- 36 |       expect(testNode.name).toBe("test");
- 37 |       expect(testNode.path).toBe("/test/path");
- 38 |     });
- 39 | 
- 40 |     it("should throw error for non-existent path", () => {
- 41 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
- 42 |       expect(() => new TestNode("test", "/invalid/path")).toThrow(
- 43 |         "Path does not exist"
- 44 |       );
- 45 |     });
- 46 | 
- 47 |     it("should throw error for non-absolute path", () => {
- 48 |       (DocumentFactory.isAbsolute as jest.Mock).mockReturnValue(false);
- 49 |       expect(() => new TestNode("test", "relative/path")).toThrow(
- 50 |         "Path is not absolute"
- 51 |       );
- 52 |     });
- 53 |   });
- 54 | 
- 55 |   describe("properties", () => {
- 56 |     let node: TestNode;
- 57 | 
- 58 |     beforeEach(() => {
- 59 |       node = new TestNode("test", "/test/path");
- 60 |     });
- 61 | 
- 62 |     it("should get and set deep property", () => {
- 63 |       node["deep"] = 2;
- 64 |       expect(node.deep).toBe(2);
- 65 |     });
- 66 | 
- 67 |     it("should get and set size property", () => {
- 68 |       node["size"] = 100;
- 69 |       expect(node.size).toBe(100);
- 70 |     });
- 71 | 
- 72 |     it("should get combined props", () => {
- 73 |       node["size"] = 100;
- 74 |       node["deep"] = 2;
- 75 |       expect(node.props).toEqual(
- 76 |         expect.objectContaining({
- 77 |           name: "test",
- 78 |           path: "/test/path",
- 79 |           size: 100,
- 80 |           deep: 2,
- 81 |         })
- 82 |       );
- 83 |     });
- 84 |   });
- 85 | 
- 86 |   describe("methods", () => {
- 87 |     let node: TestNode;
- 88 | 
- 89 |     beforeEach(() => {
- 90 |       node = new TestNode("test", "/test/path");
- 91 |     });
- 92 | 
- 93 |     it("should dispose correctly", async () => {
- 94 |       node["size"] = 100;
- 95 |       await node.dispose();
- 96 |       expect(node.size).toBe(0);
- 97 |       expect(node.name).toBe("");
- 98 |       expect(node.path).toBe("");
- 99 |       expect(node.stats).toEqual(
-100 |         expect.objectContaining({
-101 |           size: expect.any(Number),
-102 |           isDirectory: false,
-103 |           isFile: false,
-104 |           created: expect.any(Date),
-105 |           accessed: expect.any(Date),
-106 |           modified: expect.any(Date),
-107 |           permissions: {
-108 |             executable: false,
-109 |             readable: false,
-110 |             writable: false,
-111 |           },
-112 |         })
-113 |       );
-114 |     });
-115 | 
-116 |     it("should clone correctly", async () => {
-117 |       node["size"] = 100;
-118 |       const clone = await node.clone();
-119 |       expect(clone.size).toBe(100);
-120 |       expect(clone.name).toBe("test");
-121 |       expect(clone.path).toBe("/test/path");
-122 |     });
-123 |   });
-124 | });
-125 | 
+ 1 | import { INodeContent, NodeBase } from "./NodeBase";
+ 2 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+ 3 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
+ 4 | interface IPropsFile {
+ 5 | extension: string;
+ 6 | }
+ 7 | const defaultPropsFile: IPropsFile = {
+ 8 | extension: ""
+ 9 | };
+10 | export abstract class NodeFile extends NodeBase {
+11 | private _propsFile: IPropsFile = { ...defaultPropsFile };
+12 | private _content: string | null = null;
+13 | public constructor(name: string, pathName: string) {
+14 | super(name, pathName);
+15 | this.initFile(name);
+16 | }
+17 | public get extension(): string {
+18 | return this._propsFile.extension;
+19 | }
+20 | protected set extension(extension: string) {
+21 | this._propsFile.extension = extension;
+22 | }
+23 | public get content(): string | null {
+24 | return this._content;
+25 | }
+26 | protected set content(content: string | null) {
+27 | this._content = content;
+28 | }
+29 | public get secondaryProps(): Record<string, unknown> | undefined {
+30 | return {
+31 | extension: this.extension
+32 | };
+33 | }
+34 | public async bundle(deep: number = 0): Promise<void> {
+35 | this.deep = deep;
+36 | this.size = await documentFactory.size(this.path);
+37 | this.content = await documentFactory.readFile(this.path);
+38 | this.stats = await documentFactory.getStats(this.path);
+39 | }
+40 | public abstract override render(strategy: IRenderStrategy): INodeContent;
+41 | private initFile(name: string): void {
+42 | this._propsFile = { ...defaultPropsFile };
+43 | this.extension = documentFactory.extension(name);
+44 | this._content = null;
+45 | }
+46 | }
+47 | export class RenderableFile extends NodeFile {
+48 | public override render(strategy: IRenderStrategy): INodeContent {
+49 | return {
+50 | content: strategy.renderFile(this)
+51 | };
+52 | }
+53 | public override async dispose(): Promise<void> {
+54 | await super.dispose();
+55 | }
+56 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: NodeDIrectory.test.ts
-- Path: `/root/git/codewrangler/src/core/entities/__tests__/NodeDIrectory.test.ts`
-- Size: 2.08 KB
-- Extension: .ts
-- Lines of code: 51
-- Content:
-
-```ts
- 1 | import { NodeDirectory } from "../NodeDirectory";
- 2 | import { NodeFile } from "../NodeFile";
- 3 | import { mockPath } from "../../../__mocks__/mockFileSystem";
- 4 | 
- 5 | class TestDirectory extends NodeDirectory {
- 6 |   render(): string {
- 7 |     return "render";
- 8 |   }
- 9 | }
-10 | 
-11 | class TestFile extends NodeFile {
-12 |   public render(): void {}
-13 | }
-14 | 
-15 | describe("Directory", () => {
-16 |   let testDirectory: TestDirectory;
-17 | 
-18 |   beforeEach(() => {
-19 |     testDirectory = new TestDirectory("dir", mockPath() + "/dir");
-20 |   });
-21 | 
-22 |   test("constructor initializes name, path, and extension correctly", () => {
-23 |     expect(testDirectory.name).toBe("dir");
-24 |     expect(testDirectory.path).toBe(mockPath() + "/dir");
-25 |     expect(testDirectory.children).toEqual([]);
-26 |   });
-27 | 
-28 |   test("addChild throws error for invalid child type", async () => {
-29 |     await expect(testDirectory.addChild({} as NodeFile)).rejects.toThrow(
-30 |       "Invalid child type"
-31 |     );
-32 |   });
-33 | 
-34 |   test("Check props value before bundle", () => {
-35 |     const props = testDirectory.props;
-36 |     expect(props).toMatchObject({
-37 |       name: "dir",
-38 |       path: mockPath() + "/dir",
-39 |     });
-40 |   });
-41 | 
-42 |   test("bundle updates directory properties correctly", async () => {
-43 |     const mockFile1 = new TestFile("file1.ts", mockPath() + "/file1.ts");
-44 |     const mockFile2 = new TestFile("file2.js", mockPath() + "/file2.js");
-45 |     const mockSubDir = new TestDirectory("dir", mockPath() + "/dir");
-46 |     const mockFile3 = new TestFile("file3.ts", mockPath() + "/dir/file3.ts");
-47 |     const mockFile4 = new TestFile("file4.js", mockPath() + "/dir/file4.js");
-48 | 
-49 |     await testDirectory.addChild(mockFile1);
-50 |     await testDirectory.addChild(mockFile2);
-51 |     await testDirectory.addChild(mockSubDir);
-52 |     await mockSubDir.addChild(mockFile3);
-53 |     await mockSubDir.addChild(mockFile4);
-54 | 
-55 |     await testDirectory.bundle(1);
-56 | 
-57 |     expect(testDirectory.deep).toEqual(expect.any(Number));
-58 |     expect(testDirectory.length).toEqual(expect.any(Number)); // Only direct files
-59 |     expect(testDirectory.deepLength).toEqual(expect.any(Number)); // Including subdirectory and its file
-60 |     expect(testDirectory.size).toEqual(expect.any(Number)); // Sum of all file sizes
-61 |   });
-62 | });
-63 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: NodeFile.test.ts
-- Path: `/root/git/codewrangler/src/core/entities/__tests__/NodeFile.test.ts`
-- Size: 1.33 KB
-- Extension: .ts
-- Lines of code: 45
-- Content:
-
-```ts
- 1 | import { NodeFile } from "../NodeFile";
- 2 | import { getContent, mockPath } from "../../../__mocks__/mockFileSystem";
- 3 | 
- 4 | class TestFile extends NodeFile {
- 5 |   public render(): void {
- 6 |   }
- 7 | }
- 8 | 
- 9 | describe("NodeFile", () => {
-10 |   let testFile: TestFile;
-11 |   const testName = "file1.ts";
-12 |   const testPath = mockPath() + "/" + testName;
-13 | 
-14 |   beforeEach(() => {
-15 |     testFile = new TestFile(testName, testPath);
-16 |   });
-17 | 
-18 |   test("constructor initializes name, path, and extension correctly", () => {
-19 |     expect(testFile.name).toBe(testName);
-20 |     expect(testFile.path).toBe(testPath);
-21 |     expect(testFile.extension).toBe(".ts");
-22 |   });
-23 | 
-24 |   test("Check props value before bundle", () => {
-25 |     const props = testFile.props;
-26 |     expect(props).toMatchObject({
-27 |       name: testName,
-28 |       path: testPath,
-29 |       deep: 0,
-30 |       size: 0,
-31 |       extension: ".ts",
-32 |     });
-33 |   });
-34 | 
-35 |   test("Bundle method sets content correctly", async () => {
-36 |     await testFile.bundle();
-37 |     const content = getContent("root/file1.ts");
-38 |     expect(testFile.content).toBe(content);
-39 |   });
-40 | 
-41 |   test("Check props value after bundle", async () => {
-42 |     await testFile.bundle();
-43 |     const props = testFile.props;
-44 |     expect(props).toMatchObject({
-45 |       name: expect.any(String),
-46 |       path: expect.any(String),
-47 |       deep: expect.any(Number),
-48 |       size: expect.any(Number),
-49 |       extension: expect.any(String),
-50 |     });
-51 |   });
-52 | });
-53 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: DirectoryNotFoundError.ts
-- Path: `/root/git/codewrangler/src/core/errors/DirectoryNotFoundError.ts`
-- Size: 228.00 B
-- Extension: .ts
-- Lines of code: 7
-- Content:
-
+## File: DirectoryNotFoundError.ts, Path: `/root/git/codewrangler/src/core/errors/DirectoryNotFoundError.ts`
 ```ts
 1 | import { DocumentError } from "./DocumentError";
-2 | 
-3 | export class DirectoryNotFoundError extends DocumentError {
-4 |   constructor(path: string) {
-5 |     super("Directory not found", path);
-6 |     this.name = "DirectoryNotFoundError";
-7 |   }
-8 | }
-9 | 
+2 | export class DirectoryNotFoundError extends DocumentError {
+3 | constructor(path: string) {
+4 | super("Directory not found", path);
+5 | this.name = "DirectoryNotFoundError";
+6 | }
+7 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: DocumentError.ts
-- Path: `/root/git/codewrangler/src/core/errors/DocumentError.ts`
-- Size: 197.00 B
-- Extension: .ts
-- Lines of code: 6
-- Content:
-
+## File: DocumentError.ts, Path: `/root/git/codewrangler/src/core/errors/DocumentError.ts`
 ```ts
 1 | export class DocumentError extends Error {
-2 |   constructor(message: string, public readonly path: string) {
-3 |     super(`Document error at ${path}: ${message}`);
-4 |     this.name = "DocumentError";
-5 |   }
-6 | }
-7 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: FileNotFoundError.ts
-- Path: `/root/git/codewrangler/src/core/errors/FileNotFoundError.ts`
-- Size: 213.00 B
-- Extension: .ts
-- Lines of code: 7
-- Content:
-
-```ts
-1 | import { DocumentError } from "./DocumentError";
-2 | 
-3 | export class FileNotFoundError extends DocumentError {
-4 |   constructor(path: string) {
-5 |     super("File not found", path);
-6 |     this.name = "FileNotFoundError";
-7 |   }
+2 | constructor(
+3 | message: string,
+4 | public readonly path: string
+5 | ) {
+6 | super(`Document error at ${path}: ${message}`);
+7 | this.name = "DocumentError";
 8 | }
-9 | 
+9 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: index.ts
-- Path: `/root/git/codewrangler/src/core/errors/index.ts`
-- Size: 243.00 B
-- Extension: .ts
-- Lines of code: 4
-- Content:
-
+## File: FileNotFoundError.ts, Path: `/root/git/codewrangler/src/core/errors/FileNotFoundError.ts`
 ```ts
 1 | import { DocumentError } from "./DocumentError";
-2 | import { DirectoryNotFoundError } from "./DirectoryNotFoundError";
-3 | import { FileNotFoundError } from "./FileNotFoundError";
-4 | 
-5 | export { DocumentError, DirectoryNotFoundError, FileNotFoundError };
-6 | 
+2 | export class FileNotFoundError extends DocumentError {
+3 | constructor(path: string) {
+4 | super("File not found", path);
+5 | this.name = "FileNotFoundError";
+6 | }
+7 | }
 ```
 
----------------------------------------------------------------------------
+## File: index.ts, Path: `/root/git/codewrangler/src/core/errors/index.ts`
+```ts
+1 | export { DocumentError } from "./DocumentError";
+2 | export { DirectoryNotFoundError } from "./DirectoryNotFoundError";
+3 | export { FileNotFoundError } from "./FileNotFoundError";
+```
 
-
-## File: DocumentFactory.ts
-- Path: `/root/git/codewrangler/src/infrastructure/filesystem/DocumentFactory.ts`
-- Size: 11.38 KB
-- Extension: .ts
-- Lines of code: 370
-- Content:
-
+## File: DocumentFactory.ts, Path: `/root/git/codewrangler/src/infrastructure/filesystem/DocumentFactory.ts`
 ```ts
   1 | import { ObjectEncodingOptions } from "fs";
-  2 | import * as fs from "fs/promises";
-  3 | import * as fsSync from "fs";
+  2 | import * as fsSync from "fs";
+  3 | import * as fs from "fs/promises";
   4 | import * as path from "path";
-  5 | 
-  6 | import { DocumentError, FileNotFoundError } from "../../core/errors";
-  7 | import {
-  8 |   FileType,
-  9 |   IDirectoryOptions,
- 10 |   IFileStats,
- 11 |   IReadOptions,
- 12 |   IWriteOptions,
+  5 | import { DocumentError, FileNotFoundError } from "../../core/errors";
+  6 | import {
+  7 | FILE_TYPE,
+  8 | FileType,
+  9 | IDirectoryOptions,
+ 10 | IFileStats,
+ 11 | IReadOptions,
+ 12 | IWriteOptions
  13 | } from "../../types/type";
- 14 | 
- 15 | export const DocumentFactory = {
- 16 |   VERSION: "1.0.0",
- 17 | 
- 18 |   /**
- 19 |    * Gets the type of a file system entry
- 20 |    * @param filePath - The path to check
- 21 |    * @returns The type of the file system entry (File or Directory)
- 22 |    * @throws {FileNotFoundError} If the path doesn't exist
- 23 |    * @throws {DocumentError} For other file system errors
- 24 |    */
- 25 |   async type(filePath: string): Promise<FileType> {
- 26 |     try {
- 27 |       const stats = await fs.stat(filePath);
- 28 |       return stats.isDirectory() ? FileType.Directory : FileType.File;
- 29 |     } catch (error) {
- 30 |       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
- 31 |         throw new FileNotFoundError(filePath);
- 32 |       }
- 33 |       throw new DocumentError(String(error), filePath);
- 34 |     }
- 35 |   },
- 36 | 
- 37 |   /**
- 38 |    * Gets file size in bytes
- 39 |    * @param filePath - The path to the file
- 40 |    * @returns The size of the file in bytes
- 41 |    * @throws {FileNotFoundError} If the file doesn't exist
- 42 |    * @throws {DocumentError} For other file system errors or if path is a directory
- 43 |    */
- 44 |   async size(filePath: string): Promise<number> {
- 45 |     const isDirectory = (await this.type(filePath)) === FileType.Directory;
- 46 |     if (isDirectory) {
- 47 |       throw new DocumentError("Path is a directory", filePath);
- 48 |     }
- 49 |     const stats = await this.getStats(filePath);
- 50 |     return stats.size;
- 51 |   },
- 52 | 
- 53 |   /**
- 54 |    * Resolves a path to an absolute path
- 55 |    * @param filePath - The path to resolve
- 56 |    * @returns The absolute path
- 57 |    */
- 58 |   resolve(filePath: string): string {
- 59 |     return path.resolve(filePath);
- 60 |   },
- 61 | 
- 62 |   /**
- 63 |    * Gets detailed file statistics
- 64 |    * @param filePath - The path to get stats for
- 65 |    * @returns Detailed file statistics including size, dates, and permissions
- 66 |    * @throws {FileNotFoundError} If the path doesn't exist
- 67 |    * @throws {DocumentError} For other file system errors
- 68 |    */
- 69 |   async getStats(filePath: string): Promise<IFileStats> {
- 70 |     try {
- 71 |       const stats = await fs.stat(filePath);
- 72 |       const accessFlags = await this.checkAccess(filePath);
- 73 | 
- 74 |       return {
- 75 |         size: stats.size,
- 76 |         created: stats.birthtime,
- 77 |         modified: stats.mtime,
- 78 |         accessed: stats.atime,
- 79 |         isDirectory: stats.isDirectory(),
- 80 |         isFile: stats.isFile(),
- 81 |         permissions: {
- 82 |           readable: accessFlags.readable,
- 83 |           writable: accessFlags.writable,
- 84 |           executable: accessFlags.executable,
- 85 |         },
- 86 |       };
- 87 |     } catch (error) {
- 88 |       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
- 89 |         throw new FileNotFoundError(filePath);
- 90 |       }
- 91 |       throw new DocumentError(String(error), filePath);
- 92 |     }
- 93 |   },
- 94 | 
- 95 |   /**
- 96 |    * Checks various access flags for a path
- 97 |    * @private
- 98 |    * @param filePath - The path to check access for
- 99 |    * @returns An object containing readable, writable, and executable permission flags
-100 |    */
-101 |   async checkAccess(filePath: string): Promise<{
-102 |     readable: boolean;
-103 |     writable: boolean;
-104 |     executable: boolean;
-105 |   }> {
-106 |     const check = async (mode: number): Promise<boolean> => {
-107 |       try {
-108 |         await fs.access(filePath, mode);
-109 |         return true;
-110 |       } catch {
-111 |         return false;
-112 |       }
-113 |     };
-114 | 
-115 |     return {
-116 |       readable: await check(fs.constants.R_OK),
-117 |       writable: await check(fs.constants.W_OK),
-118 |       executable: await check(fs.constants.X_OK),
-119 |     };
-120 |   },
-121 | 
-122 |   /**
-123 |    * Reads the entire contents of a file synchronously
-124 |    * @param filePath - The path to the file
-125 |    * @param options - The options for the read operation
-126 |    * @returns The contents of the file as a string
-127 |    * @throws {Error} If the file cannot be read
-128 |    */
-129 |   readFileSync(filePath: string, options: IReadOptions = {}): string {
-130 |     return fsSync.readFileSync(filePath, {
-131 |       encoding: options.encoding ?? "utf-8",
-132 |       flag: options.flag,
-133 |     });
-134 |   },
-135 | 
-136 |   async readJsonSync(filePath: string): Promise<object> {
-137 |     try {
-138 |       // Resolve the absolute path
-139 |       const absolutePath = this.resolve(filePath);
-140 | 
-141 |       // Check if file exists first
-142 |       if (!this.exists(absolutePath)) {
-143 |         throw new Error(`File not found: ${absolutePath}`);
-144 |       }
-145 | 
-146 |       const fileContents = await fs.readFile(absolutePath, "utf-8");
-147 |       if (!fileContents) {
-148 |         throw new Error(`File is empty: ${absolutePath}`);
-149 |       }
-150 | 
-151 |       try {
-152 |         return JSON.parse(fileContents);
-153 |       } catch (parseError) {
-154 |         throw new Error(
-155 |           `Invalid JSON in file ${absolutePath}: ${String(parseError)}`
-156 |         );
-157 |       }
-158 |     } catch (error) {
-159 |       throw new DocumentError(String(error), filePath);
-160 |     }
-161 |   },
-162 | 
-163 |   /**
-164 |    * Reads the entire contents of a file
-165 |    * @param filePath - The path to the file
-166 |    * @param options - The options for the read operation
-167 |    * @returns The contents of the file as a string
-168 |    * @throws {FileNotFoundError} If the file doesn't exist
-169 |    * @throws {DocumentError} For other file system errors
-170 |    */
-171 |   async readFile(
-172 |     filePath: string,
-173 |     options: IReadOptions = {}
-174 |   ): Promise<string> {
-175 |     try {
-176 |       return await fs.readFile(filePath, {
-177 |         encoding: options.encoding ?? "utf-8",
-178 |         flag: options.flag,
-179 |       });
-180 |     } catch (error) {
-181 |       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-182 |         throw new FileNotFoundError(filePath);
-183 |       }
-184 |       throw new DocumentError(String(error), filePath);
-185 |     }
-186 |   },
-187 | 
-188 |   /**
-189 |    * Writes data to a file, replacing the file if it already exists
-190 |    * @param filePath - The path to the file
-191 |    * @param data - The data to write
-192 |    * @param options - The options for the write operation
-193 |    * @throws {DocumentError} For file system errors
-194 |    */
-195 |   async writeFile(
-196 |     filePath: string,
-197 |     data: string | Buffer,
-198 |     options: IWriteOptions = {}
-199 |   ): Promise<void> {
-200 |     try {
-201 |       await fs.writeFile(filePath, data, {
-202 |         encoding: options.encoding ?? "utf-8",
-203 |         mode: options.mode,
-204 |         flag: options.flag,
-205 |       });
-206 |     } catch (error) {
-207 |       throw new DocumentError(String(error), filePath);
-208 |     }
-209 |   },
-210 | 
-211 |   /**
-212 |    * Appends data to a file
-213 |    * @param filePath - The path to the file
-214 |    * @param content - The content to append
-215 |    * @param options - The options for the write operation
-216 |    * @throws {DocumentError} For file system errors
-217 |    */
-218 |   async appendFile(
-219 |     filePath: string,
-220 |     content: string,
-221 |     options: IWriteOptions = {}
-222 |   ): Promise<void> {
-223 |     try {
-224 |       await fs.appendFile(filePath, content, {
-225 |         encoding: options.encoding ?? "utf-8",
-226 |         mode: options.mode,
-227 |         flag: options.flag,
-228 |       });
-229 |     } catch (error) {
-230 |       throw new DocumentError(String(error), filePath);
-231 |     }
-232 |   },
-233 | 
-234 |   /**
-235 |    * Reads the contents of a directory
-236 |    * @param dirPath - The path to the directory
-237 |    * @param options - The options for the read operation
-238 |    * @returns An array of file and directory names in the directory
-239 |    * @throws {Error} If the directory cannot be read
-240 |    */
-241 |   async readDir(
-242 |     dirPath: string,
-243 |     options?: { withFileTypes?: boolean }
-244 |   ): Promise<string[]> {
-245 |     return await fs.readdir(dirPath, options as ObjectEncodingOptions);
-246 |   },
-247 | 
-248 |   /**
-249 |    * Creates a directory if it doesn't exist
-250 |    * @param dirPath - The path where to create the directory
-251 |    * @param recursive - Whether to create parent directories if they don't exist
-252 |    * @throws {DocumentError} For file system errors
-253 |    */
-254 |   async createDir(dirPath: string, recursive = true): Promise<void> {
-255 |     await fs.mkdir(dirPath, { recursive });
-256 |   },
-257 | 
-258 |   /**
-259 |    * Gets the base name of a file
-260 |    * @param filePath - The path to the file
-261 |    * @returns The base name of the file (last portion of the path)
-262 |    */
-263 |   baseName(filePath: string): string {
-264 |     return path.basename(filePath);
-265 |   },
-266 | 
-267 |   /**
-268 |    * Gets the extension of a file
-269 |    * @param filePath - The path to the file
-270 |    * @returns The extension of the file including the dot (e.g., '.txt')
-271 |    */
-272 |   extension(filePath: string): string {
-273 |     return path.extname(filePath);
-274 |   },
-275 | 
-276 |   /**
-277 |    * Checks if a file or directory exists
-278 |    * @param filePath - The path to check
-279 |    * @returns True if the file or directory exists, false otherwise
-280 |    */
-281 |   exists(filePath: string): boolean {
-282 |     try {
-283 |       fsSync.accessSync(filePath);
-284 |       return true;
-285 |     } catch {
-286 |       return false;
-287 |     }
-288 |   },
-289 | 
-290 |   /**
-291 |    * Checks if a path is absolute
-292 |    * @param filePath - The path to check
-293 |    * @returns True if the path is absolute, false otherwise
-294 |    */
-295 |   isAbsolute(filePath: string): boolean {
-296 |     return path.isAbsolute(filePath);
-297 |   },
-298 | 
-299 |   /**
-300 |    * Gets directory contents with type information
-301 |    * @param dirPath - The path to the directory
-302 |    * @returns An array of objects containing name and type information for each entry
-303 |    * @throws {DocumentError} If path is not a directory or other errors occur
-304 |    */
-305 |   async readDirectory(
-306 |     dirPath: string
-307 |   ): Promise<Array<{ name: string; type: FileType }>> {
-308 |     try {
-309 |       const entries = await fs.readdir(dirPath, { withFileTypes: true });
-310 |       return entries.map((entry) => ({
-311 |         name: entry.name,
-312 |         type: entry.isDirectory() ? FileType.Directory : FileType.File,
-313 |       }));
-314 |     } catch (error) {
-315 |       throw new DocumentError(String(error), dirPath);
-316 |     }
-317 |   },
-318 | 
-319 |   /**
-320 |    * Creates a directory if it doesn't exist
-321 |    * @param dirPath - The path where to create the directory
-322 |    * @param options - Options for directory creation including recursive and mode
-323 |    * @throws {DocumentError} For file system errors
-324 |    */
-325 |   async ensureDirectory(
-326 |     dirPath: string,
-327 |     options: IDirectoryOptions = {}
-328 |   ): Promise<void> {
-329 |     try {
-330 |       if (!this.exists(dirPath)) {
-331 |         await fs.mkdir(dirPath, {
-332 |           recursive: options.recursive ?? true,
-333 |           mode: options.mode,
-334 |         });
-335 |       }
-336 |     } catch (error) {
-337 |       throw new DocumentError(String(error), dirPath);
-338 |     }
-339 |   },
-340 | 
-341 |   /**
-342 |    * Removes a file or directory
-343 |    * @param filePath - The path to remove
-344 |    * @throws {DocumentError} For file system errors
-345 |    */
-346 |   async remove(filePath: string): Promise<void> {
-347 |     const stats = await fs.stat(filePath);
-348 |     if (stats.isDirectory()) {
-349 |       await fs.rm(filePath, { recursive: true, force: true });
-350 |     } else {
-351 |       await fs.unlink(filePath);
-352 |     }
-353 |   },
-354 | 
-355 |   /**
-356 |    * Copies a file or directory
-357 |    * @param src - The source path
-358 |    * @param dest - The destination path
-359 |    * @throws {DocumentError} For file system errors
-360 |    */
-361 |   async copy(src: string, dest: string): Promise<void> {
-362 |     const stats = await fs.stat(src);
-363 | 
-364 |     if (stats.isDirectory()) {
-365 |       await this.copyDir(src, dest);
-366 |     } else {
-367 |       await fs.copyFile(src, dest);
-368 |     }
-369 |   },
-370 | 
-371 |   /**
-372 |    * Copies a directory recursively
-373 |    * @private
-374 |    * @param src - The source directory path
-375 |    * @param dest - The destination directory path
-376 |    * @throws {DocumentError} For file system errors
-377 |    */
-378 |   async copyDir(src: string, dest: string): Promise<void> {
-379 |     await this.ensureDirectory(dest);
-380 |     const entries = await fs.readdir(src, { withFileTypes: true });
-381 | 
-382 |     for (const entry of entries) {
-383 |       const srcPath = path.join(src, entry.name);
-384 |       const destPath = path.join(dest, entry.name);
-385 | 
-386 |       if (entry.isDirectory()) {
-387 |         await this.copyDir(srcPath, destPath);
-388 |       } else {
-389 |         await fs.copyFile(srcPath, destPath);
-390 |       }
-391 |     }
-392 |   },
-393 | 
-394 |   /**
-395 |    * Joins an array of paths into a single path
-396 |    * @param paths - The paths to join
-397 |    * @returns The joined path
-398 |    */
-399 |   join(...paths: string[]): string {
-400 |     return path.join(...paths);
-401 |   },
-402 | };
-403 | 
+ 14 | export const documentFactory = {
+ 15 | /**
+ 16 | * Gets the type of a file system entry
+ 17 | * @param filePath - The path to check
+ 18 | * @returns The type of the file system entry (File or Directory)
+ 19 | * @throws {FileNotFoundError} If the path doesn't exist
+ 20 | * @throws {DocumentError} For other file system errors
+ 21 | */
+ 22 | async type(filePath: string): Promise<FileType> {
+ 23 | try {
+ 24 | const stats = await fs.stat(filePath);
+ 25 | return stats.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File;
+ 26 | } catch (error) {
+ 27 | if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+ 28 | throw new FileNotFoundError(filePath);
+ 29 | }
+ 30 | throw new DocumentError(String(error), filePath);
+ 31 | }
+ 32 | },
+ 33 | /**
+ 34 | * Gets file size in bytes
+ 35 | * @param filePath - The path to the file
+ 36 | * @returns The size of the file in bytes
+ 37 | * @throws {FileNotFoundError} If the file doesn't exist
+ 38 | * @throws {DocumentError} For other file system errors or if path is a directory
+ 39 | */
+ 40 | async size(filePath: string): Promise<number> {
+ 41 | const isDirectory = (await this.type(filePath)) === FILE_TYPE.Directory;
+ 42 | if (isDirectory) {
+ 43 | throw new DocumentError("Path is a directory", filePath);
+ 44 | }
+ 45 | const stats = await this.getStats(filePath);
+ 46 | return stats.size;
+ 47 | },
+ 48 | /**
+ 49 | * Resolves a path to an absolute path
+ 50 | * @param filePath - The path to resolve
+ 51 | * @returns The absolute path
+ 52 | */
+ 53 | resolve(filePath: string): string {
+ 54 | return path.resolve(filePath);
+ 55 | },
+ 56 | /**
+ 57 | * Gets detailed file statistics
+ 58 | * @param filePath - The path to get stats for
+ 59 | * @returns Detailed file statistics including size, dates, and permissions
+ 60 | * @throws {FileNotFoundError} If the path doesn't exist
+ 61 | * @throws {DocumentError} For other file system errors
+ 62 | */
+ 63 | async getStats(filePath: string): Promise<IFileStats> {
+ 64 | try {
+ 65 | const stats = await fs.stat(filePath);
+ 66 | const accessFlags = await this.checkAccess(filePath);
+ 67 | return {
+ 68 | size: stats.size,
+ 69 | created: stats.birthtime,
+ 70 | modified: stats.mtime,
+ 71 | accessed: stats.atime,
+ 72 | isDirectory: stats.isDirectory(),
+ 73 | isFile: stats.isFile(),
+ 74 | permissions: {
+ 75 | readable: accessFlags.readable,
+ 76 | writable: accessFlags.writable,
+ 77 | executable: accessFlags.executable
+ 78 | }
+ 79 | };
+ 80 | } catch (error) {
+ 81 | if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+ 82 | throw new FileNotFoundError(filePath);
+ 83 | }
+ 84 | throw new DocumentError(String(error), filePath);
+ 85 | }
+ 86 | },
+ 87 | /**
+ 88 | * Checks various access flags for a path
+ 89 | * @private
+ 90 | * @param filePath - The path to check access for
+ 91 | * @returns An object containing readable, writable, and executable permission flags
+ 92 | */
+ 93 | async checkAccess(filePath: string): Promise<{
+ 94 | readable: boolean;
+ 95 | writable: boolean;
+ 96 | executable: boolean;
+ 97 | }> {
+ 98 | const check = async (mode: number): Promise<boolean> => {
+ 99 | try {
+100 | await fs.access(filePath, mode);
+101 | return true;
+102 | } catch {
+103 | return false;
+104 | }
+105 | };
+106 | return {
+107 | readable: await check(fs.constants.R_OK),
+108 | writable: await check(fs.constants.W_OK),
+109 | executable: await check(fs.constants.X_OK)
+110 | };
+111 | },
+112 | /**
+113 | * Reads the entire contents of a file synchronously
+114 | * @param filePath - The path to the file
+115 | * @param options - The options for the read operation
+116 | * @returns The contents of the file as a string
+117 | * @throws {Error} If the file cannot be read
+118 | */
+119 | readFileSync(filePath: string, options: IReadOptions = {}): string {
+120 | return fsSync.readFileSync(filePath, {
+121 | encoding: options.encoding ?? "utf-8",
+122 | flag: options.flag
+123 | });
+124 | },
+125 | async readJsonSync(filePath: string): Promise<object> {
+126 | try {
+127 | const absolutePath = this.resolve(filePath);
+128 | if (!this.exists(absolutePath)) {
+129 | throw new Error(`File not found: ${filePath}`);
+130 | }
+131 | const fileContents = await fs.readFile(absolutePath, "utf-8");
+132 | if (!fileContents) {
+133 | throw new Error(`File is empty: ${filePath}`);
+134 | }
+135 | try {
+136 | return JSON.parse(fileContents);
+137 | } catch (parseError) {
+138 | throw new Error(
+139 | `Invalid JSON in file ${filePath}: ${String(parseError)}`
+140 | );
+141 | }
+142 | } catch (error) {
+143 | throw new DocumentError(String(error), filePath);
+144 | }
+145 | },
+146 | /**
+147 | * Reads the entire contents of a file
+148 | * @param filePath - The path to the file
+149 | * @param options - The options for the read operation
+150 | * @returns The contents of the file as a string
+151 | * @throws {FileNotFoundError} If the file doesn't exist
+152 | * @throws {DocumentError} For other file system errors
+153 | */
+154 | async readFile(
+155 | filePath: string,
+156 | options: IReadOptions = {}
+157 | ): Promise<string> {
+158 | try {
+159 | return await fs.readFile(filePath, {
+160 | encoding: options.encoding ?? "utf-8",
+161 | flag: options.flag
+162 | });
+163 | } catch (error) {
+164 | if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+165 | throw new FileNotFoundError(filePath);
+166 | }
+167 | throw new DocumentError(String(error), filePath);
+168 | }
+169 | },
+170 | /**
+171 | * Writes data to a file, replacing the file if it already exists
+172 | * @param filePath - The path to the file
+173 | * @param data - The data to write
+174 | * @param options - The options for the write operation
+175 | * @throws {DocumentError} For file system errors
+176 | */
+177 | async writeFile(
+178 | filePath: string,
+179 | data: string | Buffer,
+180 | options: IWriteOptions = {}
+181 | ): Promise<void> {
+182 | try {
+183 | await fs.writeFile(filePath, data, {
+184 | encoding: options.encoding ?? "utf-8",
+185 | mode: options.mode,
+186 | flag: options.flag
+187 | });
+188 | } catch (error) {
+189 | throw new DocumentError(String(error), filePath);
+190 | }
+191 | },
+192 | /**
+193 | * Appends data to a file
+194 | * @param filePath - The path to the file
+195 | * @param content - The content to append
+196 | * @param options - The options for the write operation
+197 | * @throws {DocumentError} For file system errors
+198 | */
+199 | async appendFile(
+200 | filePath: string,
+201 | content: string,
+202 | options: IWriteOptions = {}
+203 | ): Promise<void> {
+204 | try {
+205 | await fs.appendFile(filePath, content, {
+206 | encoding: options.encoding ?? "utf-8",
+207 | mode: options.mode,
+208 | flag: options.flag
+209 | });
+210 | } catch (error) {
+211 | throw new DocumentError(String(error), filePath);
+212 | }
+213 | },
+214 | /**
+215 | * Reads the contents of a directory
+216 | * @param dirPath - The path to the directory
+217 | * @param options - The options for the read operation
+218 | * @returns An array of file and directory names in the directory
+219 | * @throws {Error} If the directory cannot be read
+220 | */
+221 | async readDir(
+222 | dirPath: string,
+223 | options?: { withFileTypes?: boolean }
+224 | ): Promise<string[]> {
+225 | return await fs.readdir(dirPath, options as ObjectEncodingOptions);
+226 | },
+227 | /**
+228 | * Creates a directory if it doesn't exist
+229 | * @param dirPath - The path where to create the directory
+230 | * @param recursive - Whether to create parent directories if they don't exist
+231 | * @throws {DocumentError} For file system errors
+232 | */
+233 | async createDir(dirPath: string, recursive = true): Promise<void> {
+234 | await fs.mkdir(dirPath, { recursive });
+235 | },
+236 | /**
+237 | * Gets the base name of a file
+238 | * @param filePath - The path to the file
+239 | * @returns The base name of the file (last portion of the path)
+240 | */
+241 | baseName(filePath: string): string {
+242 | return path.basename(filePath);
+243 | },
+244 | /**
+245 | * Gets the extension of a file
+246 | * @param filePath - The path to the file
+247 | * @returns The extension of the file including the dot (e.g., '.txt')
+248 | */
+249 | extension(filePath: string): string {
+250 | return path.extname(filePath);
+251 | },
+252 | /**
+253 | * Checks if a file or directory exists
+254 | * @param filePath - The path to check
+255 | * @returns True if the file or directory exists, false otherwise
+256 | */
+257 | exists(filePath: string): boolean {
+258 | try {
+259 | fsSync.accessSync(filePath);
+260 | return true;
+261 | } catch {
+262 | return false;
+263 | }
+264 | },
+265 | /**
+266 | * Checks if a path is absolute
+267 | * @param filePath - The path to check
+268 | * @returns True if the path is absolute, false otherwise
+269 | */
+270 | isAbsolute(filePath: string): boolean {
+271 | return path.isAbsolute(filePath);
+272 | },
+273 | /**
+274 | * Gets directory contents with type information
+275 | * @param dirPath - The path to the directory
+276 | * @returns An array of objects containing name and type information for each entry
+277 | * @throws {DocumentError} If path is not a directory or other errors occur
+278 | */
+279 | async readDirectory(
+280 | dirPath: string
+281 | ): Promise<Array<{ name: string; type: FileType }>> {
+282 | try {
+283 | const entries = await fs.readdir(dirPath, { withFileTypes: true });
+284 | return entries.map(entry => ({
+285 | name: entry.name,
+286 | type: entry.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File
+287 | }));
+288 | } catch (error) {
+289 | throw new DocumentError(String(error), dirPath);
+290 | }
+291 | },
+292 | /**
+293 | * Creates a directory if it doesn't exist
+294 | * @param dirPath - The path where to create the directory
+295 | * @param options - Options for directory creation including recursive and mode
+296 | * @throws {DocumentError} For file system errors
+297 | */
+298 | async ensureDirectory(
+299 | dirPath: string,
+300 | options: IDirectoryOptions = {}
+301 | ): Promise<void> {
+302 | try {
+303 | if (!this.exists(dirPath)) {
+304 | await fs.mkdir(dirPath, {
+305 | recursive: options.recursive ?? true,
+306 | mode: options.mode
+307 | });
+308 | }
+309 | } catch (error) {
+310 | throw new DocumentError(String(error), dirPath);
+311 | }
+312 | },
+313 | /**
+314 | * Removes a file or directory
+315 | * @param filePath - The path to remove
+316 | * @throws {DocumentError} For file system errors
+317 | */
+318 | async remove(filePath: string): Promise<void> {
+319 | const stats = await fs.stat(filePath);
+320 | if (stats.isDirectory()) {
+321 | await fs.rm(filePath, { recursive: true, force: true });
+322 | } else {
+323 | await fs.unlink(filePath);
+324 | }
+325 | },
+326 | /**
+327 | * Copies a file or directory
+328 | * @param src - The source path
+329 | * @param dest - The destination path
+330 | * @throws {DocumentError} For file system errors
+331 | */
+332 | async copy(src: string, dest: string): Promise<void> {
+333 | const stats = await fs.stat(src);
+334 | if (stats.isDirectory()) {
+335 | await this.copyDir(src, dest);
+336 | } else {
+337 | await fs.copyFile(src, dest);
+338 | }
+339 | },
+340 | /**
+341 | * Copies a directory recursively
+342 | * @private
+343 | * @param src - The source directory path
+344 | * @param dest - The destination directory path
+345 | * @throws {DocumentError} For file system errors
+346 | */
+347 | async copyDir(src: string, dest: string): Promise<void> {
+348 | await this.ensureDirectory(dest);
+349 | const entries = await fs.readdir(src, { withFileTypes: true });
+350 | for (const entry of entries) {
+351 | const srcPath = path.join(src, entry.name);
+352 | const destPath = path.join(dest, entry.name);
+353 | if (entry.isDirectory()) {
+354 | await this.copyDir(srcPath, destPath);
+355 | } else {
+356 | await fs.copyFile(srcPath, destPath);
+357 | }
+358 | }
+359 | },
+360 | /**
+361 | * Joins an array of paths into a single path
+362 | * @param paths - The paths to join
+363 | * @returns The joined path
+364 | */
+365 | join(...paths: string[]): string {
+366 | return path.join(...paths);
+367 | }
+368 | };
 ```
 
----------------------------------------------------------------------------
-
-
-## File: DocumentFactory.test.ts
-- Path: `/root/git/codewrangler/src/infrastructure/filesystem/__tests__/DocumentFactory.test.ts`
-- Size: 22.02 KB
-- Extension: .ts
-- Lines of code: 563
-- Content:
-
+## File: TemplateEngine.ts, Path: `/root/git/codewrangler/src/infrastructure/templates/TemplateEngine.ts`
 ```ts
-  1 | import * as path from "path";
-  2 | import * as fs from "fs/promises";
-  3 | 
-  4 | import { MOCK_PATH } from "../../../__mocks__/mockFileSystem";
-  5 | import { DocumentFactory } from "../DocumentFactory";
-  6 | import { FileType } from "../../../types/type";
-  7 | 
-  8 | describe("DocumentFactory", () => {
-  9 |   const tempDir = path.join(MOCK_PATH, "temp_test");
- 10 |   const testFilePath = path.join(tempDir, "test.txt");
- 11 |   const testContent = "test content";
- 12 | 
- 13 |   beforeEach(() => {
- 14 |     jest.clearAllMocks();
- 15 |   });
- 16 | 
- 17 |   describe("type", () => {
- 18 |     it('should return "file" for a file path', async () => {
- 19 |       const result = await DocumentFactory.type(
- 20 |         path.join(MOCK_PATH, "file1.ts")
- 21 |       );
- 22 |       expect(result).toBe(FileType.File);
- 23 |     });
- 24 | 
- 25 |     it('should return "directory" for a directory path', async () => {
- 26 |       const result = await DocumentFactory.type(MOCK_PATH);
- 27 |       expect(result).toBe(FileType.Directory);
- 28 |     });
- 29 | 
- 30 |     it("should throw an error if the path doesn't exist", async () => {
- 31 |       await expect(DocumentFactory.type("nonexistent")).rejects.toThrow(
- 32 |         "Document error at nonexistent: File not found"
- 33 |       );
- 34 |     });
- 35 | 
- 36 |     it("should throw an error if the path is a file", async () => {
- 37 |       await expect(
- 38 |         DocumentFactory.type(path.join(MOCK_PATH, "file2.ts"))
- 39 |       ).rejects.toThrow(
- 40 |         `Document error at ${path.join(MOCK_PATH, "file2.ts")}: File not found`
- 41 |       );
- 42 |     });
- 43 |   });
- 44 | 
- 45 |   describe("size", () => {
- 46 |     it("should return the size of a file", async () => {
- 47 |       const result = await DocumentFactory.size(
- 48 |         path.join(MOCK_PATH, "file1.ts")
- 49 |       );
- 50 |       expect(result).toStrictEqual(expect.any(Number));
- 51 |     });
- 52 | 
- 53 |     it("should throw an error if the path doesn't exist", async () => {
- 54 |       await expect(DocumentFactory.size("nonexistent")).rejects.toThrow(
- 55 |         "Document error at nonexistent: File not found"
- 56 |       );
- 57 |     });
- 58 | 
- 59 |     it("should throw an error if the path is a directory", async () => {
- 60 |       await expect(DocumentFactory.size(MOCK_PATH)).rejects.toThrow(
- 61 |         `Document error at ${MOCK_PATH}: Path is a directory`
- 62 |       );
- 63 |     });
- 64 | 
- 65 |     it("should throw a zero size if the file is empty", async () => {
- 66 |       const result = await DocumentFactory.size(
- 67 |         path.join(MOCK_PATH, "empty.txt")
- 68 |       );
- 69 |       expect(result).toBe(0);
- 70 |     });
- 71 |   });
- 72 |   describe("getStats", () => {
- 73 |     it("should return complete file statistics", async () => {
- 74 |       const stats = await DocumentFactory.getStats(
- 75 |         path.join(MOCK_PATH, "file1.ts")
- 76 |       );
- 77 |       expect(stats).toMatchObject({
- 78 |         size: expect.any(Number),
- 79 |         created: expect.any(Object),
- 80 |         modified: expect.any(Object),
- 81 |         accessed: expect.any(Object),
- 82 |         isDirectory: false,
- 83 |         isFile: true,
- 84 |         permissions: {
- 85 |           readable: true,
- 86 |           writable: expect.any(Boolean),
- 87 |           executable: expect.any(Boolean),
- 88 |         },
- 89 |       });
- 90 |     });
- 91 | 
- 92 |     it("should return directory statistics", async () => {
- 93 |       const stats = await DocumentFactory.getStats(MOCK_PATH);
- 94 |       expect(stats).toMatchObject({
- 95 |         size: expect.any(Number),
- 96 |         isDirectory: true,
- 97 |         isFile: false,
- 98 |       });
- 99 |     });
-100 | 
-101 |     it("should throw error for non-existent path", async () => {
-102 |       await expect(DocumentFactory.getStats("nonexistent")).rejects.toThrow(
-103 |         "Document error at nonexistent: File not found"
-104 |       );
-105 |     });
-106 |   });
-107 | 
-108 |   describe("readFile", () => {
-109 |     it("should read file content iwth default options", async () => {
-110 |       const content = await DocumentFactory.readFile(
-111 |         path.join(MOCK_PATH, "file1.ts")
-112 |       );
-113 |       expect(content).toBeDefined();
-114 |       expect(content).toBeTruthy();
-115 |       expect(typeof content).toBe("string");
-116 |     });
-117 | 
-118 |     it("should read file with custom escoding", async () => {
-119 |       const content = await DocumentFactory.readFile(
-120 |         path.join(MOCK_PATH, "file1.ts"),
-121 |         { encoding: "utf-8" }
-122 |       );
-123 |       expect(content).toBeDefined();
-124 |       expect(content).toBeTruthy();
-125 |       expect(typeof content).toBe("string");
-126 |     });
-127 | 
-128 |     it("should throw an error if the path doesn't exist", async () => {
-129 |       await expect(DocumentFactory.readFile("nonexistent")).rejects.toThrow(
-130 |         "Document error at nonexistent: File not found"
-131 |       );
-132 |     });
-133 | 
-134 |     it("should throw an error if the path is a directory", async () => {
-135 |       await expect(DocumentFactory.readFile(MOCK_PATH)).rejects.toThrow(
-136 |         `Document error at ${MOCK_PATH}: Error: EISDIR: illegal operation on a directory, read`
-137 |       );
-138 |     });
-139 |   });
-140 | 
-141 |   describe("readDirectory", () => {
-142 |     it("should return directory contents with type information", async () => {
-143 |       const contents = await DocumentFactory.readDirectory(MOCK_PATH);
-144 |       expect(Array.isArray(contents)).toBe(true);
-145 |       expect(contents.length).toBeGreaterThan(0);
-146 |       contents.forEach((item) => {
-147 |         expect(item).toMatchObject({
-148 |           name: expect.any(String),
-149 |           type: expect.stringMatching(/^(file|directory)$/),
-150 |         });
-151 |       });
-152 |     });
-153 | 
-154 |     it("should throw error for non-existent directory", async () => {
-155 |       await expect(
-156 |         DocumentFactory.readDirectory("nonexistent")
-157 |       ).rejects.toThrow();
-158 |     });
-159 | 
-160 |     it("should throw error when trying to read a file as directory", async () => {
-161 |       await expect(
-162 |         DocumentFactory.readDirectory(path.join(MOCK_PATH, "file1.ts"))
-163 |       ).rejects.toThrow();
-164 |     });
-165 |   });
-166 | 
-167 |   describe("exists", () => {
-168 |     it("should return true for existing file", () => {
-169 |       const exists = DocumentFactory.exists(path.join(MOCK_PATH, "file1.ts"));
-170 |       expect(exists).toBe(true);
-171 |     });
-172 | 
-173 |     it("should return true for existing directory", () => {
-174 |       const exists = DocumentFactory.exists(MOCK_PATH);
-175 |       expect(exists).toBe(true);
-176 |     });
-177 | 
-178 |     it("should return false for non-existent path", () => {
-179 |       const exists = DocumentFactory.exists("nonexistent");
-180 |       expect(exists).toBe(false);
-181 |     });
-182 |   });
-183 | 
-184 |   describe("remove", () => {
-185 |     const tempDir = path.join(MOCK_PATH, "temp_remove");
-186 | 
-187 |     beforeEach(async () => {
-188 |       // Create temp directory and test files
-189 |       await fs.mkdir(tempDir, { recursive: true });
-190 |       await fs.writeFile(path.join(tempDir, "test.txt"), "test content");
-191 |     });
-192 | 
-193 |     afterEach(async () => {
-194 |       // Cleanup
-195 |       if (await DocumentFactory.exists(tempDir)) {
-196 |         await fs.rm(tempDir, { recursive: true });
-197 |       }
-198 |     });
-199 | 
-200 |     it("should remove a file", async () => {
-201 |       const filePath = path.join(tempDir, "test.txt");
-202 |       await DocumentFactory.remove(filePath);
-203 |       expect(await DocumentFactory.exists(filePath)).toBe(false);
-204 |     });
-205 | 
-206 |     it("should remove a directory recursively", async () => {
-207 |       await DocumentFactory.remove(tempDir);
-208 |       expect(await DocumentFactory.exists(tempDir)).toBe(false);
-209 |     });
-210 | 
-211 |     it("should throw error when path doesn't exist", async () => {
-212 |       await expect(
-213 |         DocumentFactory.remove(path.join(tempDir, "nonexistent"))
-214 |       ).rejects.toThrow();
-215 |     });
-216 |   });
-217 | 
-218 |   describe("isAbsolute", () => {
-219 |     it("should return true for absolute path", () => {
-220 |       expect(DocumentFactory.isAbsolute(MOCK_PATH)).toBe(true);
-221 |     });
-222 | 
-223 |     it("should return false for relative path", () => {
-224 |       expect(DocumentFactory.isAbsolute(path.join("file1.ts"))).toBe(false);
-225 |     });
-226 | 
-227 |     it("should return false for non-existent path", () => {
-228 |       expect(DocumentFactory.isAbsolute("nonexistent")).toBe(false);
-229 |     });
-230 |   });
-231 | 
-232 |   describe("extension", () => {
-233 |     it("should return extension for file", () => {
-234 |       expect(DocumentFactory.extension("file1.ts")).toBe(".ts");
-235 |     });
-236 | 
-237 |     it("should return empty string for directory", () => {
-238 |       expect(DocumentFactory.extension("directory")).toBe("");
-239 |     });
-240 | 
-241 |     it("should return empty string for non-existent file", () => {
-242 |       expect(DocumentFactory.extension("nonexistent")).toBe("");
-243 |     });
-244 | 
-245 |     it("should return extension for file without two . characters", () => {
-246 |       expect(DocumentFactory.extension("file1.test.ts")).toBe(".ts");
-247 |     });
-248 |   });
-249 | 
-250 |   describe("copy", () => {
-251 |     const tempDir = path.join(MOCK_PATH, "temp_copy");
-252 | 
-253 |     beforeEach(async () => {
-254 |       await fs.mkdir(tempDir, { recursive: true });
-255 |     });
-256 | 
-257 |     afterEach(async () => {
-258 |       await fs.rm(tempDir, { recursive: true });
-259 |     });
-260 | 
-261 |     it("should copy a file", async () => {
-262 |       await DocumentFactory.copy(
-263 |         path.join(MOCK_PATH, "file1.ts"),
-264 |         path.join(tempDir, "file1.ts")
-265 |       );
-266 |       expect(await DocumentFactory.exists(path.join(tempDir, "file1.ts"))).toBe(
-267 |         true
-268 |       );
-269 |     });
-270 |   });
-271 | 
-272 |   describe("readFileSync", () => {
-273 |     const testFilePath = path.join(MOCK_PATH, "temp_test", "test.txt");
-274 |     beforeEach(async () => {
-275 |       await fs.mkdir(path.join(MOCK_PATH, "temp_test"), { recursive: true });
-276 |       await fs.writeFile(testFilePath, testContent);
-277 |     });
-278 | 
-279 |     afterEach(async () => {
-280 |       await fs.rm(path.join(MOCK_PATH, "temp_test"), { recursive: true });
-281 |     });
-282 | 
-283 |     it("should read file content synchronously with default options", () => {
-284 |       const content = DocumentFactory.readFileSync(testFilePath);
-285 |       expect(content).toBe(testContent);
-286 |     });
-287 | 
-288 |     it("should read file with custom encoding", () => {
-289 |       const content = DocumentFactory.readFileSync(testFilePath, {
-290 |         encoding: "utf8",
-291 |       });
-292 |       expect(content).toBe(testContent);
-293 |     });
-294 | 
-295 |     it("should throw error for non-existent file", () => {
-296 |       expect(() => DocumentFactory.readFileSync("nonexistent")).toThrow();
-297 |     });
-298 | 
-299 |     it("should throw error when reading directory", () => {
-300 |       expect(() => DocumentFactory.readFileSync(tempDir)).toThrow();
-301 |     });
-302 |   });
-303 | 
-304 |   describe("writeFile", () => {
-305 |     const tempDir = path.join(MOCK_PATH, "temp_write");
-306 |     const testFilePath = path.join(tempDir, "test.txt");
-307 |     beforeEach(async () => {
-308 |       await fs.mkdir(tempDir, { recursive: true });
-309 |       await fs.writeFile(testFilePath, testContent);
-310 |     });
-311 | 
-312 |     afterEach(async () => {
-313 |       await fs.rm(tempDir, { recursive: true });
-314 |     });
-315 | 
-316 |     it("should write content to file with default options", async () => {
-317 |       const newContent = "new content";
-318 |       const newFile = path.join(tempDir, "new.txt");
-319 | 
-320 |       await DocumentFactory.writeFile(newFile, newContent);
-321 |       const content = await fs.readFile(newFile, "utf8");
-322 |       expect(content).toBe(newContent);
-323 |     });
-324 | 
-325 |     it("should write content with custom encoding", async () => {
-326 |       const newContent = "новый контент"; // non-ASCII content
-327 |       const newFile = path.join(tempDir, "encoded.txt");
-328 | 
-329 |       await DocumentFactory.writeFile(newFile, newContent, {
-330 |         encoding: "utf8",
-331 |       });
-332 |       const content = await fs.readFile(newFile, "utf8");
-333 |       expect(content).toBe(newContent);
-334 |     });
-335 | 
-336 |     it("should overwrite existing file", async () => {
-337 |       const newContent = "overwritten content";
-338 |       await DocumentFactory.writeFile(testFilePath, newContent);
-339 |       const content = await fs.readFile(testFilePath, "utf8");
-340 |       expect(content).toBe(newContent);
-341 |     });
-342 | 
-343 |     it("should throw error when writing to a directory", async () => {
-344 |       await expect(
-345 |         DocumentFactory.writeFile(tempDir, "content")
-346 |       ).rejects.toThrow();
-347 |     });
-348 |   });
-349 | 
-350 |   describe("appendFile", () => {
-351 |     const tempDir = path.join(MOCK_PATH, "temp_append");
-352 |     const testFilePath = path.join(tempDir, "test.txt");
-353 |     beforeEach(async () => {
-354 |       await fs.mkdir(tempDir, { recursive: true });
-355 |       await fs.writeFile(testFilePath, testContent);
-356 |     });
-357 | 
-358 |     afterEach(async () => {
-359 |       await fs.rm(tempDir, { recursive: true });
-360 |     });
-361 | 
-362 |     it("should append content to existing file", async () => {
-363 |       const appendContent = " additional content";
-364 |       await DocumentFactory.appendFile(testFilePath, appendContent);
-365 |       const content = await fs.readFile(testFilePath, "utf8");
-366 |       expect(content).toBe(testContent + appendContent);
-367 |     });
-368 | 
-369 |     it("should create new file if it doesn't exist", async () => {
-370 |       const newFile = path.join(tempDir, "append.txt");
-371 |       await DocumentFactory.appendFile(newFile, testContent);
-372 |       const content = await fs.readFile(newFile, "utf8");
-373 |       expect(content).toBe(testContent);
-374 |     });
-375 | 
-376 |     it("should throw error when appending to a directory", async () => {
-377 |       await expect(
-378 |         DocumentFactory.appendFile(tempDir, "content")
-379 |       ).rejects.toThrow();
-380 |     });
-381 |   });
-382 | 
-383 |   describe("readDir", () => {
-384 |     const tempDir = path.join(MOCK_PATH, "temp_readdir");
-385 |     beforeEach(async () => {
-386 |       await fs.mkdir(tempDir, { recursive: true });
-387 |       await fs.writeFile(path.join(tempDir, "file1.txt"), "content1");
-388 |       await fs.writeFile(path.join(tempDir, "file2.txt"), "content2");
-389 |       await fs.mkdir(path.join(tempDir, "subdir"));
-390 |     });
-391 | 
-392 |     afterEach(async () => {
-393 |       await fs.rm(tempDir, { recursive: true });
-394 |     });
-395 | 
-396 |     it("should list directory contents", async () => {
-397 |       const contents = await DocumentFactory.readDir(tempDir);
-398 |       expect(contents).toHaveLength(3); // test.txt, file1.txt, file2.txt, subdir
-399 |       expect(contents).toContain("file1.txt");
-400 |       expect(contents).toContain("file2.txt");
-401 |       expect(contents).toContain("subdir");
-402 |     });
-403 | 
-404 |     it("should support withFileTypes option", async () => {
-405 |       const contents = await DocumentFactory.readDir(tempDir, {
-406 |         withFileTypes: true,
-407 |       });
-408 |       expect(contents).toHaveLength(3);
-409 |     });
-410 | 
-411 |     it("should throw error for non-existent directory", async () => {
-412 |       await expect(DocumentFactory.readDir("nonexistent")).rejects.toThrow();
-413 |     });
-414 | 
-415 |     it("should throw error when reading a file as directory", async () => {
-416 |       await expect(DocumentFactory.readDir(testFilePath)).rejects.toThrow();
-417 |     });
-418 |   });
-419 | 
-420 |   describe("createDir", () => {
-421 |     const testFilePath = path.join(MOCK_PATH, "temp_test", "test.txt");
-422 |     beforeEach(async () => {
-423 |       await fs.mkdir(path.join(MOCK_PATH, "temp_test"), { recursive: true });
-424 |       await fs.writeFile(testFilePath, testContent);
-425 |     });
-426 | 
-427 |     afterEach(async () => {
-428 |       await fs.rm(path.join(MOCK_PATH, "temp_test"), { recursive: true });
-429 |     });
-430 | 
-431 |     it("should create new directory", async () => {
-432 |       const newDir = path.join(tempDir, "newdir");
-433 |       await DocumentFactory.createDir(newDir);
-434 |       expect(await DocumentFactory.exists(newDir)).toBe(true);
-435 |     });
-436 | 
-437 |     it("should create nested directories with recursive option", async () => {
-438 |       const nestedDir = path.join(tempDir, "nested/deep/dir");
-439 |       await DocumentFactory.createDir(nestedDir, true);
-440 |       expect(await DocumentFactory.exists(nestedDir)).toBe(true);
-441 |     });
-442 | 
-443 |     it("should throw error when creating directory with existing file path", async () => {
-444 |       await expect(DocumentFactory.createDir(testFilePath)).rejects.toThrow();
-445 |     });
-446 |   });
-447 | 
-448 |   describe("ensureDirectory", () => {
-449 |     it("should create directory if it doesn't exist", async () => {
-450 |       const newDir = path.join(tempDir, "ensure");
-451 |       await DocumentFactory.ensureDirectory(newDir);
-452 |       expect(await DocumentFactory.exists(newDir)).toBe(true);
-453 |     });
-454 | 
-455 |     it("should not throw error if directory already exists", async () => {
-456 |       await expect(
-457 |         DocumentFactory.ensureDirectory(tempDir)
-458 |       ).resolves.not.toThrow();
-459 |     });
-460 | 
-461 |     it("should respect custom mode option", async () => {
-462 |       const newDir = path.join(tempDir, "mode-test");
-463 |       await DocumentFactory.ensureDirectory(newDir, { mode: 0o755 });
-464 |       const stats = await fs.stat(newDir);
-465 |       expect(stats.mode & 0o777).toBe(0o755);
-466 |     });
-467 |   });
-468 | 
-469 |   describe("baseName", () => {
-470 |     it("should return file name from path", () => {
-471 |       expect(DocumentFactory.baseName("/path/to/file.txt")).toBe("file.txt");
-472 |     });
-473 | 
-474 |     it("should return directory name from path", () => {
-475 |       expect(DocumentFactory.baseName("/path/to/dir/")).toBe("dir");
-476 |     });
-477 | 
-478 |     it("should handle paths with multiple extensions", () => {
-479 |       expect(DocumentFactory.baseName("/path/file.test.ts")).toBe(
-480 |         "file.test.ts"
-481 |       );
-482 |     });
-483 |   });
-484 | 
-485 |   describe("join", () => {
-486 |     it("should join path segments", () => {
-487 |       const joined = DocumentFactory.join("path", "to", "file.txt");
-488 |       expect(joined).toBe(path.join("path", "to", "file.txt"));
-489 |     });
-490 | 
-491 |     it("should handle absolute paths", () => {
-492 |       const joined = DocumentFactory.join("/root", "path", "file.txt");
-493 |       expect(joined).toBe(path.join("/root", "path", "file.txt"));
-494 |     });
-495 | 
-496 |     it("should normalize path separators", () => {
-497 |       const joined = DocumentFactory.join("path/to", "file.txt");
-498 |       expect(joined).toBe(path.join("path/to", "file.txt"));
-499 |     });
-500 |   });
-501 | 
-502 |   // Additional edge cases for existing methods
-503 |   describe("edge cases", () => {
-504 |     const tempDir = path.join(MOCK_PATH, "temp_edge");
-505 |     const testFilePath = path.join(tempDir, "test.txt");
-506 |     const symlink = path.join(tempDir, "symlink");
-507 | 
-508 |     beforeEach(async () => {
-509 |       await fs.mkdir(tempDir, { recursive: true });
-510 |       // Create the test file before creating the symlink
-511 |       await fs.writeFile(testFilePath, "test content");
-512 |     });
-513 | 
-514 |     afterEach(async () => {
-515 |       await fs.rm(tempDir, { recursive: true });
-516 |     });
-517 | 
-518 |     it("should handle symlinks when copying", async () => {
-519 |       await fs.symlink(testFilePath, symlink); // Create the symlink after the file exists
-520 |       const copyPath = path.join(tempDir, "copied-symlink");
-521 |       await DocumentFactory.copy(symlink, copyPath);
-522 |       expect(await DocumentFactory.exists(copyPath)).toBe(true);
-523 |     });
-524 | 
-525 |     it("should handle empty directory copying", async () => {
-526 |       const emptyDir = path.join(tempDir, "empty");
-527 |       await fs.mkdir(emptyDir);
-528 |       const copyPath = path.join(tempDir, "copied-empty");
-529 |       await DocumentFactory.copy(emptyDir, copyPath);
-530 |       expect(await DocumentFactory.exists(copyPath)).toBe(true);
-531 |     });
-532 | 
-533 |     it("should handle files with special characters", async () => {
-534 |       const specialFile = path.join(tempDir, "special$#@!.txt");
-535 |       await fs.writeFile(specialFile, "content");
-536 |       expect(await DocumentFactory.exists(specialFile)).toBe(true);
-537 |       const stats = await DocumentFactory.getStats(specialFile);
-538 |       expect(stats.isFile).toBe(true);
-539 |     });
-540 |   });
-541 | 
-542 |   // Test for line 33 (error handling in type method)
-543 |   describe("type error handling", () => {
-544 |     it("should handle system errors correctly", async () => {
-545 |       // Mock the entire fs module
-546 |       jest.mock("fs/promises", () => ({
-547 |         ...jest.requireActual("fs/promises"),
-548 |         stat: jest.fn().mockRejectedValue(new Error("System error")),
-549 |       }));
-550 | 
-551 |       await expect(DocumentFactory.type("/some/path")).rejects.toThrow(
-552 |         "Document error at /some/path: File not found"
-553 |       );
-554 |     });
-555 |   });
-556 | 
-557 |   describe("checkAccess", () => {
-558 |     it("should handle access check failures", async () => {
-559 |       const result = await DocumentFactory.checkAccess("/nonexistent/path");
-560 |       expect(result).toEqual({
-561 |         readable: false,
-562 |         writable: false,
-563 |         executable: false,
-564 |       });
-565 |     });
-566 |   });
-567 | 
-568 |   // Tests for lines 137-159 (readJsonSync method)
-569 |   describe("readJsonSync", () => {
-570 |     const jsonFilePath = path.join(tempDir, "test.json");
-571 | 
-572 |     beforeEach(async () => {
-573 |       await fs.writeFile(jsonFilePath, JSON.stringify({ key: "value" }));
-574 |     });
-575 | 
-576 |     it("should successfully read and parse JSON file", async () => {
-577 |       const result = await DocumentFactory.readJsonSync(jsonFilePath);
-578 |       expect(result).toEqual({ key: "value" });
-579 |     });
-580 | 
-581 |     it("should throw error for non-existent file", async () => {
-582 |       await expect(
-583 |         DocumentFactory.readJsonSync("/nonexistent.json")
-584 |       ).rejects.toThrow(
-585 |         "Document error at /nonexistent.json: Error: File not found: /nonexistent.json"
-586 |       );
-587 |     });
-588 | 
-589 |     it("should throw error for empty file", async () => {
-590 |       await fs.writeFile(jsonFilePath, "");
-591 |       await expect(DocumentFactory.readJsonSync(jsonFilePath)).rejects.toThrow(
-592 |         `File is empty: ${jsonFilePath}`
-593 |       );
-594 |     });
-595 | 
-596 |     it("should throw error for invalid JSON", async () => {
-597 |       await fs.writeFile(jsonFilePath, "invalid json");
-598 |       await expect(DocumentFactory.readJsonSync(jsonFilePath)).rejects.toThrow(
-599 |         `Invalid JSON in file ${jsonFilePath}`
-600 |       );
-601 |     });
-602 |   });
-603 | 
-604 |   // Test for line 337 (error handling in appendFile)
-605 |   describe("appendFile error handling", () => {
-606 |     it("should handle appendFile errors", async () => {
-607 |       const invalidPath = path.join(tempDir, "nonexistent", "test.txt");
-608 |       await expect(
-609 |         DocumentFactory.appendFile(invalidPath, "content")
-610 |       ).rejects.toThrow("Document error at");
-611 |     });
-612 |   });
-613 | 
-614 |   // Tests for lines 383-389 (directory copying edge cases)
-615 |   describe("copyDir edge cases", () => {
-616 |     const tempDir = path.join(MOCK_PATH, "temp_edge");
-617 |     const sourceDir = path.join(tempDir, "source");
-618 |     const targetDir = path.join(tempDir, "target");
-619 | 
-620 |     beforeEach(async () => {
-621 |       // Clean up before each test
-622 |       await fs.rm(tempDir, { recursive: true, force: true });
-623 |       await fs.mkdir(tempDir, { recursive: true });
-624 |     });
-625 | 
-626 |     afterEach(async () => {
-627 |       // Cleanup after each test
-628 |       await fs.rm(tempDir, { recursive: true, force: true });
-629 |     });
-630 | 
-631 |     it("should handle errors during directory creation while copying", async () => {
-632 |       // Create a source directory with content
-633 |       await fs.mkdir(sourceDir);
-634 |       await fs.writeFile(path.join(sourceDir, "test.txt"), "test content");
-635 | 
-636 |       // Mock ensureDirectory to simulate failure
-637 |       const originalEnsureDirectory = DocumentFactory.ensureDirectory;
-638 |       DocumentFactory.ensureDirectory = jest
-639 |         .fn()
-640 |         .mockRejectedValue(new Error("Permission denied"));
-641 | 
-642 |       await expect(
-643 |         DocumentFactory.copyDir(sourceDir, targetDir)
-644 |       ).rejects.toThrow();
-645 | 
-646 |       DocumentFactory.ensureDirectory = originalEnsureDirectory;
-647 |     });
-648 | 
-649 |     it("should handle nested directory structures correctly", async () => {
-650 |       const nestedDir = path.join(sourceDir, "nested");
-651 | 
-652 |       await fs.mkdir(sourceDir);
-653 |       await fs.mkdir(nestedDir);
-654 |       await fs.writeFile(path.join(sourceDir, "test1.txt"), "content1");
-655 |       await fs.writeFile(path.join(nestedDir, "test2.txt"), "content2");
-656 | 
-657 |       await DocumentFactory.copyDir(sourceDir, targetDir);
-658 | 
-659 |       expect(
-660 |         await DocumentFactory.exists(path.join(targetDir, "test1.txt"))
-661 |       ).toBe(true);
-662 |       expect(
-663 |         await DocumentFactory.exists(
-664 |           path.join(targetDir, "nested", "test2.txt")
-665 |         )
-666 |       ).toBe(true);
-667 |     });
-668 |   });
-669 | });
-670 | 
+  1 | import { ZodObject, z } from "zod";
+  2 | import { TemplateType } from "../../types/template";
+  3 | import { logger } from "../../utils/logger";
+  4 | import { documentFactory } from "../filesystem/DocumentFactory";
+  5 | type TemplateValue = z.ZodType<string | number | boolean | undefined>;
+  6 | export class Template<
+  7 | T extends Record<string, TemplateValue> = Record<string, TemplateValue>
+  8 | > {
+  9 | private _content: string = "";
+ 10 | private schema: ZodObject<T>;
+ 11 | public constructor(
+ 12 | private type: TemplateType,
+ 13 | schema: ZodObject<T>
+ 14 | ) {
+ 15 | const optionalFields = Object.fromEntries(
+ 16 | Object.entries(schema.shape).map(([key, value]) => [
+ 17 | key,
+ 18 | value.optional()
+ 19 | ])
+ 20 | );
+ 21 | this.schema = schema.extend(optionalFields) as unknown as ZodObject<T>;
+ 22 | }
+ 23 | public async load(
+ 24 | path: string,
+ 25 | additionalFields?: Record<string, z.ZodSchema<string>>
+ 26 | ): Promise<void> {
+ 27 | this._content = await documentFactory.readFile(path);
+ 28 | if (additionalFields) {
+ 29 | this.schema = this.schema.extend(additionalFields) as ZodObject<T>;
+ 30 | }
+ 31 | this.validate();
+ 32 | }
+ 33 | public get content(): string {
+ 34 | if (!this._content) {
+ 35 | throw new Error(`Template content is not loaded for ${this.type}`);
+ 36 | }
+ 37 | return this._content;
+ 38 | }
+ 39 | public static async create<T extends Record<string, TemplateValue>>(
+ 40 | type: TemplateType,
+ 41 | schema: ZodObject<T>,
+ 42 | path: string,
+ 43 | additionalFields?: Record<string, z.ZodSchema<string>>
+ 44 | ): Promise<Template<T>> {
+ 45 | const template = new Template(type, schema);
+ 46 | await template.load(path, additionalFields);
+ 47 | return template;
+ 48 | }
+ 49 | public render(data: Record<string, string | number | boolean>): string {
+ 50 | try {
+ 51 | this.schema.parse(data);
+ 52 | const contentTokens = this.getTemplateTokens();
+ 53 | const missingTokens = contentTokens.filter(token => {
+ 54 | const isRequired = this.schema.shape[token]?.isOptional() === false;
+ 55 | return isRequired && !(token in data);
+ 56 | });
+ 57 | if (missingTokens.length > 0) {
+ 58 | throw new Error(
+ 59 | `Missing required values for tokens: ${missingTokens.join(", ")}`
+ 60 | );
+ 61 | }
+ 62 | const templateContent = this.content;
+ 63 | return templateContent.replace(
+ 64 | new RegExp(`\\{\\{(${contentTokens.join("|")})\\}\\}`, "g"),
+ 65 | (_, key) => (key in data ? String(data[key]) : `{{${key}}}`)
+ 66 | );
+ 67 | } catch (error) {
+ 68 | if (error instanceof z.ZodError) {
+ 69 | throw new Error(
+ 70 | `Template content validation failed for ${this.type}: ${error.errors
+ 71 | .map(e => `${e.path.join(".")}: ${e.message}`)
+ 72 | .join(", ")}`
+ 73 | );
+ 74 | }
+ 75 | throw error;
+ 76 | }
+ 77 | }
+ 78 | private getTemplateTokens(): string[] {
+ 79 | const tokenRegex = /\{\{(\w+)\}\}/g;
+ 80 | const tokens: string[] = [];
+ 81 | let match;
+ 82 | while ((match = tokenRegex.exec(this.content)) !== null) {
+ 83 | const token = match[1];
+ 84 | if (token === undefined) {
+ 85 | throw new Error(`Invalid template content for ${this.type}`);
+ 86 | }
+ 87 | tokens.push(token);
+ 88 | }
+ 89 | return tokens;
+ 90 | }
+ 91 | private validate(): void {
+ 92 | const tokens = this.getTemplateTokens();
+ 93 | const requiredFields = Object.keys(this.schema.shape);
+ 94 | const missingRequired = requiredFields.filter(
+ 95 | field => !tokens.includes(field)
+ 96 | );
+ 97 | if (missingRequired.length > 0) {
+ 98 | logger.warn(
+ 99 | `Missing required tokens in ${this.type} template: ${missingRequired.join(
+100 | ", "
+101 | )}`
+102 | );
+103 | }
+104 | }
+105 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: TemplateEngine.ts
-- Path: `/root/git/codewrangler/src/infrastructure/templates/TemplateEngine.ts`
-- Size: 2.60 KB
-- Extension: .ts
-- Lines of code: 83
-- Content:
-
-```ts
- 1 | import { ZodObject, z } from "zod";
- 2 | import { TemplateType } from "../../types/template";
- 3 | 
- 4 | import { DocumentFactory } from "../filesystem/DocumentFactory";
- 5 | 
- 6 | type TemplateValue = z.ZodType<string | number | boolean>;
- 7 | 
- 8 | export class Template<
- 9 |   T extends Record<string, TemplateValue> = Record<string, TemplateValue>
-10 | > {
-11 |   private _content: string = "";
-12 | 
-13 |   public constructor(
-14 |     private type: TemplateType,
-15 |     private schema: ZodObject<T>
-16 |   ) {}
-17 | 
-18 |   public async load(
-19 |     path: string,
-20 |     additionalFields?: Record<string, z.ZodSchema<string>>
-21 |   ): Promise<void> {
-22 |     this._content = await DocumentFactory.readFile(path);
-23 |     if (additionalFields) {
-24 |       this.schema = this.schema.extend(additionalFields) as ZodObject<T>;
-25 |     }
-26 |     this.validate();
-27 |   }
-28 | 
-29 |   public get content(): string {
-30 |     if (!this._content) {
-31 |       throw new Error(`Template content is not loaded for ${this.type}`);
-32 |     }
-33 |     return this._content;
-34 |   }
-35 | 
-36 |   private validate(): void {
-37 |     const tokens = this.getTemplateTokens();
-38 |     const requiredFields = Object.keys(this.schema.shape);
-39 |     const missingRequired = requiredFields.filter(
-40 |       (field) => !tokens.includes(field)
-41 |     );
-42 | 
-43 |     if (missingRequired.length > 0) {
-44 |       throw new Error(
-45 |         `Missing required tokens in ${
-46 |           this.type
-47 |         } template: ${missingRequired.join(", ")}`
-48 |       );
-49 |     }
-50 |   }
-51 | 
-52 |   public static async create<T extends Record<string, TemplateValue>>(
-53 |     type: TemplateType,
-54 |     schema: ZodObject<T>,
-55 |     path: string,
-56 |     additionalFields?: Record<string, z.ZodSchema<string>>
-57 |   ): Promise<Template<T>> {
-58 |     const template = new Template(type, schema);
-59 |     await template.load(path, additionalFields);
-60 |     return template;
-61 |   }
-62 | 
-63 |   private getTemplateTokens(): string[] {
-64 |     const tokenRegex = /\{\{(\w+)\}\}/g;
-65 |     const tokens: string[] = [];
-66 |     let match;
-67 | 
-68 |     while ((match = tokenRegex.exec(this.content)) !== null) {
-69 |       const token = match[1];
-70 |       if (token === undefined) {
-71 |         throw new Error(`Invalid template content for ${this.type}`);
-72 |       }
-73 |       tokens.push(token);
-74 |     }
-75 | 
-76 |     return tokens;
-77 |   }
-78 | 
-79 |   public render(values: Record<string, string | number | boolean>): string {
-80 |     try {
-81 |       this.schema.parse(values);
-82 |       return this.content.replace(/\{\{(\w+)\}\}/g, (_, key) =>
-83 |         values[key] !== undefined ? String(values[key]) : `{{${key}}}`
-84 |       );
-85 |     } catch (error) {
-86 |       if (error instanceof z.ZodError) {
-87 |         throw new Error(
-88 |           `Template content validation failed for ${this.type}: ${error.errors
-89 |             .map((e) => `${e.path.join(".")}: ${e.message}`)
-90 |             .join(", ")}`
-91 |         );
-92 |       }
-93 |       throw error;
-94 |     }
-95 |   }
-96 | }
-97 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: zod.ts
-- Path: `/root/git/codewrangler/src/infrastructure/templates/zod.ts`
-- Size: 1.23 KB
-- Extension: .ts
-- Lines of code: 38
-- Content:
-
+## File: zod.ts, Path: `/root/git/codewrangler/src/infrastructure/templates/zod.ts`
 ```ts
  1 | import { z } from "zod";
- 2 | 
- 3 | const OTHER_KEYS = [
- 4 |   "PROJECT_NAME",
- 5 |   "GENERATION_DATE",
- 6 |   "DIRECTORY_STRUCTURE",
- 7 |   "TOTAL_FILES",
- 8 |   "TOTAL_DIRECTORIES",
- 9 |   "TOTAL_SIZE",
-10 | ] as const;
-11 | 
-12 | export type OtherKeys = (typeof OTHER_KEYS)[number];
-13 | 
-14 | export const OTHER_KEYS_SCHEMA = z.enum(OTHER_KEYS);
-15 | 
-16 | export const BaseTemplateSchema = z.object({
-17 |   PROJECT_NAME: z.string(),
-18 |   GENERATION_DATE: z.string().datetime(),
-19 |   DIRECTORY_STRUCTURE: z.string(),
-20 |   TOTAL_FILES: z.number(),
-21 |   TOTAL_DIRECTORIES: z.number(),
-22 |   TOTAL_SIZE: z.number(),
-23 |   CONTENT: z.string(),
-24 | });
-25 | 
-26 | export type BaseTemplate = z.infer<typeof BaseTemplateSchema>;
-27 | export type BaseTemplateString = keyof BaseTemplate;
-28 | 
-29 | export const FileTemplateSchema = z.object({
-30 |   FILE_NAME: z.string(),
-31 |   FILE_EXTENSION: z.string(),
-32 |   FILE_SIZE: z.number(),
-33 |   FILE_CONTENTS: z.string(),
-34 | });
-35 | 
-36 | export type FileTemplate = z.infer<typeof FileTemplateSchema>;
-37 | export type FileTemplateString = keyof FileTemplate;
-38 | 
-39 | export const DirectoryTemplateSchema = z.object({
-40 |   DIRECTORY_NAME: z.string(),
-41 |   DIRECTORY_PATH: z.string(),
-42 |   DIRECTORY_SIZE: z.number(),
-43 |   DIRECTORY_CONTENT: z.string(),
-44 | });
-45 | 
-46 | export type DirectoryTemplate = z.infer<typeof DirectoryTemplateSchema>;
-47 | export type DirectoryTemplateString = keyof DirectoryTemplate;
-48 | 
+ 2 | const OTHER_KEYS = [
+ 3 | "PROJECT_NAME",
+ 4 | "GENERATION_DATE",
+ 5 | "DIRECTORY_STRUCTURE",
+ 6 | "TOTAL_FILES",
+ 7 | "TOTAL_DIRECTORIES",
+ 8 | "TOTAL_SIZE"
+ 9 | ] as const;
+10 | export type OtherKeys = (typeof OTHER_KEYS)[number];
+11 | export const OTHER_KEYS_SCHEMA = z.enum(OTHER_KEYS);
+12 | export const baseTemplateSchema = z.object({
+13 | PROJECT_NAME: z.string(),
+14 | GENERATION_DATE: z.string().datetime(),
+15 | DIRECTORY_STRUCTURE: z.string(),
+16 | TOTAL_FILES: z.number(),
+17 | TOTAL_DIRECTORIES: z.number(),
+18 | TOTAL_SIZE: z.number(),
+19 | CONTENT: z.string()
+20 | });
+21 | export type BaseTemplate = z.infer<typeof baseTemplateSchema>;
+22 | export type BaseTemplateString = keyof BaseTemplate;
+23 | export const fileTemplateSchema = z.object({
+24 | FILE_NAME: z.string(),
+25 | FILE_EXTENSION: z.string(),
+26 | FILE_SIZE: z.number(),
+27 | FILE_CONTENTS: z.string()
+28 | });
+29 | export type FileTemplate = z.infer<typeof fileTemplateSchema>;
+30 | export type FileTemplateString = keyof FileTemplate;
+31 | export const directoryTemplateSchema = z.object({
+32 | DIRECTORY_NAME: z.string(),
+33 | DIRECTORY_PATH: z.string(),
+34 | DIRECTORY_SIZE: z.number(),
+35 | DIRECTORY_CONTENT: z.string()
+36 | });
+37 | export type DirectoryTemplate = z.infer<typeof directoryTemplateSchema>;
+38 | export type DirectoryTemplateString = keyof DirectoryTemplate;
 ```
 
----------------------------------------------------------------------------
-
-
-## File: DocumentTreeBuilder.ts
-- Path: `/root/git/codewrangler/src/services/builder/DocumentTreeBuilder.ts`
-- Size: 1.73 KB
-- Extension: .ts
-- Lines of code: 48
-- Content:
-
+## File: DocumentTreeBuilder.ts, Path: `/root/git/codewrangler/src/services/builder/DocumentTreeBuilder.ts`
 ```ts
- 1 | import { FileTreeBuilder, IFileTreeNode } from "./FileTreeBuilder";
+ 1 | import { INodeTree, NodeTreeBuilder } from "./NodeTreeBuilder";
  2 | import { RenderableDirectory } from "../../core/entities/NodeDirectory";
  3 | import { RenderableFile } from "../../core/entities/NodeFile";
- 4 | import { IRenderStrategy } from "../renderer/RenderStrategy";
+ 4 | import { FILE_TYPE } from "../../types/type";
  5 | import { Config } from "../../utils/config";
  6 | import { logger } from "../../utils/logger";
- 7 | import { FileType } from "../../types/type";
- 8 | 
- 9 | export class DocumentTreeBuilder {
-10 |   private root: RenderableDirectory | RenderableFile | undefined;
-11 |   private builder: FileTreeBuilder;
-12 |   constructor(config: Config, private renderStrategy: IRenderStrategy[]) {
-13 |     this.builder = new FileTreeBuilder(config);
-14 |   }
-15 | 
-16 |   async build(): Promise<void> {
-17 |     try {
-18 |       // Build file tree structure
-19 |       const fileTree = await this.builder.build();
-20 | 
-21 |       // Convert file tree to Document tree
-22 |       this.root = await this.createDocumentStructure(fileTree);
-23 | 
-24 |       // Initialize the entire document tree
-25 |       await this.root.bundle();
-26 |     } catch (error) {
-27 |       logger.error("Error building document tree", error as Error);
-28 |       throw error;
-29 |     }
-30 |   }
-31 | 
-32 |   private async createDocumentStructure(
-33 |     node: IFileTreeNode
-34 |   ): Promise<RenderableDirectory | RenderableFile> {
-35 |     if (node.type === FileType.Directory) {
-36 |       const directory = new RenderableDirectory(
-37 |         node.name,
-38 |         node.path,
-39 |         this.renderStrategy
-40 |       );
-41 | 
-42 |       if (node.children) {
-43 |         // Recursively create children
-44 |         for (const child of node.children) {
-45 |           const childDocument = await this.createDocumentStructure(child);
-46 |           await directory.addChild(childDocument);
-47 |         }
-48 |       }
-49 | 
-50 |       return directory;
-51 |     } else {
-52 |       return new RenderableFile(node.name, node.path, this.renderStrategy);
-53 |     }
-54 |   }
-55 | }
-56 | 
+ 7 | import { IRenderStrategy } from "../renderer/RenderStrategy";
+ 8 | export class DocumentTreeBuilder {
+ 9 | private root: RenderableDirectory | RenderableFile | undefined;
+10 | private builder: NodeTreeBuilder;
+11 | constructor(
+12 | config: Config,
+13 | private renderStrategy: IRenderStrategy[]
+14 | ) {
+15 | this.builder = new NodeTreeBuilder(config);
+16 | }
+17 | async build(): Promise<void> {
+18 | try {
+19 | const fileTree = await this.builder.build();
+20 | this.root = await this.createDocumentStructure(fileTree);
+21 | await this.root.bundle();
+22 | } catch (error) {
+23 | logger.error("Error building document tree", error as Error);
+24 | throw error;
+25 | }
+26 | }
+27 | private async createDocumentStructure(
+28 | node: INodeTree
+29 | ): Promise<RenderableDirectory | RenderableFile> {
+30 | if (node.type === FILE_TYPE.Directory) {
+31 | const directory = new RenderableDirectory(
+32 | node.name,
+33 | node.path
+34 | );
+35 | if (node.children) {
+36 | for (const child of node.children) {
+37 | const childDocument = await this.createDocumentStructure(child);
+38 | await directory.addChild(childDocument);
+39 | }
+40 | }
+41 | return directory;
+42 | } else {
+43 | return new RenderableFile(node.name, node.path);
+44 | }
+45 | }
+46 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: FileHidden.ts
-- Path: `/root/git/codewrangler/src/services/builder/FileHidden.ts`
-- Size: 889.00 B
-- Extension: .ts
-- Lines of code: 25
-- Content:
-
+## File: FileHidden.ts, Path: `/root/git/codewrangler/src/services/builder/FileHidden.ts`
 ```ts
- 1 | import { Config } from "../../utils/config";
- 2 | import { minimatch } from "minimatch";
- 3 | 
- 4 | export default class FileHidden {
- 5 |   private ignoreHiddenFiles: boolean;
- 6 |   private patterns: string[];
- 7 |   private additionalIgnoreFiles: string[];
- 8 | 
- 9 |   constructor(config: Config) {
-10 |     this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
-11 |     this.patterns = [...config.get("excludePatterns")];
-12 |     this.additionalIgnoreFiles = config.get("additionalIgnoreFiles");
-13 |   }
-14 | 
-15 |   public shouldExclude(fileName: string): boolean {
-16 |     if (this.ignoreHiddenFiles && fileName.startsWith(".")) {
-17 |       return true;
-18 |     }
-19 | 
-20 |     if (this.patterns.some((pattern) => minimatch(fileName, pattern))) {
-21 |       return true;
-22 |     }
-23 | 
-24 |     if (this.additionalIgnoreFiles.some((file) => minimatch(fileName, file))) {
-25 |       // Additional ignore files are always excluded
-26 |       return true;
-27 |     }
-28 | 
-29 |     return false;
-30 |   }
+ 1 | import { minimatch } from "minimatch";
+ 2 | import { Config } from "../../utils/config";
+ 3 | export default class FileHidden {
+ 4 | private ignoreHiddenFiles: boolean;
+ 5 | private patterns: string[];
+ 6 | private additionalIgnoreFiles: string[];
+ 7 | constructor(config: Config) {
+ 8 | this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
+ 9 | this.patterns = [...config.get("excludePatterns")];
+10 | this.additionalIgnoreFiles = config.get("additionalIgnoreFiles");
+11 | }
+12 | public shouldExclude(fileName: string): boolean {
+13 | if (this.ignoreHiddenFiles && fileName.startsWith(".")) {
+14 | return true;
+15 | }
+16 | if (this.patterns.some(pattern => minimatch(fileName, pattern))) {
+17 | return true;
+18 | }
+19 | if (this.additionalIgnoreFiles.some(file => minimatch(fileName, file))) {
+20 | return true;
+21 | }
+22 | return false;
+23 | }
+24 | }
+```
+
+## File: NodeTreeBuilder.ts, Path: `/root/git/codewrangler/src/services/builder/NodeTreeBuilder.ts`
+```ts
+ 1 | import FileHidden from "./FileHidden";
+ 2 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+ 3 | import { FILE_TYPE, FileType } from "../../types/type";
+ 4 | import { Config, ConfigOptions } from "../../utils/config";
+ 5 | export interface INodeTree {
+ 6 | name: string;
+ 7 | path: string;
+ 8 | type: FileType;
+ 9 | children?: INodeTree[];
+10 | }
+11 | export interface INodeTreeBuilderOptions
+12 | extends Pick<
+13 | ConfigOptions,
+14 | | "additionalIgnoreFiles"
+15 | | "maxDepth"
+16 | | "excludePatterns"
+17 | | "dir"
+18 | | "followSymlinks"
+19 | > {
+20 | pattern: RegExp;
+21 | returnType: "paths" | "details";
+22 | }
+23 | export class NodeTreeBuilder {
+24 | private config: Config;
+25 | private options: INodeTreeBuilderOptions;
+26 | private fileHidden: FileHidden;
+27 | constructor(config: Config) {
+28 | this.config = config;
+29 | this.options = this.initializeOptions();
+30 | this.fileHidden = new FileHidden(config);
 31 | }
-32 | 
+32 | public async build(): Promise<INodeTree> {
+33 | const rootDir = this.options.dir;
+34 | if (!documentFactory.exists(rootDir)) {
+35 | throw new Error(`Directory ${rootDir} does not exist`);
+36 | }
+37 | return await this.buildTree(rootDir);
+38 | }
+39 | private initializeOptions(): INodeTreeBuilderOptions {
+40 | return {
+41 | dir: this.config.get("dir"),
+42 | pattern: new RegExp(this.config.get("pattern")),
+43 | maxDepth: this.config.get("maxDepth"),
+44 | excludePatterns: this.config.get("excludePatterns"),
+45 | additionalIgnoreFiles: this.config.get("additionalIgnoreFiles"),
+46 | returnType: "details",
+47 | followSymlinks: false
+48 | };
+49 | }
+50 | private async buildTree(
+51 | nodePath: string,
+52 | depth: number = 0
+53 | ): Promise<INodeTree> {
+54 | const stats = await documentFactory.getStats(nodePath);
+55 | const name = documentFactory.baseName(nodePath);
+56 | const node: INodeTree = {
+57 | name,
+58 | path: nodePath,
+59 | type: stats.isDirectory ? FILE_TYPE.Directory : FILE_TYPE.File
+60 | };
+61 | if (stats.isDirectory) {
+62 | if (
+63 | this.options.maxDepth !== undefined &&
+64 | depth >= this.options.maxDepth
+65 | ) {
+66 | return node;
+67 | }
+68 | const entries = await documentFactory.readDir(nodePath);
+69 | const children: INodeTree[] = [];
+70 | for (const entry of entries) {
+71 | const childPath = documentFactory.join(nodePath, entry);
+72 | if (this.fileHidden.shouldExclude(entry)) {
+73 | continue;
+74 | }
+75 | const childNode = await this.buildTree(childPath, depth + 1);
+76 | children.push(childNode);
+77 | }
+78 | node.children = children;
+79 | }
+80 | return node;
+81 | }
+82 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: FileTreeBuilder.ts
-- Path: `/root/git/codewrangler/src/services/builder/FileTreeBuilder.ts`
-- Size: 2.60 KB
-- Extension: .ts
-- Lines of code: 86
-- Content:
-
+## File: RenderStrategy.ts, Path: `/root/git/codewrangler/src/services/renderer/RenderStrategy.ts`
 ```ts
-  1 | import { Config, ConfigOptions } from "../../utils/config";
-  2 | import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-  3 | import { FileType } from "../../types/type";
-  4 | import FileHidden from "./FileHidden";
-  5 | 
-  6 | export interface IFileTreeNode {
-  7 |   name: string;
-  8 |   path: string;
-  9 |   type: FileType;
- 10 |   children?: IFileTreeNode[];
- 11 | }
- 12 | 
- 13 | export interface IFileTreeBuilderOptions
- 14 |   extends Pick<
- 15 |     ConfigOptions,
- 16 |     | "additionalIgnoreFiles"
- 17 |     | "maxDepth"
- 18 |     | "excludePatterns"
- 19 |     | "dir"
- 20 |     | "followSymlinks"
- 21 |   > {
- 22 |   pattern: RegExp;
- 23 |   returnType: "paths" | "details";
- 24 | }
- 25 | 
- 26 | export class FileTreeBuilder {
- 27 |   private config: Config;
- 28 |   private options: IFileTreeBuilderOptions;
- 29 |   private fileHidden: FileHidden;
- 30 | 
- 31 |   constructor(config: Config) {
- 32 |     this.config = config;
- 33 |     this.options = this.initializeOptions();
- 34 |     this.fileHidden = new FileHidden(config);
- 35 |   }
- 36 | 
- 37 |   private initializeOptions(): IFileTreeBuilderOptions {
- 38 |     return {
- 39 |       dir: this.config.get("dir"),
- 40 |       pattern: new RegExp(this.config.get("pattern")),
- 41 |       maxDepth: this.config.get("maxDepth"),
- 42 |       excludePatterns: this.config.get("excludePatterns"),
- 43 |       additionalIgnoreFiles: this.config.get("additionalIgnoreFiles"),
- 44 |       returnType: "details",
- 45 |       followSymlinks: false,
- 46 |     };
- 47 |   }
- 48 |   public async build(): Promise<IFileTreeNode> {
- 49 |     const rootDir = this.options.dir;
- 50 |     if (!DocumentFactory.exists(rootDir)) {
- 51 |       throw new Error(`Directory ${rootDir} does not exist`);
- 52 |     }
- 53 |     return await this.buildTree(rootDir);
- 54 |   }
- 55 | 
- 56 |   private async buildTree(
- 57 |     nodePath: string,
- 58 |     depth: number = 0
- 59 |   ): Promise<IFileTreeNode> {
- 60 |     const stats = await DocumentFactory.getStats(nodePath);
- 61 |     const name = DocumentFactory.baseName(nodePath);
- 62 | 
- 63 |     const node: IFileTreeNode = {
- 64 |       name,
- 65 |       path: nodePath,
- 66 |       type: stats.isDirectory ? FileType.Directory : FileType.File,
- 67 |     };
- 68 | 
- 69 |     if (stats.isDirectory) {
- 70 |       // Check depth limit
- 71 |       if (
- 72 |         this.options.maxDepth !== undefined &&
- 73 |         depth >= this.options.maxDepth
- 74 |       ) {
- 75 |         return node;
- 76 |       }
- 77 | 
- 78 |       // Read directory entries
- 79 |       const entries = await DocumentFactory.readDir(nodePath);
- 80 |       const children: IFileTreeNode[] = [];
- 81 | 
- 82 |       for (const entry of entries) {
- 83 |         const childPath = DocumentFactory.join(nodePath, entry);
- 84 | 
- 85 |         // Skip if should be excluded
- 86 |         if (this.fileHidden.shouldExclude(entry)) {
- 87 |           continue;
- 88 |         }
- 89 | 
- 90 |         // Recursively build tree for child
- 91 |         const childNode = await this.buildTree(childPath, depth + 1);
- 92 |         children.push(childNode);
- 93 |       }
- 94 | 
- 95 |       node.children = children;
- 96 |     }
- 97 | 
- 98 |     return node;
- 99 |   }
+  1 | import { NodeDirectory } from "../../core/entities/NodeDirectory";
+  2 | import { NodeFile } from "../../core/entities/NodeFile";
+  3 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+  4 | import { Template } from "../../infrastructure/templates/TemplateEngine";
+  5 | import {
+  6 | BaseTemplate,
+  7 | DirectoryTemplate,
+  8 | FileTemplate,
+  9 | baseTemplateSchema,
+ 10 | directoryTemplateSchema,
+ 11 | fileTemplateSchema
+ 12 | } from "../../infrastructure/templates/zod";
+ 13 | import { TemplateType } from "../../types/template";
+ 14 | import { Config, OutputFormatExtension } from "../../utils/config";
+ 15 | interface IContentRenderer {
+ 16 | renderFile: (file: NodeFile) => string;
+ 17 | renderDirectory: (directory: NodeDirectory) => string;
+ 18 | }
+ 19 | interface ITemplateLoader {
+ 20 | loadTemplates: () => Promise<void>;
+ 21 | }
+ 22 | interface IDocumentRenderer {
+ 23 | render: (rootDirectory: NodeDirectory) => string;
+ 24 | dispose: () => void;
+ 25 | }
+ 26 | export interface IRenderStrategy
+ 27 | extends IContentRenderer,
+ 28 | ITemplateLoader,
+ 29 | IDocumentRenderer {}
+ 30 | export abstract class BaseRenderStrategy implements IRenderStrategy {
+ 31 | protected extension: OutputFormatExtension;
+ 32 | protected templates: Record<TemplateType, Template | null>;
+ 33 | protected config: Config;
+ 34 | protected constructor(config: Config, extension: OutputFormatExtension) {
+ 35 | this.config = config;
+ 36 | this.templates = {
+ 37 | page: null,
+ 38 | file: null,
+ 39 | directory: null
+ 40 | };
+ 41 | this.extension = extension;
+ 42 | }
+ 43 | public async loadTemplates(): Promise<void> {
+ 44 | const templateDir = documentFactory.join(
+ 45 | this.config.get("rootDir") as string,
+ 46 | this.config.get("templatesDir") as string
+ 47 | );
+ 48 | if (!documentFactory.exists(templateDir)) {
+ 49 | throw new Error(`Templates directory not found: ${templateDir}`);
+ 50 | }
+ 51 | this.templates = {
+ 52 | page: await Template.create(
+ 53 | "page",
+ 54 | baseTemplateSchema,
+ 55 | documentFactory.join(templateDir, `page.${this.extension}`)
+ 56 | ),
+ 57 | file: await Template.create(
+ 58 | "file",
+ 59 | fileTemplateSchema,
+ 60 | documentFactory.join(templateDir, `file.${this.extension}`)
+ 61 | ),
+ 62 | directory: await Template.create(
+ 63 | "directory",
+ 64 | directoryTemplateSchema,
+ 65 | documentFactory.join(templateDir, `directory.${this.extension}`)
+ 66 | )
+ 67 | };
+ 68 | }
+ 69 | public renderFile(file: NodeFile): string {
+ 70 | if (!this.templates.file) {
+ 71 | throw new Error("File template is not loaded");
+ 72 | }
+ 73 | return this.replaceSelectors(this.templates.file.content, {
+ 74 | FILE_NAME: file.name,
+ 75 | FILE_EXTENSION: file.extension,
+ 76 | FILE_SIZE: file.size,
+ 77 | FILE_CONTENTS: file.content || "",
+ 78 | ...file.props
+ 79 | });
+ 80 | }
+ 81 | public renderDirectory(directory: NodeDirectory): string {
+ 82 | const content = directory.children
+ 83 | .map(
+ 84 | child =>
+ 85 | child instanceof NodeFile
+ 86 | ? this.renderFile(child)
+ 87 | : this.renderDirectory(child) // save the rendering result on the object after bundling execution
+ 88 | )
+ 89 | .join("");
+ 90 | if (!this.templates.directory) {
+ 91 | throw new Error("Directory template is not loaded");
+ 92 | }
+ 93 | return this.replaceSelectors(this.templates.directory.content, {
+ 94 | DIRECTORY_NAME: directory.name,
+ 95 | DIRECTORY_PATH: directory.path,
+ 96 | DIRECTORY_SIZE: directory.size,
+ 97 | DIRECTORY_CONTENT: content,
+ 98 | ...directory.props
+ 99 | });
 100 | }
-101 | 
+101 | public render(rootDirectory: NodeDirectory): string {
+102 | const directoryContent = this.renderDirectory(rootDirectory);
+103 | if (!this.templates.page) {
+104 | throw new Error("Page template is not loaded");
+105 | }
+106 | return this.replaceSelectors(this.templates.page.content, {
+107 | PROJECT_NAME:
+108 | this.config.get("projectName") || rootDirectory.name || "Project",
+109 | GENERATION_DATE: new Date().toLocaleDateString(),
+110 | DIRECTORY_STRUCTURE: directoryContent,
+111 | TOTAL_FILES: rootDirectory.length,
+112 | TOTAL_DIRECTORIES: rootDirectory.deepLength,
+113 | TOTAL_SIZE: rootDirectory.size,
+114 | CONTENT: directoryContent
+115 | });
+116 | }
+117 | public dispose(): void {
+118 | this.templates = {
+119 | page: null,
+120 | file: null,
+121 | directory: null
+122 | };
+123 | }
+124 | protected replaceSelectors(
+125 | template: string,
+126 | values: BaseTemplate | FileTemplate | DirectoryTemplate
+127 | ): string {
+128 | return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+129 | const typedKey = key as keyof typeof values;
+130 | return values[typedKey] !== undefined
+131 | ? String(values[typedKey])
+132 | : `{{${key}}}`;
+133 | });
+134 | }
+135 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: DocumentTreeBuild.test.ts
-- Path: `/root/git/codewrangler/src/services/builder/__tests__/DocumentTreeBuild.test.ts`
-- Size: 6.11 KB
-- Extension: .ts
-- Lines of code: 178
-- Content:
-
+## File: HTMLStrategy.ts, Path: `/root/git/codewrangler/src/services/renderer/strategies/HTMLStrategy.ts`
 ```ts
-  1 | import { DocumentTreeBuilder } from "../DocumentTreeBuilder";
-  2 | import { FileTreeBuilder } from "../FileTreeBuilder";
-  3 | import { RenderableDirectory } from "../../../core/entities/NodeDirectory";
-  4 | import { RenderableFile } from "../../../core/entities/NodeFile";
-  5 | import { IRenderStrategy } from "../../renderer/RenderStrategy";
-  6 | import { Config } from "../../../utils/config";
-  7 | import { logger } from "../../../utils/logger";
-  8 | import { FileType } from "../../../types/type";
-  9 | 
- 10 | jest.mock("../FileTreeBuilder");
- 11 | jest.mock("../../../core/entities/NodeDirectory");
- 12 | jest.mock("../../../core/entities/NodeFile");
- 13 | jest.mock("../../../utils/logger");
- 14 | jest.mock("../../../utils/config");
- 15 | 
- 16 | describe("DocumentTreeBuilder", () => {
- 17 |   let mockConfig: jest.Mocked<Config>;
- 18 |   let mockRenderStrategy: jest.Mocked<IRenderStrategy>;
- 19 |   let documentTreeBuilder: DocumentTreeBuilder;
- 20 |   let mockFileTreeBuilder: jest.Mocked<FileTreeBuilder>;
- 21 | 
- 22 |   beforeEach(() => {
- 23 |     // Reset all mocks
- 24 |     jest.clearAllMocks();
- 25 | 
- 26 |     // Set up mock config
- 27 |     mockConfig = {
- 28 |       get: jest.fn(),
- 29 |     } as unknown as jest.Mocked<Config>;
- 30 | 
- 31 |     // Set up mock render strategy
- 32 |     mockRenderStrategy = {
- 33 |       renderFile: jest.fn(),
- 34 |       renderDirectory: jest.fn(),
- 35 |       loadTemplates: jest.fn(),
- 36 |       render: jest.fn(),
- 37 |       dispose: jest.fn(),
- 38 |     };
- 39 | 
- 40 |     // Set up mock FileTreeBuilder
- 41 |     mockFileTreeBuilder = {
- 42 |       build: jest.fn(),
- 43 |     } as unknown as jest.Mocked<FileTreeBuilder>;
- 44 | 
- 45 |     (FileTreeBuilder as jest.Mock).mockImplementation(
- 46 |       () => mockFileTreeBuilder
- 47 |     );
- 48 | 
- 49 |     // Create instance of DocumentTreeBuilder
- 50 |     documentTreeBuilder = new DocumentTreeBuilder(mockConfig, [
- 51 |       mockRenderStrategy,
- 52 |     ]);
- 53 |   });
- 54 | 
- 55 |   describe("build", () => {
- 56 |     it("should successfully build a document tree with a single file", async () => {
- 57 |       const mockFileNode = {
- 58 |         name: "test.txt",
- 59 |         path: "/test/test.txt",
- 60 |         type: FileType.File,
- 61 |       };
- 62 | 
- 63 |       mockFileTreeBuilder.build.mockResolvedValue(mockFileNode);
- 64 | 
- 65 |       (RenderableFile as jest.Mock).mockImplementation(() => ({
- 66 |         bundle: jest.fn().mockResolvedValue(undefined),
- 67 |       }));
- 68 | 
- 69 |       await documentTreeBuilder.build();
- 70 | 
- 71 |       expect(mockFileTreeBuilder.build).toHaveBeenCalledTimes(1);
- 72 |       expect(RenderableFile).toHaveBeenCalledWith(
- 73 |         "test.txt",
- 74 |         "/test/test.txt",
- 75 |         [mockRenderStrategy]
- 76 |       );
- 77 |     });
- 78 | 
- 79 |     it("should successfully build a document tree with a directory structure", async () => {
- 80 |       const mockTree = {
- 81 |         name: "root",
- 82 |         path: "/test",
- 83 |         type: FileType.Directory,
- 84 |         children: [
- 85 |           {
- 86 |             name: "test.txt",
- 87 |             path: "/test/test.txt",
- 88 |             type: FileType.File,
- 89 |           },
- 90 |           {
- 91 |             name: "subdir",
- 92 |             path: "/test/subdir",
- 93 |             type: FileType.Directory,
- 94 |             children: [
- 95 |               {
- 96 |                 name: "subfile.txt",
- 97 |                 path: "/test/subdir/subfile.txt",
- 98 |                 type: FileType.File,
- 99 |               },
-100 |             ],
-101 |           },
-102 |         ],
-103 |       };
-104 | 
-105 |       mockFileTreeBuilder.build.mockResolvedValue(mockTree);
-106 | 
-107 |       const mockDirectory = {
-108 |         addChild: jest.fn().mockResolvedValue(undefined),
-109 |         bundle: jest.fn().mockResolvedValue(undefined),
-110 |       };
-111 | 
-112 |       (RenderableDirectory as jest.Mock).mockImplementation(
-113 |         () => mockDirectory
-114 |       );
-115 |       (RenderableFile as jest.Mock).mockImplementation(() => ({
-116 |         bundle: jest.fn().mockResolvedValue(undefined),
-117 |       }));
-118 | 
-119 |       await documentTreeBuilder.build();
-120 | 
-121 |       expect(mockFileTreeBuilder.build).toHaveBeenCalledTimes(1);
-122 |       expect(RenderableDirectory).toHaveBeenCalledTimes(2);
-123 |       expect(RenderableFile).toHaveBeenCalledTimes(2);
-124 |       expect(mockDirectory.addChild).toHaveBeenCalledTimes(3);
-125 |     });
-126 | 
-127 |     it("should handle errors during tree building", async () => {
-128 |       const error = new Error("Build failed");
-129 |       mockFileTreeBuilder.build.mockRejectedValue(error);
-130 | 
-131 |       await expect(documentTreeBuilder.build()).rejects.toThrow("Build failed");
-132 |       expect(logger.error).toHaveBeenCalledWith(
-133 |         "Error building document tree",
-134 |         error
-135 |       );
-136 |     });
-137 | 
-138 |     it("should handle errors during document structure creation", async () => {
-139 |       const mockTree = {
-140 |         name: "root",
-141 |         path: "/test",
-142 |         type: FileType.Directory,
-143 |         children: [
-144 |           {
-145 |             name: "test.txt",
-146 |             path: "/test/test.txt",
-147 |             type: FileType.File,
-148 |           },
-149 |         ],
-150 |       };
-151 | 
-152 |       mockFileTreeBuilder.build.mockResolvedValue(mockTree);
-153 |       (RenderableDirectory as jest.Mock).mockImplementation(() => {
-154 |         throw new Error("Failed to create directory");
-155 |       });
-156 | 
-157 |       await expect(documentTreeBuilder.build()).rejects.toThrow(
-158 |         "Failed to create directory"
-159 |       );
-160 |       expect(logger.error).toHaveBeenCalled();
-161 |     });
-162 | 
-163 |     it("should handle errors during bundle process", async () => {
-164 |       const mockTree = {
-165 |         name: "root",
-166 |         path: "/test",
-167 |         type: FileType.Directory,
-168 |         children: [],
-169 |       };
-170 | 
-171 |       mockFileTreeBuilder.build.mockResolvedValue(mockTree);
-172 | 
-173 |       const mockDirectory = {
-174 |         addChild: jest.fn().mockResolvedValue(undefined),
-175 |         bundle: jest.fn().mockRejectedValue(new Error("Bundle failed")),
-176 |       };
-177 | 
-178 |       (RenderableDirectory as jest.Mock).mockImplementation(
-179 |         () => mockDirectory
-180 |       );
-181 | 
-182 |       await expect(documentTreeBuilder.build()).rejects.toThrow(
-183 |         "Bundle failed"
-184 |       );
-185 |       expect(logger.error).toHaveBeenCalled();
-186 |     });
-187 | 
-188 |     it("should handle empty file trees", async () => {
-189 |       const mockTree = {
-190 |         name: "root",
-191 |         path: "/test",
-192 |         type: FileType.Directory,
-193 |         children: [],
-194 |       };
-195 | 
-196 |       mockFileTreeBuilder.build.mockResolvedValue(mockTree);
-197 | 
-198 |       const mockDirectory = {
-199 |         addChild: jest.fn().mockResolvedValue(undefined),
-200 |         bundle: jest.fn().mockResolvedValue(undefined),
-201 |       };
-202 | 
-203 |       (RenderableDirectory as jest.Mock).mockImplementation(
-204 |         () => mockDirectory
-205 |       );
-206 | 
-207 |       await documentTreeBuilder.build();
-208 | 
-209 |       expect(mockDirectory.addChild).not.toHaveBeenCalled();
-210 |       expect(mockDirectory.bundle).toHaveBeenCalled();
-211 |     });
-212 |   });
-213 | });
-214 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: FileHidden.test.ts
-- Path: `/root/git/codewrangler/src/services/builder/__tests__/FileHidden.test.ts`
-- Size: 5.09 KB
-- Extension: .ts
-- Lines of code: 132
-- Content:
-
-```ts
-  1 | import { Config } from "../../../utils/config";
-  2 | import FileHidden from "../FileHidden";
-  3 | 
-  4 | jest.mock("../../../utils/config", () => ({
-  5 |   Config: {
-  6 |     load: jest.fn(),
-  7 |   },
-  8 | }));
-  9 | 
- 10 | describe("FileHidden", () => {
- 11 |   let mockConfig: jest.Mocked<Config>;
- 12 |   let fileHidden: FileHidden;
- 13 | 
- 14 |   beforeEach(() => {
- 15 |     mockConfig = {
- 16 |       get: jest.fn(),
- 17 |     } as unknown as jest.Mocked<Config>;
- 18 | 
- 19 |     // Set default mock values
- 20 |     mockConfig.get.mockImplementation((key: string) => {
- 21 |       switch (key) {
- 22 |         case "ignoreHiddenFiles":
- 23 |           return true;
- 24 |         case "excludePatterns":
- 25 |           return ["node_modules/**", "**/*.test.ts", "dist/**"];
- 26 |         case "additionalIgnoreFiles":
- 27 |           return [];
- 28 |         default:
- 29 |           return undefined;
- 30 |       }
- 31 |     });
- 32 | 
- 33 |     fileHidden = new FileHidden(mockConfig);
- 34 |   });
- 35 | 
- 36 |   describe("shouldExclude", () => {
- 37 |     describe("hidden files handling", () => {
- 38 |       it("should exclude hidden files when ignoredHiddenFiles is true", () => {
- 39 |         expect(fileHidden.shouldExclude(".hidden")).toBe(true);
- 40 |         expect(fileHidden.shouldExclude(".git")).toBe(true);
- 41 |         expect(fileHidden.shouldExclude(".vscode")).toBe(true);
- 42 |       });
- 43 | 
- 44 |       it("should not exclude hidden files when ignoreHiddenFiles is false", () => {
- 45 |         mockConfig.get.mockImplementation((key: string) =>
- 46 |           key === "ignoreHiddenFiles" ? false : []
- 47 |         );
- 48 |         fileHidden = new FileHidden(mockConfig);
- 49 | 
- 50 |         expect(fileHidden.shouldExclude(".hidden")).toBe(false);
- 51 |         expect(fileHidden.shouldExclude(".git")).toBe(false);
- 52 |         expect(fileHidden.shouldExclude(".vscode")).toBe(false);
- 53 |       });
- 54 |     });
- 55 | 
- 56 |     describe("exclude patterns handling", () => {
- 57 |       it("should exclude files matching exclude patterns", () => {
- 58 |         expect(fileHidden.shouldExclude("node_modules/package/file.ts")).toBe(
- 59 |           true
- 60 |         );
- 61 |         expect(fileHidden.shouldExclude("src/file.test.ts")).toBe(true);
- 62 |         expect(fileHidden.shouldExclude("dist/file.js")).toBe(true);
- 63 |       });
- 64 | 
- 65 |       it("should not exclude files not matching exclude patterns", () => {
- 66 |         expect(fileHidden.shouldExclude("src/component.ts")).toBe(false);
- 67 |         expect(fileHidden.shouldExclude("package.json")).toBe(false);
- 68 |         expect(fileHidden.shouldExclude("README.md")).toBe(false);
- 69 |       });
- 70 | 
- 71 |       it("should handle empty exclude patterns", () => {
- 72 |         mockConfig.get.mockImplementation((key: string) =>
- 73 |           key === "excludePatterns" ? [] : []
- 74 |         );
- 75 |         fileHidden = new FileHidden(mockConfig);
- 76 | 
- 77 |         expect(fileHidden.shouldExclude("node_modules/package/index.js")).toBe(
- 78 |           false
- 79 |         );
- 80 |         expect(fileHidden.shouldExclude("src/component.test.ts")).toBe(false);
- 81 |       });
- 82 |     });
- 83 | 
- 84 |     describe("additional ignore files handling", () => {
- 85 |       it("should exclude files matching additional ignore patterns", () => {
- 86 |         mockConfig.get.mockImplementation((key: string) => {
- 87 |           switch (key) {
- 88 |             case "additionalIgnoreFiles":
- 89 |               return ["*.log", "temp/**"];
- 90 |             default:
- 91 |               return [];
- 92 |           }
- 93 |         });
- 94 |         fileHidden = new FileHidden(mockConfig);
- 95 | 
- 96 |         expect(fileHidden.shouldExclude("error.log")).toBe(true);
- 97 |         expect(fileHidden.shouldExclude("temp/cache.json")).toBe(true);
- 98 |       });
- 99 | 
-100 |       it("should not exclude files not matching additional ignore patterns", () => {
-101 |         mockConfig.get.mockImplementation((key: string) => {
-102 |           switch (key) {
-103 |             case "additionalIgnoreFiles":
-104 |               return ["*.log", "temp/**"];
-105 |             default:
-106 |               return [];
-107 |           }
-108 |         });
-109 |         fileHidden = new FileHidden(mockConfig);
-110 | 
-111 |         expect(fileHidden.shouldExclude("src/index.ts")).toBe(false);
-112 |         expect(fileHidden.shouldExclude("data/cache.json")).toBe(false);
-113 |       });
-114 |     });
-115 | 
-116 |     describe("combined patterns handling", () => {
-117 |       beforeEach(() => {
-118 |         mockConfig.get.mockImplementation((key: string) => {
-119 |           switch (key) {
-120 |             case "ignoreHiddenFiles":
-121 |               return true;
-122 |             case "excludePatterns":
-123 |               return ["*.test.ts", "dist/**"];
-124 |             case "additionalIgnoreFiles":
-125 |               return ["*.log", "temp/**"];
-126 |             default:
-127 |               return undefined;
-128 |           }
-129 |         });
-130 |         fileHidden = new FileHidden(mockConfig);
-131 |       });
-132 | 
-133 |       it("should exclude files matching any exclusion rule", () => {
-134 |         // Hidden files
-135 |         expect(fileHidden.shouldExclude(".env")).toBe(true);
-136 |         // Exclude patterns
-137 |         expect(fileHidden.shouldExclude("component.test.ts")).toBe(true);
-138 |         expect(fileHidden.shouldExclude("dist/bundle.js")).toBe(true);
-139 |         // Additional ignore files
-140 |         expect(fileHidden.shouldExclude("error.log")).toBe(true);
-141 |         expect(fileHidden.shouldExclude("temp/file.txt")).toBe(true);
-142 |       });
-143 | 
-144 |       it("should not exclude files not matching any exclusion rule", () => {
-145 |         expect(fileHidden.shouldExclude("src/index.ts")).toBe(false);
-146 |         expect(fileHidden.shouldExclude("package.json")).toBe(false);
-147 |         expect(fileHidden.shouldExclude("docs/README.md")).toBe(false);
-148 |       });
-149 |     });
-150 |   });
-151 | });
-152 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: FileTreeBuilder.test.ts
-- Path: `/root/git/codewrangler/src/services/builder/__tests__/FileTreeBuilder.test.ts`
-- Size: 7.71 KB
-- Extension: .ts
-- Lines of code: 223
-- Content:
-
-```ts
-  1 | import { FileTreeBuilder } from "../FileTreeBuilder";
-  2 | import { Config } from "../../../utils/config";
-  3 | import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
-  4 | import { FileType } from "../../../types/type";
-  5 | import FileHidden from "../FileHidden";
-  6 | 
-  7 | jest.mock("../../../utils/config");
-  8 | jest.mock("../../../infrastructure/filesystem/DocumentFactory");
-  9 | jest.mock("../FileHidden");
- 10 | 
- 11 | describe("FileTreeBuilder", () => {
- 12 |   let mockConfig: jest.Mocked<Config>;
- 13 |   let fileTreeBuilder: FileTreeBuilder;
- 14 | 
- 15 |   beforeEach(() => {
- 16 |     jest.clearAllMocks();
- 17 | 
- 18 |     mockConfig = {
- 19 |       get: jest.fn(),
- 20 |     } as unknown as jest.Mocked<Config>;
- 21 | 
- 22 |     mockConfig.get.mockImplementation((key: string) => {
- 23 |       switch (key) {
- 24 |         case "dir":
- 25 |           return "/test/dir";
- 26 |         case "pattern":
- 27 |           return ".*";
- 28 |         case "maxDepth":
- 29 |           return 10;
- 30 |         case "excludePatterns":
- 31 |           return ["node_modules/**"];
- 32 |         case "additionalIgnoreFiles":
- 33 |           return [];
- 34 |         default:
- 35 |           return undefined;
- 36 |       }
- 37 |     });
- 38 | 
- 39 |     // Configure FileHidden mock with default behavior
- 40 |     (FileHidden as jest.Mock).mockImplementation(() => ({
- 41 |       shouldExclude: jest.fn().mockReturnValue(false),
- 42 |     }));
- 43 | 
- 44 |     fileTreeBuilder = new FileTreeBuilder(mockConfig);
- 45 |   });
- 46 | 
- 47 |   describe("initialization", () => {
- 48 |     it("should initialize with correct config values", () => {
- 49 |       expect(mockConfig.get).toHaveBeenCalledWith("dir");
- 50 |       expect(mockConfig.get).toHaveBeenCalledWith("pattern");
- 51 |       expect(mockConfig.get).toHaveBeenCalledWith("maxDepth");
- 52 |       expect(mockConfig.get).toHaveBeenCalledWith("excludePatterns");
- 53 |       expect(mockConfig.get).toHaveBeenCalledWith("additionalIgnoreFiles");
- 54 |     });
- 55 |   });
- 56 | 
- 57 |   describe("build", () => {
- 58 |     it("should throw error if root directory doesn't exist", async () => {
- 59 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
- 60 |       await expect(fileTreeBuilder.build()).rejects.toThrow(
- 61 |         "Directory /test/dir does not exist"
- 62 |       );
- 63 |     });
- 64 | 
- 65 |     it("should build root node with no children if directory is empty", async () => {
- 66 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
- 67 |       (DocumentFactory.getStats as jest.Mock).mockResolvedValue({
- 68 |         isDirectory: true,
- 69 |         isFile: false,
- 70 |         size: 0,
- 71 |         created: new Date(),
- 72 |         modified: new Date(),
- 73 |         accessed: new Date(),
- 74 |         permissions: {
- 75 |           readable: true,
- 76 |           writable: true,
- 77 |           executable: true,
- 78 |         },
- 79 |       });
- 80 |       (DocumentFactory.baseName as jest.Mock).mockReturnValue("dir");
- 81 |       (DocumentFactory.readDir as jest.Mock).mockResolvedValue([]);
- 82 | 
- 83 |       const result = await fileTreeBuilder.build();
- 84 | 
- 85 |       expect(result).toEqual({
- 86 |         name: "dir",
- 87 |         path: "/test/dir",
- 88 |         type: FileType.Directory,
- 89 |         children: [],
- 90 |       });
- 91 |     });
- 92 | 
- 93 |     it("should build tree with files and directories", async () => {
- 94 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
- 95 |       (DocumentFactory.baseName as jest.Mock).mockImplementation((path) =>
- 96 |         path.split("/").pop()
- 97 |       );
- 98 |       (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
- 99 |         paths.join("/")
-100 |       );
-101 | 
-102 |       // Setup mock responses for each path
-103 |       const mockStats = new Map([
-104 |         ["/test/dir", { isDirectory: true, isFile: false }],
-105 |         ["/test/dir/file1.txt", { isDirectory: false, isFile: true }],
-106 |         ["/test/dir/subdir", { isDirectory: true, isFile: false }],
-107 |         ["/test/dir/subdir/file2.txt", { isDirectory: false, isFile: true }],
-108 |       ]);
-109 | 
-110 |       (DocumentFactory.getStats as jest.Mock).mockImplementation(
-111 |         async (path) => ({
-112 |           ...mockStats.get(path),
-113 |           size: 1000,
-114 |           created: new Date(),
-115 |           modified: new Date(),
-116 |           accessed: new Date(),
-117 |           permissions: { readable: true, writable: true, executable: true },
-118 |         })
-119 |       );
-120 | 
-121 |       (DocumentFactory.readDir as jest.Mock)
-122 |         .mockResolvedValueOnce(["file1.txt", "subdir"])
-123 |         .mockResolvedValueOnce(["file2.txt"]);
-124 | 
-125 |       const result = await fileTreeBuilder.build();
-126 | 
-127 |       expect(result).toEqual({
-128 |         name: "dir",
-129 |         path: "/test/dir",
-130 |         type: FileType.Directory,
-131 |         children: [
-132 |           {
-133 |             name: "file1.txt",
-134 |             path: "/test/dir/file1.txt",
-135 |             type: FileType.File,
-136 |           },
-137 |           {
-138 |             name: "subdir",
-139 |             path: "/test/dir/subdir",
-140 |             type: FileType.Directory,
-141 |             children: [
-142 |               {
-143 |                 name: "file2.txt",
-144 |                 path: "/test/dir/subdir/file2.txt",
-145 |                 type: FileType.File,
-146 |               },
-147 |             ],
-148 |           },
-149 |         ],
-150 |       });
-151 |     });
-152 | 
-153 |     it("should respect maxDepth configuration", async () => {
-154 |       mockConfig.get.mockImplementation((key) =>
-155 |         key === "maxDepth" ? 1 : mockConfig.get(key)
-156 |       );
-157 | 
-158 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-159 |       (DocumentFactory.baseName as jest.Mock).mockImplementation((path) =>
-160 |         path.split("/").pop()
-161 |       );
-162 |       (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
-163 |         paths.join("/")
-164 |       );
-165 | 
-166 |       const mockStats = new Map([
-167 |         ["/test/dir", { isDirectory: true, isFile: false }],
-168 |         ["/test/dir/subdir", { isDirectory: true, isFile: false }],
-169 |       ]);
-170 | 
-171 |       (DocumentFactory.getStats as jest.Mock).mockImplementation(
-172 |         async (path) => ({
-173 |           ...mockStats.get(path),
-174 |           size: 1000,
-175 |           created: new Date(),
-176 |           modified: new Date(),
-177 |           accessed: new Date(),
-178 |           permissions: { readable: true, writable: true, executable: true },
-179 |         })
-180 |       );
-181 | 
-182 |       (DocumentFactory.readDir as jest.Mock).mockResolvedValue(["subdir"]);
-183 | 
-184 |       const result = await fileTreeBuilder.build();
-185 | 
-186 |       expect(result).toEqual({
-187 |         name: "dir",
-188 |         path: "/test/dir",
-189 |         type: FileType.Directory,
-190 |         children: [
-191 |           {
-192 |             name: "subdir",
-193 |             path: "/test/dir/subdir",
-194 |             type: FileType.Directory,
-195 |             children: [
-196 |               {
-197 |                 name: "subdir",
-198 |                 path: "/test/dir/subdir/subdir",
-199 |                 type: FileType.File,
-200 |               },
-201 |             ],
-202 |           },
-203 |         ],
-204 |       });
-205 |     });
-206 | 
-207 |     it("should handle file exclusion", async () => {
-208 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-209 |       (DocumentFactory.baseName as jest.Mock).mockImplementation((path) =>
-210 |         path.split("/").pop()
-211 |       );
-212 |       (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
-213 |         paths.join("/")
-214 |       );
-215 | 
-216 |       const mockFileHidden = {
-217 |         shouldExclude: jest
-218 |           .fn()
-219 |           .mockReturnValueOnce(false) // include.txt
-220 |           .mockReturnValueOnce(true), // exclude.txt
-221 |       };
-222 | 
-223 |       (FileHidden as jest.Mock).mockImplementation(() => mockFileHidden);
-224 | 
-225 |       (DocumentFactory.getStats as jest.Mock).mockImplementation(
-226 |         async (path) => ({
-227 |           isDirectory: path === "/test/dir",
-228 |           isFile: path !== "/test/dir",
-229 |           size: 1000,
-230 |           created: new Date(),
-231 |           modified: new Date(),
-232 |           accessed: new Date(),
-233 |           permissions: { readable: true, writable: true, executable: true },
-234 |         })
-235 |       );
-236 | 
-237 |       (DocumentFactory.readDir as jest.Mock).mockResolvedValue([
-238 |         "include.txt",
-239 |         "exclude.txt",
-240 |       ]);
-241 | 
-242 |       const result = await fileTreeBuilder.build();
-243 | 
-244 |       expect(result.children).toHaveLength(2);
-245 |       const children = result.children;
-246 |       expect(children).not.toBeNull();
-247 |       if (children) {
-248 |         const child1 = children[0];
-249 |         const child2 = children[1];
-250 |         expect(child1?.name).toBe("include.txt");
-251 |         expect(child2?.name).toBe("exclude.txt");
-252 |       }
-253 |     });
-254 |   });
-255 | });
-256 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: RenderStrategy.ts
-- Path: `/root/git/codewrangler/src/services/renderer/RenderStrategy.ts`
-- Size: 4.43 KB
-- Extension: .ts
-- Lines of code: 136
-- Content:
-
-```ts
-  1 | import { NodeFile } from "../../core/entities/NodeFile";
-  2 | import { NodeDirectory } from "../../core/entities/NodeDirectory";
-  3 | import { Config, OutputFormatExtension } from "../../utils/config";
-  4 | import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-  5 | import { Template } from "../../infrastructure/templates/TemplateEngine";
-  6 | import {
-  7 |   BaseTemplate,
-  8 |   BaseTemplateSchema,
-  9 |   DirectoryTemplate,
- 10 |   DirectoryTemplateSchema,
- 11 |   FileTemplate,
- 12 |   FileTemplateSchema,
- 13 | } from "../../infrastructure/templates/zod";
- 14 | import { TemplateType } from "../../types/template";
- 15 | 
- 16 | interface IContentRenderer {
- 17 |   renderFile(file: NodeFile): string;
- 18 |   renderDirectory(directory: NodeDirectory): string;
- 19 | }
- 20 | 
- 21 | interface ITemplateLoader {
- 22 |   loadTemplates(): Promise<void>;
- 23 | }
- 24 | 
- 25 | interface IDocumentRenderer {
- 26 |   render(rootDirectory: NodeDirectory): Promise<string>;
- 27 |   dispose(): Promise<void>;
- 28 | }
- 29 | 
- 30 | export interface IRenderStrategy
- 31 |   extends IContentRenderer,
- 32 |     ITemplateLoader,
- 33 |     IDocumentRenderer {}
- 34 | 
- 35 | export abstract class BaseRenderStrategy implements IRenderStrategy {
- 36 |   protected extension: OutputFormatExtension;
- 37 |   protected templates: Record<TemplateType, Template | null>;
- 38 |   protected config: Config;
- 39 | 
- 40 |   protected constructor(config: Config, extension: OutputFormatExtension) {
- 41 |     this.config = config;
- 42 |     this.templates = {
- 43 |       page: null,
- 44 |       file: null,
- 45 |       directory: null,
- 46 |     };
- 47 |     this.extension = extension;
- 48 |   }
- 49 | 
- 50 |   async loadTemplates(): Promise<void> {
- 51 |     const templateDir = DocumentFactory.join(
- 52 |       this.config.get("rootDir") as string,
- 53 |       this.config.get("templatesDir") as string
- 54 |     );
- 55 |     // check if the templates directory exists
- 56 |     if (!DocumentFactory.exists(templateDir)) {
- 57 |       throw new Error(`Templates directory not found: ${templateDir}`);
- 58 |     }
- 59 | 
- 60 |     this.templates = {
- 61 |       page: await Template.create(
- 62 |         "page",
- 63 |         BaseTemplateSchema,
- 64 |         DocumentFactory.join(templateDir, `page.${this.extension}`)
- 65 |       ),
- 66 |       file: await Template.create(
- 67 |         "file",
- 68 |         FileTemplateSchema,
- 69 |         DocumentFactory.join(templateDir, `file.${this.extension}`)
- 70 |       ),
- 71 |       directory: await Template.create(
- 72 |         "directory",
- 73 |         DirectoryTemplateSchema,
- 74 |         DocumentFactory.join(templateDir, `directory.${this.extension}`)
- 75 |       ),
- 76 |     };
- 77 |   }
- 78 | 
- 79 |   public renderFile(file: NodeFile): string {
- 80 |     if (!this.templates.file) {
- 81 |       throw new Error("File template is not loaded");
- 82 |     }
- 83 |     return this.replaceSelectors(this.templates.file.content, {
- 84 |       FILE_NAME: file.name,
- 85 |       FILE_EXTENSION: file.extension,
- 86 |       FILE_SIZE: file.size,
- 87 |       FILE_CONTENTS: file.content || "",
- 88 |       ...file.props
- 89 |     });
- 90 |   }
- 91 | 
- 92 |   public renderDirectory(directory: NodeDirectory): string {
- 93 |     const content = directory.children
- 94 |       .map(
- 95 |         (child) =>
- 96 |           child instanceof NodeFile
- 97 |             ? this.renderFile(child)
- 98 |             : this.renderDirectory(child) // save the rendering result on the object after bundling execution
- 99 |       )
-100 |       .join("");
-101 |     if (!this.templates.directory) {
-102 |       throw new Error("Directory template is not loaded");
-103 |     }
-104 |     return this.replaceSelectors(this.templates.directory.content, {
-105 |       DIRECTORY_NAME: directory.name,
-106 |       DIRECTORY_PATH: directory.path,
-107 |       DIRECTORY_SIZE: directory.size,
-108 |       DIRECTORY_CONTENT: content,
-109 |       ...directory.props,
-110 |     });
-111 |   }
-112 | 
-113 |   protected replaceSelectors(
-114 |     template: string,
-115 |     values: BaseTemplate | FileTemplate | DirectoryTemplate
-116 |   ): string {
-117 |     return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-118 |       const typedKey = key as keyof typeof values;
-119 |       return values[typedKey] !== undefined
-120 |         ? String(values[typedKey])
-121 |         : `{{${key}}}`;
-122 |     });
-123 |   }
-124 | 
-125 |   public async render(rootDirectory: NodeDirectory): Promise<string> {
-126 |     const directoryContent = this.renderDirectory(rootDirectory);
-127 |     if (!this.templates.page) {
-128 |       throw new Error("Page template is not loaded");
-129 |     }
-130 |     return this.replaceSelectors(this.templates.page.content, {
-131 |       PROJECT_NAME:
-132 |         this.config.get("projectName") || rootDirectory.name || "Project",
-133 |       GENERATION_DATE: new Date().toLocaleDateString(),
-134 |       DIRECTORY_STRUCTURE: directoryContent,
-135 |       TOTAL_FILES: rootDirectory.length,
-136 |       TOTAL_DIRECTORIES: rootDirectory.deepLength,
-137 |       TOTAL_SIZE: rootDirectory.size,
-138 |       CONTENT: directoryContent,
-139 |     });
-140 |   }
-141 | 
-142 |   public async dispose(): Promise<void> {
-143 |     this.templates = {
-144 |       page: null,
-145 |       file: null,
-146 |       directory: null,
-147 |     };
-148 |   }
-149 | }
-150 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: RenderStrategy.test.ts
-- Path: `/root/git/codewrangler/src/services/renderer/__tests__/RenderStrategy.test.ts`
-- Size: 3.88 KB
-- Extension: .ts
-- Lines of code: 103
-- Content:
-
-```ts
-  1 | import { BaseRenderStrategy } from "../RenderStrategy";
-  2 | import { Config } from "../../../utils/config";
-  3 | import { NodeFile } from "../../../core/entities/NodeFile";
-  4 | import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
-  5 | import { Template } from "../../../infrastructure/templates/TemplateEngine";
-  6 | import { OutputFormatExtension } from "../../../utils/config/schema";
-  7 | 
-  8 | jest.mock("../../../utils/config");
-  9 | jest.mock("../../../core/entities/NodeFile");
- 10 | jest.mock("../../../infrastructure/filesystem/DocumentFactory");
- 11 | jest.mock("../../../infrastructure/templates/TemplateEngine");
- 12 | 
- 13 | class TestRenderStrategy extends BaseRenderStrategy {
- 14 |   constructor(config: Config) {
- 15 |     super(config, "md" as OutputFormatExtension);
- 16 |   }
- 17 | }
- 18 | 
- 19 | describe("BaseRenderStrategy", () => {
- 20 |   let mockConfig: jest.Mocked<Config>;
- 21 |   let renderStrategy: TestRenderStrategy;
- 22 |   let mockTemplate: jest.Mocked<Template>;
- 23 | 
- 24 |   beforeEach(() => {
- 25 |     jest.clearAllMocks();
- 26 | 
- 27 |     // Configure mock config
- 28 |     mockConfig = {
- 29 |       get: jest.fn().mockImplementation((key: string) => {
- 30 |         switch (key) {
- 31 |           case "rootDir":
- 32 |             return "/test";
- 33 |           case "templatesDir":
- 34 |             return "templates";
- 35 |           case "projectName":
- 36 |             return "Test Project";
- 37 |           default:
- 38 |             return undefined;
- 39 |         }
- 40 |       }),
- 41 |     } as unknown as jest.Mocked<Config>;
- 42 | 
- 43 |     // Configure mock template
- 44 |     mockTemplate = {
- 45 |       content: "Template content with {{FILE_NAME}}",
- 46 |       load: jest.fn().mockResolvedValue(undefined),
- 47 |       render: jest.fn().mockReturnValue("Rendered content"),
- 48 |     } as unknown as jest.Mocked<Template>;
- 49 | 
- 50 |     (Template.create as jest.Mock).mockResolvedValue(mockTemplate);
- 51 | 
- 52 |     (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
- 53 |       paths.join("/")
- 54 |     );
- 55 |     (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
- 56 | 
- 57 |     renderStrategy = new TestRenderStrategy(mockConfig);
- 58 |   });
- 59 | 
- 60 |   describe("loadTemplates", () => {
- 61 |     it("should successfully load all templates", async () => {
- 62 |       await renderStrategy.loadTemplates();
- 63 | 
- 64 |       expect(DocumentFactory.join).toHaveBeenCalledWith("/test", "templates");
- 65 |       expect(DocumentFactory.exists).toHaveBeenCalled();
- 66 |       expect(Template.create).toHaveBeenCalledTimes(3);
- 67 |     });
- 68 | 
- 69 |     it("should throw error if templates directory doesn't exist", async () => {
- 70 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
- 71 | 
- 72 |       await expect(renderStrategy.loadTemplates()).rejects.toThrow(
- 73 |         "Templates directory not found"
- 74 |       );
- 75 |     });
- 76 |   });
- 77 | 
- 78 |   describe("renderFile", () => {
- 79 |     it("should render file content correctly", async () => {
- 80 |       const mockFile = {
- 81 |         name: "test.txt",
- 82 |         extension: ".txt",
- 83 |         size: 1000,
- 84 |         content: "Test content",
- 85 |       } as NodeFile;
- 86 | 
- 87 |       await renderStrategy.loadTemplates();
- 88 |       const result = renderStrategy.renderFile(mockFile);
- 89 | 
- 90 |       expect(result).toBe("Template content with test.txt");
- 91 |     });
- 92 | 
- 93 |     it("should handle null file content", async () => {
- 94 |       const mockFile = {
- 95 |         name: "test.txt",
- 96 |         extension: ".txt",
- 97 |         size: 1000,
- 98 |         content: null,
- 99 |       } as NodeFile;
-100 | 
-101 |       await renderStrategy.loadTemplates();
-102 |       const result = renderStrategy.renderFile(mockFile);
-103 | 
-104 |       expect(result).toBe("Template content with test.txt");
-105 |     });
-106 | 
-107 |     it("should throw error if file template is not loaded", () => {
-108 |       const mockFile = {} as NodeFile;
-109 | 
-110 |       expect(() => renderStrategy.renderFile(mockFile)).toThrow(
-111 |         "File template is not loaded"
-112 |       );
-113 |     });
-114 |   });
-115 | 
-116 |   describe("dispose", () => {
-117 |     it("should clear all templates", async () => {
-118 |       await renderStrategy.loadTemplates();
-119 |       await renderStrategy.dispose();
-120 | 
-121 |       expect(renderStrategy["templates"].page).toBeNull();
-122 |       expect(renderStrategy["templates"].file).toBeNull();
-123 |       expect(renderStrategy["templates"].directory).toBeNull();
-124 |     });
-125 |   });
-126 | });
-127 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: HTMLStrategy.ts
-- Path: `/root/git/codewrangler/src/services/renderer/strategies/HTMLStrategy.ts`
-- Size: 958.00 B
-- Extension: .ts
-- Lines of code: 26
-- Content:
-
-```ts
- 1 | import { BaseRenderStrategy } from "../RenderStrategy";
- 2 | import { Config } from "../../../utils/config";
- 3 | import { NodeFile } from "../../../core/entities/NodeFile";
- 4 | import { OUTPUT_FORMATS } from "../../../utils/config/schema";
- 5 | 
- 6 | export class HTMLRenderStrategy extends BaseRenderStrategy {
- 7 |   constructor(config: Config) {
- 8 |     super(config, OUTPUT_FORMATS.html);
- 9 |   }
-10 | 
-11 |   protected processCodeBlock(content: string, language: string): string {
-12 |     return `<pre><code class="language-${language}">${this.escapeHtml(
-13 |       content
-14 |     )}</code></pre>`;
-15 |   }
-16 | 
-17 |   private escapeHtml(content: string): string {
-18 |     return content
-19 |       .replace(/&/g, "&amp;")
-20 |       .replace(/</g, "&lt;")
-21 |       .replace(/>/g, "&gt;")
-22 |       .replace(/"/g, "&quot;")
-23 |       .replace(/'/g, "&#039;");
-24 |   }
-25 | 
-26 |   public override renderFile(file: NodeFile): string {
-27 |     const rendered = super.renderFile(file);
-28 |     return this.processCodeBlock(rendered, file.extension.replace(".", ""));
-29 |   }
-30 | }
-31 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: MarkdownStrategy.ts
-- Path: `/root/git/codewrangler/src/services/renderer/strategies/MarkdownStrategy.ts`
-- Size: 682.00 B
-- Extension: .ts
-- Lines of code: 16
-- Content:
-
-```ts
- 1 | import { BaseRenderStrategy } from "../RenderStrategy";
+ 1 | import { NodeFile } from "../../../core/entities/NodeFile";
  2 | import { Config } from "../../../utils/config";
  3 | import { OUTPUT_FORMATS } from "../../../utils/config/schema";
- 4 | import { NodeFile } from "../../../core/entities/NodeFile";
- 5 | 
- 6 | export class MarkdownStrategy extends BaseRenderStrategy {
- 7 |   constructor(config: Config) {
- 8 |     super(config, OUTPUT_FORMATS.markdown);
- 9 |   }
-10 | 
-11 |   protected processCodeBlock(content: string, language: string): string {
-12 |     return `\`\`\`${language}\n${content}\n\`\`\``;
-13 |   }
-14 | 
-15 |   public override renderFile(file: NodeFile): string {
-16 |     const rendered = super.renderFile(file);
-17 |     return this.processCodeBlock(rendered, file.extension.replace(".", ""));
-18 |   }
-19 | }
-20 | 
+ 4 | import { BaseRenderStrategy } from "../RenderStrategy";
+ 5 | export class HTMLRenderStrategy extends BaseRenderStrategy {
+ 6 | constructor(config: Config) {
+ 7 | super(config, OUTPUT_FORMATS.html);
+ 8 | }
+ 9 | public override renderFile(file: NodeFile): string {
+10 | const rendered = super.renderFile(file);
+11 | return this.processCodeBlock(rendered, file.extension.replace(".", ""));
+12 | }
+13 | protected processCodeBlock(content: string, language: string): string {
+14 | return `<pre><code class="language-${language}">${this.escapeHtml(
+15 | content
+16 | )}</code></pre>`;
+17 | }
+18 | private escapeHtml(content: string): string {
+19 | return content
+20 | .replace(/&/g, "&amp;")
+21 | .replace(/</g, "&lt;")
+22 | .replace(/>/g, "&gt;")
+23 | .replace(/"/g, "&quot;")
+24 | .replace(/'/g, "&#039;");
+25 | }
+26 | }
 ```
 
----------------------------------------------------------------------------
+## File: MarkdownStrategy.ts, Path: `/root/git/codewrangler/src/services/renderer/strategies/MarkdownStrategy.ts`
+```ts
+ 1 | import { NodeFile } from "../../../core/entities/NodeFile";
+ 2 | import { Config } from "../../../utils/config";
+ 3 | import { OUTPUT_FORMATS } from "../../../utils/config/schema";
+ 4 | import { BaseRenderStrategy } from "../RenderStrategy";
+ 5 | export class MarkdownStrategy extends BaseRenderStrategy {
+ 6 | constructor(config: Config) {
+ 7 | super(config, OUTPUT_FORMATS.markdown);
+ 8 | }
+ 9 | public override renderFile(file: NodeFile): string {
+10 | const rendered = super.renderFile(file);
+11 | return this.processCodeBlock(rendered, file.extension.replace(".", ""));
+12 | }
+13 | protected processCodeBlock(content: string, language: string): string {
+14 | return `\`\`\`${language}\n${content}\n\`\`\``;
+15 | }
+16 | }
+```
 
+## File: template.ts, Path: `/root/git/codewrangler/src/types/template.ts`
+```ts
+1 | import { z } from "zod";
+2 | export type TemplateType = "page" | "file" | "directory";
+3 | export interface ITemplateContent<T> {
+4 | content: string;
+5 | schema: z.ZodSchema<T>;
+6 | additionalFields?: Record<string, z.ZodSchema<string>>;
+7 | }
+```
 
-## File: template.ts
-- Path: `/root/git/codewrangler/src/types/template.ts`
-- Size: 229.00 B
-- Extension: .ts
-- Lines of code: 7
-- Content:
+## File: type.ts, Path: `/root/git/codewrangler/src/types/type.ts`
+```ts
+ 1 | export const FILE_TYPE = {
+ 2 | File: "file",
+ 3 | Directory: "directory"
+ 4 | } as const;
+ 5 | export type FileType = (typeof FILE_TYPE)[keyof typeof FILE_TYPE];
+ 6 | export interface IFileStats {
+ 7 | size: number;
+ 8 | created: Date;
+ 9 | modified: Date;
+10 | accessed: Date;
+11 | isDirectory: boolean;
+12 | isFile: boolean;
+13 | permissions: {
+14 | readable: boolean;
+15 | writable: boolean;
+16 | executable: boolean;
+17 | };
+18 | }
+19 | export interface IReadOptions {
+20 | encoding?: BufferEncoding;
+21 | flag?: string;
+22 | }
+23 | export interface IWriteOptions extends IReadOptions {
+24 | mode?: number;
+25 | flag?: string;
+26 | }
+27 | export interface IDirectoryOptions {
+28 | recursive?: boolean;
+29 | mode?: number;
+30 | }
+31 | export interface IFileTreeItem {
+32 | path: string;
+33 | type: FileType;
+34 | stats?: IFileStats;
+35 | }
+36 | export interface IPropsNode {
+37 | name: string;
+38 | path: string;
+39 | deep: number;
+40 | size: number;
+41 | extension?: string;
+42 | stats?: IFileStats;
+43 | }
+```
 
+## File: Config.ts, Path: `/root/git/codewrangler/src/utils/config/Config.ts`
 ```ts
  1 | import { z } from "zod";
- 2 | 
- 3 | export type TemplateType = "page" | "file" | "directory";
- 4 | 
- 5 | export interface ITemplateContent<T> {
- 6 |   content: string;
- 7 |   schema: z.ZodSchema<T>;
- 8 |   additionalFields?: Record<string, z.ZodSchema<string>>;
- 9 | }
-10 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: type.ts
-- Path: `/root/git/codewrangler/src/types/type.ts`
-- Size: 869.00 B
-- Extension: .ts
-- Lines of code: 43
-- Content:
-
-```ts
- 1 | export const FileType = {
- 2 |   File: "file",
- 3 |   Directory: "directory",
- 4 | } as const;
- 5 | 
- 6 | export type FileType = (typeof FileType)[keyof typeof FileType];
- 7 | 
- 8 | export interface IFileStats {
- 9 |   size: number;
-10 |   created: Date;
-11 |   modified: Date;
-12 |   accessed: Date;
-13 |   isDirectory: boolean;
-14 |   isFile: boolean;
-15 |   permissions: {
-16 |     readable: boolean;
-17 |     writable: boolean;
-18 |     executable: boolean;
-19 |   };
+ 2 | import {
+ 3 | ConfigKeys,
+ 4 | ConfigOptions,
+ 5 | DEFAULT_CONFIG,
+ 6 | configSchema
+ 7 | } from "./schema";
+ 8 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+ 9 | import { logger } from "../logger/Logger";
+10 | export class Config {
+11 | private static instance: Config | undefined;
+12 | private config: ConfigOptions;
+13 | private constructor() {
+14 | this.config = configSchema.parse(DEFAULT_CONFIG);
+15 | }
+16 | public static async load(): Promise<Config> {
+17 | if (!Config.instance) {
+18 | Config.instance = new Config();
+19 | await Config.instance.initialize();
 20 | }
-21 | 
-22 | export interface IReadOptions {
-23 |   encoding?: BufferEncoding;
-24 |   flag?: string;
+21 | return Config.instance;
+22 | }
+23 | public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
+24 | return this.config[key] as ConfigOptions[T];
 25 | }
-26 | 
-27 | export interface IWriteOptions extends IReadOptions {
-28 |   mode?: number;
-29 |   flag?: string;
-30 | }
-31 | 
-32 | export interface IDirectoryOptions {
-33 |   recursive?: boolean;
-34 |   mode?: number;
-35 | }
-36 | 
-37 | export interface IFileTreeItem {
-38 |   path: string;
-39 |   type: FileType;
-40 |   stats?: IFileStats;
-41 | }
-42 | 
-43 | export interface IPropsNode {
-44 |   name: string;
-45 |   path: string;
-46 |   deep: number;
-47 |   size: number;
-48 |   extension?: string;
-49 |   stats?: IFileStats;
-50 | }
-51 | 
+26 | public set(
+27 | key: keyof ConfigOptions,
+28 | value: ConfigOptions[keyof ConfigOptions]
+29 | ): void {
+30 | const updatedConfig = { ...this.config, [key]: value };
+31 | try {
+32 | configSchema.parse(updatedConfig);
+33 | this.config = updatedConfig;
+34 | } catch (error) {
+35 | if (error instanceof z.ZodError) {
+36 | logger.error(`Invalid configuration value: ${error.errors}`);
+37 | }
+38 | throw error;
+39 | }
+40 | }
+41 | public getAll(): ConfigOptions {
+42 | return this.config;
+43 | }
+44 | public reset(): void {
+45 | this.config = DEFAULT_CONFIG;
+46 | }
+47 | public static destroy(): void {
+48 | Config.instance = undefined;
+49 | }
+50 | public override(config: Partial<ConfigOptions>): void {
+51 | const newOverrideConfig = { ...this.config, ...config };
+52 | try {
+53 | configSchema.parse(newOverrideConfig);
+54 | this.config = newOverrideConfig;
+55 | } catch (error) {
+56 | if (error instanceof z.ZodError) {
+57 | logger.error(`Invalid configuration value: ${error.errors}`);
+58 | }
+59 | throw error;
+60 | }
+61 | }
+62 | private async initialize(): Promise<Config> {
+63 | try {
+64 | const currentDirConfig = documentFactory.join(
+65 | process.cwd(),
+66 | this.config.codeConfigFile
+67 | );
+68 | if (documentFactory.exists(currentDirConfig)) {
+69 | const fileContent = await documentFactory.readFile(currentDirConfig);
+70 | if (!fileContent.trim()) {
+71 | throw new Error(`Configuration file is empty: ${currentDirConfig}`);
+72 | }
+73 | let userConfig;
+74 | try {
+75 | userConfig = JSON.parse(fileContent);
+76 | } catch {
+77 | throw new Error(
+78 | `Invalid JSON in configuration file: ${currentDirConfig}`
+79 | );
+80 | }
+81 | const validatedConfig = configSchema.parse({
+82 | ...this.config,
+83 | ...userConfig
+84 | });
+85 | this.config = validatedConfig;
+86 | }
+87 | } catch (error) {
+88 | if (error instanceof z.ZodError) {
+89 | const details = error.errors
+90 | .map(err => `${err.path.join(".")}: ${err.message}`)
+91 | .join(", ");
+92 | throw new Error(`Configuration validation failed: ${details}`);
+93 | }
+94 | throw error;
+95 | }
+96 | return this;
+97 | }
+98 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: Config.ts
-- Path: `/root/git/codewrangler/src/utils/config/Config.ts`
-- Size: 2.86 KB
-- Extension: .ts
-- Lines of code: 99
-- Content:
-
-```ts
-  1 | import { z } from "zod";
-  2 | import { logger } from "../logger/Logger";
-  3 | import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-  4 | import {
-  5 |   ConfigKeys,
-  6 |   ConfigOptions,
-  7 |   ConfigSchema,
-  8 |   DEFAULT_CONFIG,
-  9 | } from "./schema";
- 10 | 
- 11 | export class Config {
- 12 |   private static instance: Config | undefined;
- 13 |   private config: ConfigOptions;
- 14 | 
- 15 |   private constructor() {
- 16 |     this.config = ConfigSchema.parse(DEFAULT_CONFIG);
- 17 |   }
- 18 | 
- 19 |   public static async load(): Promise<Config> {
- 20 |     if (!Config.instance) {
- 21 |       Config.instance = new Config();
- 22 |       await Config.instance.initialize();
- 23 |     }
- 24 |     return Config.instance;
- 25 |   }
- 26 |   private async initialize(): Promise<Config> {
- 27 |     try {
- 28 |       const currentDirConfig = DocumentFactory.join(
- 29 |         process.cwd(),
- 30 |         this.config.codeConfigFile
- 31 |       );
- 32 | 
- 33 |       if (DocumentFactory.exists(currentDirConfig)) {
- 34 |         const fileContent = await DocumentFactory.readFile(currentDirConfig);
- 35 | 
- 36 |         if (!fileContent.trim()) {
- 37 |           throw new Error(`Configuration file is empty: ${currentDirConfig}`);
- 38 |         }
- 39 | 
- 40 |         let userConfig;
- 41 |         try {
- 42 |           userConfig = JSON.parse(fileContent);
- 43 |         } catch {
- 44 |           throw new Error(
- 45 |             `Invalid JSON in configuration file: ${currentDirConfig}`
- 46 |           );
- 47 |         }
- 48 | 
- 49 |         // Validate and merge configurations
- 50 |         const validatedConfig = ConfigSchema.parse({
- 51 |           ...this.config,
- 52 |           ...userConfig,
- 53 |         });
- 54 | 
- 55 |         this.config = validatedConfig;
- 56 |       }
- 57 |     } catch (error) {
- 58 |       if (error instanceof z.ZodError) {
- 59 |         const details = error.errors
- 60 |           .map((err) => `${err.path.join(".")}: ${err.message}`)
- 61 |           .join(", ");
- 62 |         throw new Error(`Configuration validation failed: ${details}`);
- 63 |       }
- 64 |       throw error;
- 65 |     }
- 66 |     return this;
- 67 |   }
- 68 | 
- 69 |   public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
- 70 |     return this.config[key] as ConfigOptions[T];
- 71 |   }
- 72 | 
- 73 |   public set(
- 74 |     key: keyof ConfigOptions,
- 75 |     value: ConfigOptions[keyof ConfigOptions]
- 76 |   ): void {
- 77 |     const updatedConfig = { ...this.config, [key]: value };
- 78 |     try {
- 79 |       ConfigSchema.parse(updatedConfig);
- 80 |       this.config = updatedConfig;
- 81 |     } catch (error) {
- 82 |       if (error instanceof z.ZodError) {
- 83 |         logger.error(`Invalid configuration value: ${error.errors}`);
- 84 |       }
- 85 |       throw error;
- 86 |     }
- 87 |   }
- 88 |   public getAll(): ConfigOptions {
- 89 |     return this.config;
- 90 |   }
- 91 |   public reset(): void {
- 92 |     this.config = DEFAULT_CONFIG;
- 93 |   }
- 94 |   public static destroy(): void {
- 95 |     Config.instance = undefined;
- 96 |   }
- 97 |   public override(config: Partial<ConfigOptions>): void {
- 98 |     const newOverrideConfig = { ...this.config, ...config };
- 99 |     try {
-100 |       ConfigSchema.parse(newOverrideConfig);
-101 |       this.config = newOverrideConfig;
-102 |     } catch (error) {
-103 |       if (error instanceof z.ZodError) {
-104 |         logger.error(`Invalid configuration value: ${error.errors}`);
-105 |       }
-106 |       throw error;
-107 |     }
-108 |   }
-109 | }
-110 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: Config.test.ts
-- Path: `/root/git/codewrangler/src/utils/config/__tests__/Config.test.ts`
-- Size: 5.12 KB
-- Extension: .ts
-- Lines of code: 137
-- Content:
-
-```ts
-  1 | import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
-  2 | import { Config } from "../Config";
-  3 | import { DEFAULT_CONFIG } from "../schema";
-  4 | import { logger } from "../../logger/Logger";
-  5 | 
-  6 | jest.mock("../../../infrastructure/filesystem/DocumentFactory");
-  7 | jest.mock("../../logger/Logger", () => ({
-  8 |   logger: {
-  9 |     error: jest.fn(),
- 10 |   },
- 11 |   LOG_VALUES: ["ERROR", "WARN", "INFO", "DEBUG"],
- 12 | }));
- 13 | 
- 14 | describe("Config", () => {
- 15 |   let config: Config;
- 16 | 
- 17 |   beforeEach(async () => {
- 18 |     // Reset mocks
- 19 |     jest.resetAllMocks();
- 20 |     (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
- 21 |     (DocumentFactory.readFile as jest.Mock).mockResolvedValue(
- 22 |       JSON.stringify(DEFAULT_CONFIG)
- 23 |     );
- 24 |     (DocumentFactory.join as jest.Mock).mockImplementation((...args) =>
- 25 |       args.join("/")
- 26 |     );
- 27 | 
- 28 |     // Destroy singleton instance before each test
- 29 |     Config.destroy();
- 30 |     config = await Config.load();
- 31 |   });
- 32 | 
- 33 |   afterEach(() => {
- 34 |     Config.destroy();
- 35 |   });
- 36 | 
- 37 |   describe("Singleton Management", () => {
- 38 |     it("load returns the same instance", async () => {
- 39 |       const instance1 = await Config.load();
- 40 |       const instance2 = await Config.load();
- 41 |       expect(instance1).toBe(instance2);
- 42 |     });
- 43 | 
- 44 |     it("destroy removes the singleton instance", async () => {
- 45 |       const instance1 = await Config.load();
- 46 |       Config.destroy();
- 47 |       const instance2 = await Config.load();
- 48 |       expect(instance1).not.toBe(instance2);
- 49 |     });
- 50 | 
- 51 |     it("reset restores default configuration", async () => {
- 52 |       config.set("outputFile", "custom-output");
- 53 |       config.reset();
- 54 |       expect(config.getAll()).toEqual(DEFAULT_CONFIG);
- 55 |     });
- 56 |   });
- 57 | 
- 58 |   describe("Configuration Loading", () => {
- 59 |     it("loads default config when no config file exists", async () => {
- 60 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
- 61 |       Config.destroy();
- 62 |       const newConfig = await Config.load();
- 63 |       expect(newConfig.getAll()).toEqual(DEFAULT_CONFIG);
- 64 |     });
- 65 | 
- 66 |     it("loads and merges custom config when file exists", async () => {
- 67 |       const customConfig = {
- 68 |         outputFile: "custom-output",
- 69 |         logLevel: "DEBUG" as const,
- 70 |       };
- 71 | 
- 72 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
- 73 |       (DocumentFactory.readFile as jest.Mock).mockResolvedValue(
- 74 |         JSON.stringify(customConfig)
- 75 |       );
- 76 | 
- 77 |       Config.destroy();
- 78 |       const newConfig = await Config.load();
- 79 | 
- 80 |       expect(newConfig.get("outputFile")).toBe(customConfig.outputFile);
- 81 |       expect(newConfig.get("logLevel")).toBe(customConfig.logLevel);
- 82 |     });
- 83 | 
- 84 |     it("throws error when config file is empty", async () => {
- 85 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
- 86 |       (DocumentFactory.readFile as jest.Mock).mockResolvedValue("  ");
- 87 | 
- 88 |       Config.destroy();
- 89 |       await expect(Config.load()).rejects.toThrow(
- 90 |         "Configuration file is empty"
- 91 |       );
- 92 |     });
- 93 | 
- 94 |     it("throws error when config file contains invalid JSON", async () => {
- 95 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
- 96 |       (DocumentFactory.readFile as jest.Mock).mockResolvedValue("invalid json");
- 97 | 
- 98 |       Config.destroy();
- 99 |       await expect(Config.load()).rejects.toThrow(
-100 |         "Invalid JSON in configuration file"
-101 |       );
-102 |     });
-103 |   });
-104 | 
-105 |   describe("Configuration Operations", () => {
-106 |     describe("get", () => {
-107 |       it("returns correct values after initialization", async () => {
-108 |         expect(config.get("dir")).toBe(DEFAULT_CONFIG.dir);
-109 |         expect(config.get("pattern")).toBe(DEFAULT_CONFIG.pattern);
-110 |         expect(config.get("outputFile")).toBe(DEFAULT_CONFIG.outputFile);
-111 |       });
-112 |     });
-113 | 
-114 |     describe("set", () => {
-115 |       it("updates single value successfully", () => {
-116 |         config.set("outputFile", "new-output");
-117 |         expect(config.get("outputFile")).toBe("new-output");
-118 |       });
-119 | 
-120 |       it("maintains other values when setting one value", () => {
-121 |         const originalConfig = config.getAll();
-122 |         config.set("outputFile", "new-output");
-123 |         expect(config.get("pattern")).toBe(originalConfig.pattern);
-124 |       });
-125 | 
-126 |       it("throws error for invalid values", () => {
-127 |         expect(() => {
-128 |           config.set("maxFileSize", -1);
-129 |         }).toThrow();
-130 |         expect(logger.error).toHaveBeenCalled();
-131 |       });
-132 |     });
-133 | 
-134 |     describe("override", () => {
-135 |       it("successfully overrides multiple values", () => {
-136 |         const overrides = {
-137 |           outputFile: "custom-output",
-138 |           logLevel: "DEBUG" as const,
-139 |           maxFileSize: 2048576,
-140 |         };
-141 | 
-142 |         config.override(overrides);
-143 | 
-144 |         expect(config.get("outputFile")).toBe(overrides.outputFile);
-145 |         expect(config.get("logLevel")).toBe(overrides.logLevel);
-146 |         expect(config.get("maxFileSize")).toBe(overrides.maxFileSize);
-147 |       });
-148 | 
-149 |       it("maintains unaffected values after override", () => {
-150 |         const originalPattern = config.get("pattern");
-151 |         config.override({ outputFile: "custom-output" });
-152 |         expect(config.get("pattern")).toBe(originalPattern);
-153 |       });
-154 | 
-155 |       it("throws error for invalid override values", () => {
-156 |         expect(() => {
-157 |           config.override({ maxFileSize: -1 });
-158 |         }).toThrow();
-159 |         expect(logger.error).toHaveBeenCalled();
-160 |       });
-161 |     });
-162 |   });
-163 | });
-164 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: index.ts
-- Path: `/root/git/codewrangler/src/utils/config/index.ts`
-- Size: 52.00 B
-- Extension: .ts
-- Lines of code: 2
-- Content:
-
+## File: index.ts, Path: `/root/git/codewrangler/src/utils/config/index.ts`
 ```ts
 1 | export * from "./Config";
 2 | export * from "./schema";
-3 | 
 ```
 
----------------------------------------------------------------------------
-
-
-## File: schema.ts
-- Path: `/root/git/codewrangler/src/utils/config/schema.ts`
-- Size: 2.42 KB
-- Extension: .ts
-- Lines of code: 64
-- Content:
-
+## File: schema.ts, Path: `/root/git/codewrangler/src/utils/config/schema.ts`
 ```ts
  1 | import { z } from "zod";
  2 | import { LOG_VALUES } from "../logger/Logger";
- 3 | 
- 4 | export const OUTPUT_FORMATS = {
- 5 |   markdown: "md",
- 6 |   html: "html",
- 7 | } as const;
- 8 | 
- 9 | export type OutputFormats = typeof OUTPUT_FORMATS;
-10 | export type OutputFormatName = keyof OutputFormats;
-11 | export type OutputFormatExtension = OutputFormats[OutputFormatName];
-12 | 
-13 | export const OutputFormatSchema = z.enum(["markdown", "html"] as const);
-14 | 
-15 | export const FileExtensionSchema = z.enum(["md", "html"] as const);
-16 | 
-17 | export type OutputFormat = z.infer<typeof OutputFormatSchema>;
-18 | export type FileExtension = z.infer<typeof FileExtensionSchema>;
-19 | 
-20 | export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
-21 |   markdown: "md",
-22 |   html: "html",
-23 | };
-24 | 
-25 | export const ConfigSchema = z
-26 |   .object({
-27 |     dir: z.string().default(process.cwd()),
-28 |     rootDir: z.string().default(process.cwd()),
-29 |     templatesDir: z.string().default("public/templates"),
-30 |     pattern: z
-31 |       .string()
-32 |       .regex(/^.*$/, "Pattern must be a valid regex")
-33 |       .default(".*"),
-34 |     outputFile: z.string().default("output"),
-35 |     logLevel: z.enum(LOG_VALUES as [string, ...string[]]).default("INFO"),
-36 |     outputFormat: z.array(OutputFormatSchema).default(["markdown"]),
-37 |     maxFileSize: z.number().positive().default(1048576),
-38 |     maxDepth: z.number().default(100),
-39 |     excludePatterns: z
-40 |       .array(z.string())
-41 |       .default(["node_modules/**", "**/*.test.ts", "dist/**"]),
-42 |     ignoreHiddenFiles: z.boolean().default(true),
-43 |     additionalIgnoreFiles: z.array(z.string()).optional().default([]),
-44 |     projectName: z.string().optional(),
-45 |     followSymlinks: z.boolean().default(false),
-46 |     codeConfigFile: z
-47 |       .string()
-48 |       .regex(/\.json$/, "Config file must end with .json")
-49 |       .default("public/codewrangler.json"),
-50 |   })
-51 |   .strict();
-52 | 
-53 | export type ConfigOptions = z.infer<typeof ConfigSchema>;
-54 | // get a type listing all the keys of the config
-55 | export type ConfigKeys = keyof ConfigOptions;
-56 | 
-57 | export const DEFAULT_CONFIG: ConfigOptions = {
-58 |   dir: process.cwd(), // current working directory, where the command is run
-59 |   rootDir: process.cwd(),
-60 |   templatesDir: "public/templates",
-61 |   pattern: ".*",
-62 |   outputFile: "output",
-63 |   logLevel: "INFO",
-64 |   outputFormat: ["markdown"],
-65 |   maxFileSize: 1048576,
-66 |   maxDepth: 100,
-67 |   codeConfigFile: "public/codewrangler.json",
-68 |   projectName: undefined,
-69 |   followSymlinks: false,
-70 |   ignoreHiddenFiles: true, // Default value
-71 |   additionalIgnoreFiles: [],
-72 |   excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"],
-73 | };
-74 | 
+ 3 | export const OUTPUT_FORMATS = {
+ 4 | markdown: "md",
+ 5 | html: "html"
+ 6 | } as const;
+ 7 | export type OutputFormats = typeof OUTPUT_FORMATS;
+ 8 | export type OutputFormatName = keyof OutputFormats;
+ 9 | export type OutputFormatExtension = OutputFormats[OutputFormatName];
+10 | export const outputFormatSchema = z.enum(["markdown", "html"] as const);
+11 | export const fileExtensionSchema = z.enum(["md", "html"] as const);
+12 | export type OutputFormat = z.infer<typeof outputFormatSchema>;
+13 | export type FileExtension = z.infer<typeof fileExtensionSchema>;
+14 | export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
+15 | markdown: "md",
+16 | html: "html"
+17 | };
+18 | export const configSchema = z
+19 | .object({
+20 | dir: z.string().default(process.cwd()),
+21 | rootDir: z.string().default(process.cwd()),
+22 | templatesDir: z.string().default("public/templates"),
+23 | pattern: z
+24 | .string()
+25 | .regex(/^.*$/, "Pattern must be a valid regex")
+26 | .default(".*"),
+27 | outputFile: z.string().default("output"),
+28 | logLevel: z.enum(LOG_VALUES as [string, ...string[]]).default("INFO"),
+29 | outputFormat: z.array(outputFormatSchema).default(["markdown"]),
+30 | maxFileSize: z.number().positive().default(1048576),
+31 | maxDepth: z.number().default(100),
+32 | excludePatterns: z
+33 | .array(z.string())
+34 | .default(["node_modules/**", "**/*.test.ts", "dist/**"]),
+35 | ignoreHiddenFiles: z.boolean().default(true),
+36 | additionalIgnoreFiles: z.array(z.string()).optional().default([]),
+37 | projectName: z.string().optional(),
+38 | followSymlinks: z.boolean().default(false),
+39 | codeConfigFile: z
+40 | .string()
+41 | .regex(/\.json$/, "Config file must end with .json")
+42 | .default("public/codewrangler.json")
+43 | })
+44 | .strict();
+45 | export type ConfigOptions = z.infer<typeof configSchema>;
+46 | export type ConfigKeys = keyof ConfigOptions;
+47 | export const DEFAULT_CONFIG: ConfigOptions = {
+48 | dir: process.cwd(), // current working directory, where the command is run
+49 | rootDir: process.cwd(),
+50 | templatesDir: "public/templates",
+51 | pattern: ".*",
+52 | outputFile: "output",
+53 | logLevel: "INFO",
+54 | outputFormat: ["markdown"],
+55 | maxFileSize: 1048576,
+56 | maxDepth: 100,
+57 | codeConfigFile: "public/codewrangler.json",
+58 | projectName: undefined,
+59 | followSymlinks: false,
+60 | ignoreHiddenFiles: true, // Default value
+61 | additionalIgnoreFiles: [],
+62 | excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"]
+63 | };
 ```
 
----------------------------------------------------------------------------
-
-
-## File: ProgressBar.ts
-- Path: `/root/git/codewrangler/src/utils/helpers/ProgressBar.ts`
-- Size: 1.45 KB
-- Extension: .ts
-- Lines of code: 57
-- Content:
-
+## File: ProgressBar.ts, Path: `/root/git/codewrangler/src/utils/helpers/ProgressBar.ts`
 ```ts
  1 | import cliProgress from "cli-progress";
- 2 | 
- 3 | export class ProgressBar {
- 4 |   private bar: cliProgress.SingleBar;
- 5 |   private intervalId: NodeJS.Timeout | null = null;
- 6 |   private currentValue: number = 0;
- 7 | 
- 8 |   constructor(private total: number = 100) {
- 9 |     this.bar = new cliProgress.SingleBar(
-10 |       {},
-11 |       cliProgress.Presets.shades_classic
-12 |     );
-13 |   }
-14 | 
-15 |   private simulateProgress(): void {
-16 |     const remainingProgress = this.total - this.currentValue;
-17 |     const increment = Math.random() * remainingProgress * 0.1;
-18 |     this.currentValue = Math.min(
-19 |       this.currentValue + increment,
-20 |       this.total * 0.95
-21 |     );
-22 |     this.bar.update(this.currentValue);
-23 |   }
-24 | 
-25 |   start(): ProgressBar {
-26 |     this.bar.start(this.total, 0);
-27 |     this.intervalId = setInterval(() => this.simulateProgress(), 200);
-28 |     return this;
-29 |   }
-30 | 
-31 |   update(value: number): ProgressBar {
-32 |     this.currentValue = value;
-33 |     this.bar.update(value);
-34 |     return this;
-35 |   }
-36 | 
-37 |   stop(): ProgressBar {
-38 |     if (this.intervalId) {
-39 |       clearInterval(this.intervalId);
-40 |       this.intervalId = null;
-41 |     }
-42 |     this.bar.update(this.total);
-43 |     this.bar.stop();
-44 |     return this;
-45 |   }
-46 | 
-47 |   async execute<T>(fn: () => Promise<T>): Promise<T> {
-48 |     this.start();
-49 |     try {
-50 |       return await fn();
-51 |     } finally {
-52 |       this.stop();
-53 |     }
-54 |   }
-55 | }
-56 | 
-57 | export async function progressBar(
-58 |   total: number,
-59 |   callback: () => Promise<void>
-60 | ): Promise<void> {
-61 |   const bar = new ProgressBar(total);
-62 |   await bar.execute(async () => {
-63 |     await callback();
-64 |   });
-65 | }
-66 | 
+ 2 | export class ProgressBar {
+ 3 | private bar: cliProgress.SingleBar;
+ 4 | private intervalId: NodeJS.Timeout | null = null;
+ 5 | private currentValue: number = 0;
+ 6 | constructor(private total: number = 100) {
+ 7 | this.bar = new cliProgress.SingleBar(
+ 8 | {},
+ 9 | cliProgress.Presets.shades_classic
+10 | );
+11 | }
+12 | public start(): ProgressBar {
+13 | this.bar.start(this.total, 0);
+14 | this.intervalId = setInterval(() => this.simulateProgress(), 200);
+15 | return this;
+16 | }
+17 | public update(value: number): ProgressBar {
+18 | this.currentValue = value;
+19 | this.bar.update(value);
+20 | return this;
+21 | }
+22 | public stop(): ProgressBar {
+23 | if (this.intervalId) {
+24 | clearInterval(this.intervalId);
+25 | this.intervalId = null;
+26 | }
+27 | this.bar.update(this.total);
+28 | this.bar.stop();
+29 | return this;
+30 | }
+31 | public async execute<T>(fn: () => Promise<T>): Promise<T> {
+32 | this.start();
+33 | try {
+34 | return await fn();
+35 | } finally {
+36 | this.stop();
+37 | }
+38 | }
+39 | private simulateProgress(): void {
+40 | const remainingProgress = this.total - this.currentValue;
+41 | const increment = Math.random() * remainingProgress * 0.1;
+42 | this.currentValue = Math.min(
+43 | this.currentValue + increment,
+44 | this.total * 0.95
+45 | );
+46 | this.bar.update(this.currentValue);
+47 | }
+48 | }
+49 | export async function progressBar(
+50 | total: number,
+51 | callback: () => Promise<void>
+52 | ): Promise<void> {
+53 | const bar = new ProgressBar(total);
+54 | await bar.execute(async () => {
+55 | await callback();
+56 | });
+57 | }
 ```
 
----------------------------------------------------------------------------
-
-
-## File: Logger.ts
-- Path: `/root/git/codewrangler/src/utils/logger/Logger.ts`
-- Size: 1.98 KB
-- Extension: .ts
-- Lines of code: 69
-- Content:
-
+## File: Logger.ts, Path: `/root/git/codewrangler/src/utils/logger/Logger.ts`
 ```ts
  1 | /* eslint-disable no-console */
  2 | import colors from "colors";
  3 | import { Config } from "../config/Config";
- 4 | 
- 5 | export const LogLevel = {
- 6 |   ERROR: 0,
- 7 |   WARN: 1,
- 8 |   INFO: 2,
- 9 |   DEBUG: 3,
-10 | } as const;
-11 | 
-12 | type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
-13 | export type LogLevelString = keyof typeof LogLevel;
-14 | export const LOG_VALUES = Object.keys(LogLevel) as LogLevelString[];
-15 | 
-16 | export class Logger {
-17 |   private static instance: Logger;
-18 |   private config: Config | null = null;
-19 | 
-20 |   private constructor() {}
-21 |   public static load(): Logger {
-22 |     if (!Logger.instance) {
-23 |       Logger.instance = new Logger();
-24 |     }
-25 |     return Logger.instance;
-26 |   }
-27 |   public setConfig(config: Config): Logger {
-28 |     this.config = config;
-29 |     return this;
-30 |   }
-31 |   public setLogLevel(logLevel: LogLevelString): Logger {
-32 |     if (this.config) {
-33 |       this.config.set("logLevel", logLevel);
-34 |     }
-35 |     return this;
-36 |   }
-37 | 
-38 |   private get logLevel(): LogLevel {
-39 |     const configLogLevel = this.config?.get("logLevel") as
-40 |       | LogLevelString
-41 |       | undefined;
-42 |     return configLogLevel ? LogLevel[configLogLevel] : LogLevel.ERROR;
-43 |   }
-44 | 
-45 |   public error(message: string, error?: Error, ...other: unknown[]): void {
-46 |     if (this.logLevel >= LogLevel.ERROR) {
-47 |       console.log(colors.red(`[ERROR] ${message}`), ...other);
-48 |       if (error instanceof Error && error.stack) {
-49 |         console.log(colors.red(error.stack));
-50 |       }
-51 |     }
-52 |   }
-53 | 
-54 |   public warn(message: string): void {
-55 |     if (this.logLevel >= LogLevel.WARN) {
-56 |       console.log(colors.yellow(`[WARN] ${message}`));
-57 |     }
-58 |   }
-59 | 
-60 |   public info(message: string): void {
-61 |     if (this.logLevel >= LogLevel.INFO) {
-62 |       console.log(colors.blue(`[INFO] ${message}`));
-63 |     }
-64 |   }
-65 | 
-66 |   public debug(message: string): void {
-67 |     if (this.logLevel >= LogLevel.DEBUG) {
-68 |       console.log(colors.gray(`[DEBUG] ${message}`));
-69 |     }
-70 |   }
-71 | 
-72 |   public success(message: string): void {
-73 |     console.log(colors.green(message));
-74 |   }
-75 | 
-76 |   public log(message: string): void {
-77 |     console.log(message);
-78 |   }
-79 | }
-80 | 
-81 | export const logger = Logger.load();
-82 | 
+ 4 | export const LOG_LEVEL = {
+ 5 | ERROR: 0,
+ 6 | WARN: 1,
+ 7 | INFO: 2,
+ 8 | DEBUG: 3
+ 9 | } as const;
+10 | type LogLevel = (typeof LOG_LEVEL)[keyof typeof LOG_LEVEL];
+11 | export type LogLevelString = keyof typeof LOG_LEVEL;
+12 | export const LOG_VALUES = Object.keys(LOG_LEVEL) as LogLevelString[];
+13 | export class Logger {
+14 | private static instance: Logger;
+15 | private config: Config | null = null;
+16 | private constructor() {}
+17 | public static load(): Logger {
+18 | if (!Logger.instance) {
+19 | Logger.instance = new Logger();
+20 | }
+21 | return Logger.instance;
+22 | }
+23 | public setConfig(config: Config): Logger {
+24 | this.config = config;
+25 | return this;
+26 | }
+27 | public setLogLevel(logLevel: LogLevelString): Logger {
+28 | if (this.config) {
+29 | this.config.set("logLevel", logLevel);
+30 | }
+31 | return this;
+32 | }
+33 | private get logLevel(): LogLevel {
+34 | const configLogLevel = this.config?.get("logLevel") as
+35 | | LogLevelString
+36 | | undefined;
+37 | return configLogLevel ? LOG_LEVEL[configLogLevel] : LOG_LEVEL.ERROR;
+38 | }
+39 | public error(message: string, error?: Error, ...other: unknown[]): void {
+40 | if (this.logLevel >= LOG_LEVEL.ERROR) {
+41 | console.log(colors.red(`[ERROR] ${message}`), ...other);
+42 | if (error instanceof Error && error.stack) {
+43 | console.log(colors.red(error.stack));
+44 | }
+45 | }
+46 | }
+47 | public warn(message: string): void {
+48 | if (this.logLevel >= LOG_LEVEL.WARN) {
+49 | console.log(colors.yellow(`[WARN] ${message}`));
+50 | }
+51 | }
+52 | public info(message: string): void {
+53 | if (this.logLevel >= LOG_LEVEL.INFO) {
+54 | console.log(colors.blue(`[INFO] ${message}`));
+55 | }
+56 | }
+57 | public debug(message: string): void {
+58 | if (this.logLevel >= LOG_LEVEL.DEBUG) {
+59 | console.log(colors.gray(`[DEBUG] ${message}`));
+60 | }
+61 | }
+62 | public success(message: string): void {
+63 | console.log(colors.green(message));
+64 | }
+65 | public log(message: string): void {
+66 | console.log(message);
+67 | }
+68 | }
+69 | export const logger = Logger.load();
 ```
 
----------------------------------------------------------------------------
-
-
-## File: Logger.test.ts
-- Path: `/root/git/codewrangler/src/utils/logger/__tests__/Logger.test.ts`
-- Size: 5.30 KB
-- Extension: .ts
-- Lines of code: 147
-- Content:
-
-```ts
-  1 | /* eslint-disable no-console */
-  2 | import { LOG_VALUES, LogLevel, Logger } from "../Logger";
-  3 | import { Config } from "../../config/Config";
-  4 | import colors from "colors";
-  5 | 
-  6 | jest.mock("../../config/Config");
-  7 | jest.spyOn(console, "log").mockImplementation(() => {});
-  8 | 
-  9 | describe("Logger", () => {
- 10 |   let logger: Logger;
- 11 |   let mockConfig: jest.Mocked<Config>;
- 12 | 
- 13 |   beforeEach(() => {
- 14 |     jest.clearAllMocks();
- 15 | 
- 16 |     mockConfig = {
- 17 |       get: jest.fn(),
- 18 |       set: jest.fn(),
- 19 |     } as unknown as jest.Mocked<Config>;
- 20 | 
- 21 |     logger = Logger.load();
- 22 |   });
- 23 | 
- 24 |   describe("Singleton Pattern", () => {
- 25 |     it("should create only one instance of Logger", () => {
- 26 |       const instance1 = Logger.load();
- 27 |       const instance2 = Logger.load();
- 28 |       expect(instance1).toBe(instance2);
- 29 |     });
- 30 |   });
- 31 | 
- 32 |   describe("Configuration", () => {
- 33 |     it("should set config correctly", () => {
- 34 |       const result = logger.setConfig(mockConfig);
- 35 |       expect(result).toBe(logger);
- 36 |       expect(logger["config"]).toBe(mockConfig);
- 37 |     });
- 38 | 
- 39 |     it("should set log level when config is present", () => {
- 40 |       logger.setConfig(mockConfig);
- 41 |       const result = logger.setLogLevel("DEBUG");
- 42 | 
- 43 |       expect(result).toBe(logger);
- 44 |       expect(mockConfig.set).toHaveBeenCalledWith("logLevel", "DEBUG");
- 45 |     });
- 46 | 
- 47 |     it("should not set log level when config is not present", () => {
- 48 |       const result = logger.setLogLevel("DEBUG");
- 49 | 
- 50 |       expect(result).toBe(logger);
- 51 |       expect(mockConfig.set).not.toHaveBeenCalled();
- 52 |     });
- 53 | 
- 54 |     it("should return ERROR level when config returns undefined", () => {
- 55 |       logger.setConfig(mockConfig);
- 56 |       mockConfig.get.mockReturnValue(undefined);
- 57 |       expect(logger["logLevel"]).toBe(LogLevel.ERROR);
- 58 |     });
- 59 | 
- 60 |     it("should return correct log level from config", () => {
- 61 |       logger.setConfig(mockConfig);
- 62 |       mockConfig.get.mockReturnValue("DEBUG");
- 63 |       expect(logger["logLevel"]).toBe(LogLevel.DEBUG);
- 64 |     });
- 65 |   });
- 66 | 
- 67 |   describe("Logging Methods", () => {
- 68 |     beforeEach(() => {
- 69 |       logger.setConfig(mockConfig);
- 70 |     });
- 71 | 
- 72 |     describe("error", () => {
- 73 |       it("should log error messages when level is ERROR or higher", () => {
- 74 |         mockConfig.get.mockReturnValue("ERROR");
- 75 |         logger.error("Test error");
- 76 |         expect(console.log).toHaveBeenCalledWith(
- 77 |           colors.red("[ERROR] Test error")
- 78 |         );
- 79 |       });
- 80 | 
- 81 |       it("should log error with stack trace when error object is provided", () => {
- 82 |         mockConfig.get.mockReturnValue("ERROR");
- 83 |         const error = new Error("Test error");
- 84 |         logger.error("Error occurred", error);
- 85 | 
- 86 |         expect(console.log).toHaveBeenCalledWith(
- 87 |           colors.red("[ERROR] Error occurred")
- 88 |         );
- 89 |         expect(console.log).toHaveBeenCalledWith(colors.red(error.stack ?? ""));
- 90 |       });
- 91 | 
- 92 |       it("should log additional arguments", () => {
- 93 |         mockConfig.get.mockReturnValue("ERROR");
- 94 |         logger.error("Test error", undefined, { details: "test" });
- 95 |         expect(console.log).toHaveBeenCalledWith(
- 96 |           colors.red("[ERROR] Test error"),
- 97 |           { details: "test" }
- 98 |         );
- 99 |       });
-100 |     });
-101 | 
-102 |     describe("warn", () => {
-103 |       it("should log warn messages when level is WARN or higher", () => {
-104 |         mockConfig.get.mockReturnValue("WARN");
-105 |         logger.warn("Test warning");
-106 |         expect(console.log).toHaveBeenCalledWith(
-107 |           colors.yellow("[WARN] Test warning")
-108 |         );
-109 |       });
-110 | 
-111 |       it("should not log warn messages when level is ERROR", () => {
-112 |         mockConfig.get.mockReturnValue("ERROR");
-113 |         logger.warn("Test warning");
-114 |         expect(console.log).not.toHaveBeenCalled();
-115 |       });
-116 |     });
-117 | 
-118 |     describe("info", () => {
-119 |       it("should log info messages when level is INFO or higher", () => {
-120 |         mockConfig.get.mockReturnValue("INFO");
-121 |         logger.info("Test info");
-122 |         expect(console.log).toHaveBeenCalledWith(
-123 |           colors.blue("[INFO] Test info")
-124 |         );
-125 |       });
-126 | 
-127 |       it("should not log info messages when level is WARN", () => {
-128 |         mockConfig.get.mockReturnValue("WARN");
-129 |         logger.info("Test info");
-130 |         expect(console.log).not.toHaveBeenCalled();
-131 |       });
-132 |     });
-133 | 
-134 |     describe("debug", () => {
-135 |       it("should log debug messages when level is DEBUG", () => {
-136 |         mockConfig.get.mockReturnValue("DEBUG");
-137 |         logger.debug("Test debug");
-138 |         expect(console.log).toHaveBeenCalledWith(
-139 |           colors.gray("[DEBUG] Test debug")
-140 |         );
-141 |       });
-142 | 
-143 |       it("should not log debug messages when level is INFO", () => {
-144 |         mockConfig.get.mockReturnValue("INFO");
-145 |         logger.debug("Test debug");
-146 |         expect(console.log).not.toHaveBeenCalled();
-147 |       });
-148 |     });
-149 | 
-150 |     describe("success", () => {
-151 |       it("should always log success messages in green", () => {
-152 |         mockConfig.get.mockReturnValue("ERROR");
-153 |         logger.success("Operation successful");
-154 |         expect(console.log).toHaveBeenCalledWith(
-155 |           colors.green("Operation successful")
-156 |         );
-157 |       });
-158 |     });
-159 | 
-160 |     describe("log", () => {
-161 |       it("should always log plain messages without color", () => {
-162 |         mockConfig.get.mockReturnValue("ERROR");
-163 |         logger.log("Plain message");
-164 |         expect(console.log).toHaveBeenCalledWith("Plain message");
-165 |       });
-166 |     });
-167 |   });
-168 | 
-169 |   describe("Log Values", () => {
-170 |     it("should export correct log level values", () => {
-171 |       expect(LOG_VALUES).toEqual(["ERROR", "WARN", "INFO", "DEBUG"]);
-172 |     });
-173 |   });
-174 | });
-175 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: index.ts
-- Path: `/root/git/codewrangler/src/utils/logger/index.ts`
-- Size: 25.00 B
-- Extension: .ts
-- Lines of code: 1
-- Content:
-
+## File: index.ts, Path: `/root/git/codewrangler/src/utils/logger/index.ts`
 ```ts
 1 | export * from "./Logger";
 ```
-
----------------------------------------------------------------------------
-

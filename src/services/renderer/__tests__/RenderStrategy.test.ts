@@ -1,9 +1,9 @@
-import { BaseRenderStrategy } from "../RenderStrategy";
-import { Config } from "../../../utils/config";
 import { NodeFile } from "../../../core/entities/NodeFile";
-import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
 import { Template } from "../../../infrastructure/templates/TemplateEngine";
+import { Config } from "../../../utils/config";
 import { OutputFormatExtension } from "../../../utils/config/schema";
+import { BaseRenderStrategy } from "../RenderStrategy";
 
 jest.mock("../../../utils/config");
 jest.mock("../../../core/entities/NodeFile");
@@ -49,10 +49,10 @@ describe("BaseRenderStrategy", () => {
 
     (Template.create as jest.Mock).mockResolvedValue(mockTemplate);
 
-    (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
+    (documentFactory.join as jest.Mock).mockImplementation((...paths) =>
       paths.join("/")
     );
-    (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
+    (documentFactory.exists as jest.Mock).mockReturnValue(true);
 
     renderStrategy = new TestRenderStrategy(mockConfig);
   });
@@ -61,13 +61,13 @@ describe("BaseRenderStrategy", () => {
     it("should successfully load all templates", async () => {
       await renderStrategy.loadTemplates();
 
-      expect(DocumentFactory.join).toHaveBeenCalledWith("/test", "templates");
-      expect(DocumentFactory.exists).toHaveBeenCalled();
+      expect(documentFactory.join).toHaveBeenCalledWith("/test", "templates");
+      expect(documentFactory.exists).toHaveBeenCalled();
       expect(Template.create).toHaveBeenCalledTimes(3);
     });
 
     it("should throw error if templates directory doesn't exist", async () => {
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
+      (documentFactory.exists as jest.Mock).mockReturnValue(false);
 
       await expect(renderStrategy.loadTemplates()).rejects.toThrow(
         "Templates directory not found"

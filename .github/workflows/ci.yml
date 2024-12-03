@@ -2,14 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, development]
   pull_request:
-    branches: [main, develop]
+    branches: [main, development]
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }} # group by workflow and branch
+  cancel-in-progress: true # cancel in progress jobs when a new one is started
 
 jobs:
   test:
@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         node: [18.x, 20.x]
-        os: [ubuntu-latest, macOS-latest] # windows-latest is not supported for the first version of code wrangler
+        os: [ubuntu-latest, macOS-latest, windows-latest]
         typescript: [4.9.x, 5.5.x, 5.6.x]
       fail-fast: false # run all tests even if some fail
 

@@ -1,7 +1,7 @@
-import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+import { logger } from "../../logger/Logger";
 import { Config } from "../Config";
 import { DEFAULT_CONFIG } from "../schema";
-import { logger } from "../../logger/Logger";
 
 jest.mock("../../../infrastructure/filesystem/DocumentFactory");
 jest.mock("../../logger/Logger", () => ({
@@ -14,14 +14,16 @@ jest.mock("../../logger/Logger", () => ({
 describe("Config", () => {
   let config: Config;
 
+  const TEST_OUTPUT_FILE = "new-output";
+
   beforeEach(async () => {
     // Reset mocks
     jest.resetAllMocks();
-    (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
-    (DocumentFactory.readFile as jest.Mock).mockResolvedValue(
+    (documentFactory.exists as jest.Mock).mockReturnValue(false);
+    (documentFactory.readFile as jest.Mock).mockResolvedValue(
       JSON.stringify(DEFAULT_CONFIG)
     );
-    (DocumentFactory.join as jest.Mock).mockImplementation((...args) =>
+    (documentFactory.join as jest.Mock).mockImplementation((...args) =>
       args.join("/")
     );
 
@@ -48,8 +50,8 @@ describe("Config", () => {
       expect(instance1).not.toBe(instance2);
     });
 
-    it("reset restores default configuration", async () => {
-      config.set("outputFile", "custom-output");
+    it("reset restores default configuration", () => {
+      config.set("outputFile", TEST_OUTPUT_FILE);
       config.reset();
       expect(config.getAll()).toEqual(DEFAULT_CONFIG);
     });
@@ -57,7 +59,7 @@ describe("Config", () => {
 
   describe("Configuration Loading", () => {
     it("loads default config when no config file exists", async () => {
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
+      (documentFactory.exists as jest.Mock).mockReturnValue(false);
       Config.destroy();
       const newConfig = await Config.load();
       expect(newConfig.getAll()).toEqual(DEFAULT_CONFIG);
@@ -65,12 +67,12 @@ describe("Config", () => {
 
     it("loads and merges custom config when file exists", async () => {
       const customConfig = {
-        outputFile: "custom-output",
+        outputFile: TEST_OUTPUT_FILE,
         logLevel: "DEBUG" as const
       };
 
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(
+      (documentFactory.exists as jest.Mock).mockReturnValue(true);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(
         JSON.stringify(customConfig)
       );
 
@@ -82,8 +84,8 @@ describe("Config", () => {
     });
 
     it("throws error when config file is empty", async () => {
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue("  ");
+      (documentFactory.exists as jest.Mock).mockReturnValue(true);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue("  ");
 
       Config.destroy();
       await expect(Config.load()).rejects.toThrow(
@@ -92,8 +94,8 @@ describe("Config", () => {
     });
 
     it("throws error when config file contains invalid JSON", async () => {
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue("invalid json");
+      (documentFactory.exists as jest.Mock).mockReturnValue(true);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue("invalid json");
 
       Config.destroy();
       await expect(Config.load()).rejects.toThrow(
@@ -104,7 +106,7 @@ describe("Config", () => {
 
   describe("Configuration Operations", () => {
     describe("get", () => {
-      it("returns correct values after initialization", async () => {
+      it("returns correct values after initialization", () => {
         expect(config.get("dir")).toBe(DEFAULT_CONFIG.dir);
         expect(config.get("pattern")).toBe(DEFAULT_CONFIG.pattern);
         expect(config.get("outputFile")).toBe(DEFAULT_CONFIG.outputFile);
@@ -112,14 +114,15 @@ describe("Config", () => {
     });
 
     describe("set", () => {
+      const TEST_OUTPUT_FILE = "new-output";
       it("updates single value successfully", () => {
-        config.set("outputFile", "new-output");
-        expect(config.get("outputFile")).toBe("new-output");
+        config.set("outputFile", TEST_OUTPUT_FILE);
+        expect(config.get("outputFile")).toBe(TEST_OUTPUT_FILE);
       });
 
       it("maintains other values when setting one value", () => {
         const originalConfig = config.getAll();
-        config.set("outputFile", "new-output");
+        config.set("outputFile", TEST_OUTPUT_FILE);
         expect(config.get("pattern")).toBe(originalConfig.pattern);
       });
 
@@ -134,7 +137,7 @@ describe("Config", () => {
     describe("override", () => {
       it("successfully overrides multiple values", () => {
         const overrides = {
-          outputFile: "custom-output",
+          outputFile: TEST_OUTPUT_FILE,
           logLevel: "DEBUG" as const,
           maxFileSize: 2048576
         };
@@ -148,7 +151,7 @@ describe("Config", () => {
 
       it("maintains unaffected values after override", () => {
         const originalPattern = config.get("pattern");
-        config.override({ outputFile: "custom-output" });
+        config.override({ outputFile: TEST_OUTPUT_FILE });
         expect(config.get("pattern")).toBe(originalPattern);
       });
 

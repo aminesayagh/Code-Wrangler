@@ -1,3 +1,4 @@
+import { Stats } from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
 
@@ -24,6 +25,7 @@ interface IDocumentConfig {
   excludePatterns: string[];
   maxFileSize: number;
   ignoreHidden: boolean;
+  compress: boolean;
 }
 
 const DEFAULT_CONFIG: IDocumentConfig = {
@@ -32,7 +34,8 @@ const DEFAULT_CONFIG: IDocumentConfig = {
   outputPath: "documentation.md",
   excludePatterns: ["node_modules/**", "**/dist/**", "**/*.test.ts"],
   maxFileSize: 1024 * 1024, // 1MB
-  ignoreHidden: true
+  ignoreHidden: true,
+  compress: false
 };
 
 // Tree visualization functions
@@ -188,7 +191,12 @@ const formatContentWithLineNumbers = (content: string): string => {
 };
 
 // Markdown generation functions
-const generateFileSection = (file: IFileInfo): string => `
+const generateFileSection = (
+  file: IFileInfo,
+  compress: boolean = false
+): string =>
+  !compress
+    ? `
 ## File: ${file.name}
 - Path: \`${file.path}\`
 - Size: ${formatSize(Number(file.size))}
@@ -201,12 +209,20 @@ ${formatContentWithLineNumbers(file.content)}
 \`\`\`
 
 ---------------------------------------------------------------------------
-`;
+`
+    : `
+## File: ${file.name}, Path: \`${file.path}\`
+\`\`\`${file.ext.slice(1) || "plaintext"}
+${formatContentWithLineNumbers(file.content)}
+\`\`\``;
 
 const generateMarkdownContent = (
   files: IFileInfo[],
-  treeContent: string
-): string => `
+  treeContent: string,
+  compress: boolean
+): string =>
+  !compress
+    ? `
 # Code Documentation
 Generated on: ${new Date().toISOString()}
 Total files: ${files.length}
@@ -217,8 +233,37 @@ Total files: ${files.length}
 ${treeContent}
 \`\`\`
 
-${files.map(generateFileSection).join("\n")}
+${files.map(file => generateFileSection(file)).join("\n")}
+`
+    : `
+# Code documentation
+${treeContent}
+${files.map(file => generateFileSection(file, true)).join("\n")}
 `;
+
+const compressContent = (content: string): string =>
+  content
+    .split("\n")
+    .map(line => line.trim())
+    .filter(line => line !== "")
+    .filter(line => !line.startsWith("//"))
+    .join("\n");
+
+async function generateFileInfo(
+  filePath: string,
+  stats: Stats,
+  compress: boolean
+): Promise<IFileInfo> {
+  const content = await fs.readFile(filePath, "utf-8");
+  return {
+    name: path.basename(filePath),
+    path: filePath,
+    content: compress ? compressContent(content) : content,
+    ext: path.extname(filePath),
+    size: stats.size,
+    lines: content.split("\n").filter(line => line.trim() !== "").length
+  };
+}
 
 // Main function
 async function generateDocumentation(
@@ -235,23 +280,22 @@ async function generateDocumentation(
       : "No matching files found";
 
     for await (const filePath of walkDirectory(config.rootDir)) {
-      if (isMatchingFile(filePath, config)) {
-        const stats = await fs.stat(filePath);
-        if (stats.size <= config.maxFileSize) {
-          const content = await fs.readFile(filePath, "utf-8");
-          files.push({
-            name: path.basename(filePath),
-            path: filePath,
-            content,
-            ext: path.extname(filePath),
-            size: stats.size,
-            lines: content.split("\n").filter(line => line.trim() !== "").length
-          });
-        }
+      if (!isMatchingFile(filePath, config)) {
+        continue;
       }
+      const stats = await fs.stat(filePath);
+      if (stats.size > config.maxFileSize) {
+        continue;
+      }
+      const fileInfo = await generateFileInfo(filePath, stats, config.compress);
+      files.push(fileInfo);
     }
 
-    const markdownContent = generateMarkdownContent(files, treeContent);
+    const markdownContent = generateMarkdownContent(
+      files,
+      treeContent,
+      config.compress
+    );
     await fs.writeFile(config.outputPath, markdownContent, "utf-8");
   } catch (error) {
     console.error("Error generating documentation", error);
@@ -264,6 +308,14 @@ if (require.main === module) {
     pattern: /\.ts$/,
     outputPath: "demo.md",
     ignoreHidden: true,
-    excludePatterns: ["node_modules/**", "**/dist/**", "coverage/**"]
+    excludePatterns: [
+      "node_modules",
+      "dist",
+      "documentation",
+      "coverage",
+      "**/__tests__",
+      "**/*.test.ts"
+    ],
+    compress: true
   }).catch(console.error);
 }

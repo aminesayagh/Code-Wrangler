@@ -1,19 +1,15 @@
-import { FileTreeBuilder, IFileTreeNode } from "./FileTreeBuilder";
+import { INodeTree, NodeTreeBuilder } from "./NodeTreeBuilder";
 import { RenderableDirectory } from "../../core/entities/NodeDirectory";
 import { RenderableFile } from "../../core/entities/NodeFile";
-import { IRenderStrategy } from "../renderer/RenderStrategy";
+import { FILE_TYPE } from "../../types/type";
 import { Config } from "../../utils/config";
 import { logger } from "../../utils/logger";
-import { FileType } from "../../types/type";
 
 export class DocumentTreeBuilder {
   private root: RenderableDirectory | RenderableFile | undefined;
-  private builder: FileTreeBuilder;
-  constructor(
-    config: Config,
-    private renderStrategy: IRenderStrategy[]
-  ) {
-    this.builder = new FileTreeBuilder(config);
+  private builder: NodeTreeBuilder;
+  constructor(config: Config) {
+    this.builder = new NodeTreeBuilder(config);
   }
 
   async build(): Promise<void> {
@@ -33,26 +29,22 @@ export class DocumentTreeBuilder {
   }
 
   private async createDocumentStructure(
-    node: IFileTreeNode
+    node: INodeTree
   ): Promise<RenderableDirectory | RenderableFile> {
-    if (node.type === FileType.Directory) {
-      const directory = new RenderableDirectory(
-        node.name,
-        node.path,
-        this.renderStrategy
-      );
+    if (node.type === FILE_TYPE.Directory) {
+      const directory = new RenderableDirectory(node.name, node.path);
 
       if (node.children) {
         // Recursively create children
         for (const child of node.children) {
           const childDocument = await this.createDocumentStructure(child);
-          await directory.addChild(childDocument);
+          directory.addChild(childDocument);
         }
       }
 
       return directory;
     } else {
-      return new RenderableFile(node.name, node.path, this.renderStrategy);
+      return new RenderableFile(node.name, node.path);
     }
   }
 }

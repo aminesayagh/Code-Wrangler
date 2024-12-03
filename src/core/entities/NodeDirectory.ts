@@ -1,7 +1,7 @@
+import { INodeContent, NodeBase } from "./NodeBase";
 import { NodeFile } from "./NodeFile";
-import { NodeBase } from "./NodeBase";
+import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
-import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 
 interface IPropsDirectory {
   length: number;
@@ -21,12 +21,6 @@ export abstract class NodeDirectory extends NodeBase {
     super(name, pathName);
     this.initDirectory();
   }
-
-  private initDirectory(): void {
-    this.children = [];
-    this._propsDirectory = { ...defaultPropsDirectory };
-  }
-
   // getters and setters
   public get length(): number {
     return this._propsDirectory.length;
@@ -46,9 +40,7 @@ export abstract class NodeDirectory extends NodeBase {
     };
   }
 
-  public async addChild(
-    child: NodeFile | NodeDirectory
-  ): Promise<NodeDirectory> {
+  public addChild(child: NodeFile | NodeDirectory): NodeDirectory {
     if (!(child instanceof NodeFile || child instanceof NodeDirectory)) {
       throw new Error("Invalid child type");
     }
@@ -79,22 +71,21 @@ export abstract class NodeDirectory extends NodeBase {
     this.size = this.children.reduce((acc, child) => acc + child.size, 0);
 
     // set stats
-    this.stats = await DocumentFactory.getStats(this.path);
+    this.stats = await documentFactory.getStats(this.path);
   }
 
-  public abstract override render(): void;
+  public abstract override render(strategy: IRenderStrategy): INodeContent;
+
+  private initDirectory(): void {
+    this.children = [];
+    this._propsDirectory = { ...defaultPropsDirectory };
+  }
 }
 
 export class RenderableDirectory extends NodeDirectory {
-  constructor(
-    name: string,
-    pathName: string,
-    private renderStrategy: IRenderStrategy[]
-  ) {
-    super(name, pathName);
-  }
-
-  public render(): void {
-    this.renderStrategy.map(strategy => strategy.renderDirectory(this));
+  public override render(strategy: IRenderStrategy): INodeContent {
+    return {
+      content: strategy.renderDirectory(this)
+    };
   }
 }

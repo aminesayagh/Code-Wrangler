@@ -1,4 +1,5 @@
 import { Command } from "commander";
+
 import { Config } from "../../utils/config/Config";
 
 export class ProgramBuilder {

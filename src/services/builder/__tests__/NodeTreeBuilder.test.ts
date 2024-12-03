@@ -1,16 +1,16 @@
-import { FileTreeBuilder } from "../FileTreeBuilder";
+import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+import { FILE_TYPE } from "../../../types/type";
 import { Config } from "../../../utils/config";
-import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
-import { FileType } from "../../../types/type";
 import FileHidden from "../FileHidden";
+import { NodeTreeBuilder } from "../NodeTreeBuilder";
 
 jest.mock("../../../utils/config");
 jest.mock("../../../infrastructure/filesystem/DocumentFactory");
 jest.mock("../FileHidden");
 
-describe("FileTreeBuilder", () => {
+describe("NodeTreeBuilder", () => {
   let mockConfig: jest.Mocked<Config>;
-  let fileTreeBuilder: FileTreeBuilder;
+  let nodeTreeBuilder: NodeTreeBuilder;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -41,7 +41,7 @@ describe("FileTreeBuilder", () => {
       shouldExclude: jest.fn().mockReturnValue(false)
     }));
 
-    fileTreeBuilder = new FileTreeBuilder(mockConfig);
+    nodeTreeBuilder = new NodeTreeBuilder(mockConfig);
   });
 
   describe("initialization", () => {
@@ -55,16 +55,18 @@ describe("FileTreeBuilder", () => {
   });
 
   describe("build", () => {
+    const SUBDIR_PATH = "/test/dir/subdir";
+
     it("should throw error if root directory doesn't exist", async () => {
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
-      await expect(fileTreeBuilder.build()).rejects.toThrow(
+      (documentFactory.exists as jest.Mock).mockReturnValue(false);
+      await expect(nodeTreeBuilder.build()).rejects.toThrow(
         "Directory /test/dir does not exist"
       );
     });
 
     it("should build root node with no children if directory is empty", async () => {
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-      (DocumentFactory.getStats as jest.Mock).mockResolvedValue({
+      (documentFactory.exists as jest.Mock).mockReturnValue(true);
+      (documentFactory.getStats as jest.Mock).mockResolvedValue({
         isDirectory: true,
         isFile: false,
         size: 0,
@@ -77,25 +79,25 @@ describe("FileTreeBuilder", () => {
           executable: true
         }
       });
-      (DocumentFactory.baseName as jest.Mock).mockReturnValue("dir");
-      (DocumentFactory.readDir as jest.Mock).mockResolvedValue([]);
+      (documentFactory.baseName as jest.Mock).mockReturnValue("dir");
+      (documentFactory.readDir as jest.Mock).mockResolvedValue([]);
 
-      const result = await fileTreeBuilder.build();
+      const result = await nodeTreeBuilder.build();
 
       expect(result).toEqual({
         name: "dir",
         path: "/test/dir",
-        type: FileType.Directory,
+        type: FILE_TYPE.Directory,
         children: []
       });
     });
 
     it("should build tree with files and directories", async () => {
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-      (DocumentFactory.baseName as jest.Mock).mockImplementation(path =>
+      (documentFactory.exists as jest.Mock).mockReturnValue(true);
+      (documentFactory.baseName as jest.Mock).mockImplementation(path =>
         path.split("/").pop()
       );
-      (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
+      (documentFactory.join as jest.Mock).mockImplementation((...paths) =>
         paths.join("/")
       );
 
@@ -103,46 +105,44 @@ describe("FileTreeBuilder", () => {
       const mockStats = new Map([
         ["/test/dir", { isDirectory: true, isFile: false }],
         ["/test/dir/file1.txt", { isDirectory: false, isFile: true }],
-        ["/test/dir/subdir", { isDirectory: true, isFile: false }],
-        ["/test/dir/subdir/file2.txt", { isDirectory: false, isFile: true }]
+        [SUBDIR_PATH, { isDirectory: true, isFile: false }],
+        [`${SUBDIR_PATH}/file2.txt`, { isDirectory: false, isFile: true }]
       ]);
 
-      (DocumentFactory.getStats as jest.Mock).mockImplementation(
-        async path => ({
-          ...mockStats.get(path),
-          size: 1000,
-          created: new Date(),
-          modified: new Date(),
-          accessed: new Date(),
-          permissions: { readable: true, writable: true, executable: true }
-        })
-      );
+      (documentFactory.getStats as jest.Mock).mockImplementation(path => ({
+        ...mockStats.get(path),
+        size: 1000,
+        created: new Date(),
+        modified: new Date(),
+        accessed: new Date(),
+        permissions: { readable: true, writable: true, executable: true }
+      }));
 
-      (DocumentFactory.readDir as jest.Mock)
+      (documentFactory.readDir as jest.Mock)
         .mockResolvedValueOnce(["file1.txt", "subdir"])
         .mockResolvedValueOnce(["file2.txt"]);
 
-      const result = await fileTreeBuilder.build();
+      const result = await nodeTreeBuilder.build();
 
       expect(result).toEqual({
         name: "dir",
         path: "/test/dir",
-        type: FileType.Directory,
+        type: FILE_TYPE.Directory,
         children: [
           {
             name: "file1.txt",
             path: "/test/dir/file1.txt",
-            type: FileType.File
+            type: FILE_TYPE.File
           },
           {
             name: "subdir",
-            path: "/test/dir/subdir",
-            type: FileType.Directory,
+            path: SUBDIR_PATH,
+            type: FILE_TYPE.Directory,
             children: [
               {
                 name: "file2.txt",
-                path: "/test/dir/subdir/file2.txt",
-                type: FileType.File
+                path: `${SUBDIR_PATH}/file2.txt`,
+                type: FILE_TYPE.File
               }
             ]
           }
@@ -155,48 +155,46 @@ describe("FileTreeBuilder", () => {
         key === "maxDepth" ? 1 : mockConfig.get(key)
       );
 
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-      (DocumentFactory.baseName as jest.Mock).mockImplementation(path =>
+      (documentFactory.exists as jest.Mock).mockReturnValue(true);
+      (documentFactory.baseName as jest.Mock).mockImplementation(path =>
         path.split("/").pop()
       );
-      (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
+      (documentFactory.join as jest.Mock).mockImplementation((...paths) =>
         paths.join("/")
       );
 
       const mockStats = new Map([
         ["/test/dir", { isDirectory: true, isFile: false }],
-        ["/test/dir/subdir", { isDirectory: true, isFile: false }]
+        [SUBDIR_PATH, { isDirectory: true, isFile: false }]
       ]);
 
-      (DocumentFactory.getStats as jest.Mock).mockImplementation(
-        async path => ({
-          ...mockStats.get(path),
-          size: 1000,
-          created: new Date(),
-          modified: new Date(),
-          accessed: new Date(),
-          permissions: { readable: true, writable: true, executable: true }
-        })
-      );
+      (documentFactory.getStats as jest.Mock).mockImplementation(path => ({
+        ...mockStats.get(path),
+        size: 1000,
+        created: new Date(),
+        modified: new Date(),
+        accessed: new Date(),
+        permissions: { readable: true, writable: true, executable: true }
+      }));
 
-      (DocumentFactory.readDir as jest.Mock).mockResolvedValue(["subdir"]);
+      (documentFactory.readDir as jest.Mock).mockResolvedValue(["subdir"]);
 
-      const result = await fileTreeBuilder.build();
+      const result = await nodeTreeBuilder.build();
 
       expect(result).toEqual({
         name: "dir",
         path: "/test/dir",
-        type: FileType.Directory,
+        type: FILE_TYPE.Directory,
         children: [
           {
             name: "subdir",
-            path: "/test/dir/subdir",
-            type: FileType.Directory,
+            path: SUBDIR_PATH,
+            type: FILE_TYPE.Directory,
             children: [
               {
                 name: "subdir",
-                path: "/test/dir/subdir/subdir",
-                type: FileType.File
+                path: `${SUBDIR_PATH}/subdir`,
+                type: FILE_TYPE.File
               }
             ]
           }
@@ -205,11 +203,11 @@ describe("FileTreeBuilder", () => {
     });
 
     it("should handle file exclusion", async () => {
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-      (DocumentFactory.baseName as jest.Mock).mockImplementation(path =>
+      (documentFactory.exists as jest.Mock).mockReturnValue(true);
+      (documentFactory.baseName as jest.Mock).mockImplementation(path =>
         path.split("/").pop()
       );
-      (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
+      (documentFactory.join as jest.Mock).mockImplementation((...paths) =>
         paths.join("/")
       );
 
@@ -222,24 +220,22 @@ describe("FileTreeBuilder", () => {
 
       (FileHidden as jest.Mock).mockImplementation(() => mockFileHidden);
 
-      (DocumentFactory.getStats as jest.Mock).mockImplementation(
-        async path => ({
-          isDirectory: path === "/test/dir",
-          isFile: path !== "/test/dir",
-          size: 1000,
-          created: new Date(),
-          modified: new Date(),
-          accessed: new Date(),
-          permissions: { readable: true, writable: true, executable: true }
-        })
-      );
+      (documentFactory.getStats as jest.Mock).mockImplementation(path => ({
+        isDirectory: path === "/test/dir",
+        isFile: path !== "/test/dir",
+        size: 1000,
+        created: new Date(),
+        modified: new Date(),
+        accessed: new Date(),
+        permissions: { readable: true, writable: true, executable: true }
+      }));
 
-      (DocumentFactory.readDir as jest.Mock).mockResolvedValue([
+      (documentFactory.readDir as jest.Mock).mockResolvedValue([
         "include.txt",
         "exclude.txt"
       ]);
 
-      const result = await fileTreeBuilder.build();
+      const result = await nodeTreeBuilder.build();
 
       expect(result.children).toHaveLength(2);
       const children = result.children;

@@ -1,9 +1,9 @@
-export const FileType = {
+export const FILE_TYPE = {
   File: "file",
   Directory: "directory"
 } as const;
 
-export type FileType = (typeof FileType)[keyof typeof FileType];
+export type FileType = (typeof FILE_TYPE)[keyof typeof FILE_TYPE];
 
 export interface IFileStats {
   size: number;

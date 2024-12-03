@@ -1,9 +1,16 @@
-import { NodeFile } from "../NodeFile";
-import * as path from "path";
 import * as fs from "fs/promises";
+import * as path from "path";
+
+import { IRenderStrategy } from "../../../services/renderer/RenderStrategy";
+import { INodeContent } from "../NodeBase";
+import { NodeFile } from "../NodeFile";
 
 class TestFile extends NodeFile {
-  public render(): void {}
+  public render(_: IRenderStrategy): INodeContent {
+    return {
+      content: "render"
+    };
+  }
 }
 
 describe("NodeFile", () => {
