@@ -40,7 +40,7 @@ export abstract class NodeBase implements INodeLifeCycle {
 
   private validatePath(path: string): boolean {
     if (!DocumentFactory.exists(path)) {
-      throw new Error(`Path ${path} does not exist`);
+      throw new Error("Path does not exist");
     }
     if (!DocumentFactory.isAbsolute(path)) {
       throw new Error("Path is not absolute");
