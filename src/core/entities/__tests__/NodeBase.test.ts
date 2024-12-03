@@ -15,11 +15,11 @@ jest.mock("../../../infrastructure/filesystem/DocumentFactory", () => ({
 }));
 
 class TestNode extends NodeBase {
-  async bundle(): Promise<void> {}
-  render(): INodeContent {
+  public async bundle(): Promise<void> {}
+  public render(): INodeContent {
     return { content: "" };
   }
-  get secondaryProps(): Record<string, unknown> | undefined {
+  public get secondaryProps(): Record<string, unknown> | undefined {
     return {};
   }
 }

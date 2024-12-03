@@ -5,7 +5,7 @@ export class ProgressBar {
   private intervalId: NodeJS.Timeout | null = null;
   private currentValue: number = 0;
 
-  constructor(private total: number = 100) {
+  public constructor(private total: number = 100) {
     this.bar = new cliProgress.SingleBar(
       {},
       cliProgress.Presets.shades_classic

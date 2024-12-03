@@ -43,7 +43,6 @@ export class Template<
       config.get("rootDir") as string,
       config.get("templatesDir") as string
     );
-    console.log(documentFactory.exists(dir));
     if (!documentFactory.exists(dir)) {
       throw new Error(`Templates directory not found: ${dir}`);
     }

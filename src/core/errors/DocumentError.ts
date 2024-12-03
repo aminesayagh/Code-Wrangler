@@ -1,5 +1,5 @@
 export class DocumentError extends Error {
-  constructor(
+  public constructor(
     message: string,
     public readonly path: string
   ) {

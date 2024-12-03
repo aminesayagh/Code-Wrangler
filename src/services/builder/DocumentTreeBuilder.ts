@@ -8,11 +8,11 @@ import { logger } from "../../utils/logger";
 export class DocumentTreeBuilder {
   private root: RenderableDirectory | RenderableFile | undefined;
   private builder: NodeTreeBuilder;
-  constructor(config: Config) {
+  public constructor(config: Config) {
     this.builder = new NodeTreeBuilder(config);
   }
 
-  async build(): Promise<void> {
+  public async build(): Promise<void> {
     try {
       // Build file tree structure
       const fileTree = await this.builder.build();
