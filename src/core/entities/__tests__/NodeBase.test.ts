@@ -40,14 +40,14 @@ describe("NodeBase", () => {
     it("should throw error for non-existent path", () => {
       (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
       expect(() => new TestNode("test", "/invalid/path")).toThrow(
-        "Path does not exist"
+        new Error("Path /invalid/path does not exist")
       );
     });
 
     it("should throw error for non-absolute path", () => {
       (DocumentFactory.isAbsolute as jest.Mock).mockReturnValue(false);
       expect(() => new TestNode("test", "relative/path")).toThrow(
-        "Path is not absolute"
+        new Error("Path relative/path is not absolute")
       );
     });
   });

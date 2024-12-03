@@ -32,18 +32,17 @@ interface INodeLifeCycle {
 export abstract class NodeBase implements INodeLifeCycle {
   protected _props: IPropsNode = { ...defaultProps };
 
-  constructor(_name: string, _path: string) {
-    // check if path is absolute or a valid path
-    this.initNode(_name, _path);
+  constructor(_name: string, private originalPath: string) {
+    this.initNode(_name, originalPath);
     this.validate();
   }
 
   private validatePath(path: string): boolean {
     if (!DocumentFactory.exists(path)) {
-      throw new Error("Path does not exist");
+      throw new Error(`Path ${this.originalPath} does not exist`);
     }
     if (!DocumentFactory.isAbsolute(path)) {
-      throw new Error("Path is not absolute");
+      throw new Error(`Path ${this.originalPath} is not absolute`);
     }
     return true;
   }
