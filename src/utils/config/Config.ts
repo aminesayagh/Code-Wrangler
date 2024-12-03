@@ -7,20 +7,23 @@ import {
   configSchema
 } from "./schema";
 import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+import { JsonReader } from "../../infrastructure/filesystem/JsonReader";
 import { logger } from "../logger/Logger";
 
 export class Config {
   private static instance: Config | undefined;
   private config: ConfigOptions;
+  private jsonReader: JsonReader;
 
   private constructor() {
+    this.jsonReader = new JsonReader();
     this.config = configSchema.parse(DEFAULT_CONFIG);
   }
 
   public static async load(): Promise<Config> {
     if (!Config.instance) {
       Config.instance = new Config();
-      await Config.instance.initialize();
+      await Config.instance.loadUserConfig();
     }
     return Config.instance;
   }
@@ -65,46 +68,24 @@ export class Config {
       throw error;
     }
   }
-  private async initialize(): Promise<Config> {
+
+  private async loadUserConfig(): Promise<void> {
     try {
-      const currentDirConfig = documentFactory.join(
-        process.cwd(),
-        this.config.codeConfigFile
-      );
-
-      if (documentFactory.exists(currentDirConfig)) {
-        const fileContent = await documentFactory.readFile(currentDirConfig);
-
-        if (!fileContent.trim()) {
-          throw new Error(`Configuration file is empty: ${currentDirConfig}`);
-        }
-
-        let userConfig;
-        try {
-          userConfig = JSON.parse(fileContent);
-        } catch {
-          throw new Error(
-            `Invalid JSON in configuration file: ${currentDirConfig}`
-          );
-        }
-
-        // Validate and merge configurations
-        const validatedConfig = configSchema.parse({
-          ...this.config,
-          ...userConfig
-        });
-
-        this.config = validatedConfig;
-      }
+      const configPath = documentFactory.resolve(this.config.codeConfigFile);
+      const userConfig = await this.jsonReader.readJsonSync(configPath);
+      this.config = configSchema.parse({ ...this.config, ...userConfig });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        const details = error.errors
-          .map(err => `${err.path.join(".")}: ${err.message}`)
-          .join(", ");
-        throw new Error(`Configuration validation failed: ${details}`);
-      }
-      throw error;
+      this.handleConfigError(error);
     }
-    return this;
+  }
+
+  private handleConfigError(error: unknown): void {
+    if (error instanceof z.ZodError) {
+      const details = error.errors
+        .map(err => `${err.path.join(".")}: ${err.message}`)
+        .join(", ");
+      throw new Error(`Configuration validation failed: ${details}`);
+    }
+    throw error;
   }
 }

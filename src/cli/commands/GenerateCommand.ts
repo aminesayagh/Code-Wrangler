@@ -5,8 +5,13 @@ import { MarkdownStrategy } from "../../services/renderer/strategies/MarkdownStr
 import { Config } from "../../utils/config/Config";
 import { logger } from "../../utils/logger/Logger";
 
+const CONFIG_FROM_FORMAT = {
+  markdown: MarkdownStrategy,
+  html: HTMLRenderStrategy
+} as const;
+
 export class GenerateCommand implements ICommand {
-  constructor(private config: Config) {}
+  public constructor(private config: Config) {}
 
   public async execute(
     args: string[],
@@ -23,16 +28,7 @@ export class GenerateCommand implements ICommand {
 
       // Execute document tree building
       const outputFormat = this.config.get("outputFormat");
-      outputFormat.map(format => {
-        switch (format) {
-          case "markdown":
-            return new MarkdownStrategy(this.config);
-          case "html":
-            return new HTMLRenderStrategy(this.config);
-          default:
-            throw new Error(`Unsupported output format: ${format}`);
-        }
-      });
+      outputFormat.map(format => new CONFIG_FROM_FORMAT[format](this.config));
       const builder = new DocumentTreeBuilder(this.config);
       await builder.build();
     } catch (error) {

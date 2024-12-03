@@ -175,7 +175,7 @@ export default [
           ignoreMemberSort: false
         }
       ],
-      "max-lines-per-function": ["warn", {
+      "max-lines-per-function": ["error", {
         max: 20,
         skipBlankLines: true,
         skipComments: true

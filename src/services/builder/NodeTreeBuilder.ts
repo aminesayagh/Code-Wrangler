@@ -1,5 +1,6 @@
 import FileHidden from "./FileHidden";
 import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
 import { FILE_TYPE, FileType } from "../../types/type";
 import { Config, ConfigOptions } from "../../utils/config";
 
@@ -28,7 +29,7 @@ export class NodeTreeBuilder {
   private options: INodeTreeBuilderOptions;
   private fileHidden: FileHidden;
 
-  constructor(config: Config) {
+  public constructor(config: Config) {
     this.config = config;
     this.options = this.initializeOptions();
     this.fileHidden = new FileHidden(config);
@@ -54,46 +55,62 @@ export class NodeTreeBuilder {
     };
   }
 
-  private async buildTree(
-    nodePath: string,
-    depth: number = 0
-  ): Promise<INodeTree> {
-    const stats = await documentFactory.getStats(nodePath);
+  private async createNode(nodePath: string): Promise<INodeTree> {
+    const stats = await fileStatsService(nodePath);
     const name = documentFactory.baseName(nodePath);
 
-    const node: INodeTree = {
+    return {
       name,
       path: nodePath,
       type: stats.isDirectory ? FILE_TYPE.Directory : FILE_TYPE.File
     };
+  }
 
-    if (stats.isDirectory) {
-      // Check depth limit
-      if (
-        this.options.maxDepth !== undefined &&
-        depth >= this.options.maxDepth
-      ) {
-        return node;
-      }
+  private shouldProcessChildren(node: INodeTree, depth: number): boolean {
+    const isDirectory = node.type === FILE_TYPE.Directory;
+    const withinDepthLimit =
+      !this.options.maxDepth || depth < this.options.maxDepth;
+    return isDirectory && withinDepthLimit;
+  }
 
-      // Read directory entries
-      const entries = await documentFactory.readDir(nodePath);
-      const children: INodeTree[] = [];
+  private async processChildren(
+    nodePath: string,
+    depth: number
+  ): Promise<INodeTree[]> {
+    const entries = await documentFactory.readDir(nodePath);
+    const children: INodeTree[] = [];
 
-      for (const entry of entries) {
-        const childPath = documentFactory.join(nodePath, entry);
-
-        // Skip if should be excluded
-        if (this.fileHidden.shouldExclude(entry)) {
-          continue;
-        }
-
-        // Recursively build tree for child
-        const childNode = await this.buildTree(childPath, depth + 1);
+    for (const entry of entries) {
+      const childNode = await this.processChild(nodePath, entry, depth);
+      if (childNode) {
         children.push(childNode);
       }
+    }
 
-      node.children = children;
+    return children;
+  }
+
+  private async processChild(
+    parentPath: string,
+    entry: string,
+    depth: number
+  ): Promise<INodeTree | null> {
+    if (this.fileHidden.shouldExclude(entry)) {
+      return null;
+    }
+
+    const childPath = documentFactory.join(parentPath, entry);
+    return await this.buildTree(childPath, depth + 1);
+  }
+
+  private async buildTree(
+    nodePath: string,
+    depth: number = 0
+  ): Promise<INodeTree> {
+    const node = await this.createNode(nodePath);
+
+    if (this.shouldProcessChildren(node, depth)) {
+      node.children = await this.processChildren(nodePath, depth);
     }
 
     return node;

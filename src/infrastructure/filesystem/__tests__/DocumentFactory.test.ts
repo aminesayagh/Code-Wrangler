@@ -3,11 +3,11 @@ import * as path from "path";
 
 import { FILE_TYPE } from "../../../types/type";
 import { documentFactory } from "../DocumentFactory";
-
+import { fileStatsService } from "../FileStats";
 describe("DocumentFactory", () => {
   const pwd = process.cwd();
   const MOCK_PATH = path.resolve(
-    `${pwd}/src/infrastructure/filesystem/__tests__/__mocks__`
+    `${pwd}/src/infrastructure/filesystem/__tests__/__mocks__/documentFactory`
   );
   const tempDir = path.join(MOCK_PATH, "temp_test");
   const testFilePath = path.join(tempDir, "test.txt");
@@ -75,39 +75,6 @@ describe("DocumentFactory", () => {
     it("should throw a zero size if the file is empty", async () => {
       const result = await documentFactory.size(emptyFilePath);
       expect(result).toBe(0);
-    });
-  });
-  describe("getStats", () => {
-    it("should return complete file statistics", async () => {
-      const stats = await documentFactory.getStats(testFilePath);
-      expect(stats).toMatchObject({
-        size: expect.any(Number),
-        created: expect.any(Object),
-        modified: expect.any(Object),
-        accessed: expect.any(Object),
-        isDirectory: false,
-        isFile: true,
-        permissions: {
-          readable: true,
-          writable: expect.any(Boolean),
-          executable: expect.any(Boolean)
-        }
-      });
-    });
-
-    it("should return directory statistics", async () => {
-      const stats = await documentFactory.getStats(MOCK_PATH);
-      expect(stats).toMatchObject({
-        size: expect.any(Number),
-        isDirectory: true,
-        isFile: false
-      });
-    });
-
-    it("should throw error for non-existent path", async () => {
-      await expect(documentFactory.getStats("nonexistent")).rejects.toThrow(
-        DOCUMENT_ERROR_MESSAGE
-      );
     });
   });
 
@@ -536,7 +503,7 @@ describe("DocumentFactory", () => {
       const specialFile = path.join(tempDir, "special$#@!.txt");
       await fs.writeFile(specialFile, "content");
       expect(documentFactory.exists(specialFile)).toBe(true);
-      const stats = await documentFactory.getStats(specialFile);
+      const stats = await fileStatsService(specialFile);
       expect(stats.isFile).toBe(true);
     });
   });
@@ -564,42 +531,6 @@ describe("DocumentFactory", () => {
         writable: false,
         executable: false
       });
-    });
-  });
-
-  // Tests for lines 137-159 (readJsonSync method)
-  describe("readJsonSync", () => {
-    const jsonFilePath = path.join(tempDir, "test.json");
-
-    beforeEach(async () => {
-      await fs.writeFile(jsonFilePath, JSON.stringify({ key: "value" }));
-    });
-
-    it("should successfully read and parse JSON file", async () => {
-      const result = await documentFactory.readJsonSync(jsonFilePath);
-      expect(result).toEqual({ key: "value" });
-    });
-
-    it("should throw error for non-existent file", async () => {
-      await expect(
-        documentFactory.readJsonSync("/nonexistent.json")
-      ).rejects.toThrow(
-        "Document error at /nonexistent.json: Error: File not found: /nonexistent.json"
-      );
-    });
-
-    it("should throw error for empty file", async () => {
-      await fs.writeFile(jsonFilePath, "");
-      await expect(documentFactory.readJsonSync(jsonFilePath)).rejects.toThrow(
-        `File is empty: ${jsonFilePath}`
-      );
-    });
-
-    it("should throw error for invalid JSON", async () => {
-      await fs.writeFile(jsonFilePath, "invalid json");
-      await expect(documentFactory.readJsonSync(jsonFilePath)).rejects.toThrow(
-        `Invalid JSON in file ${jsonFilePath}`
-      );
     });
   });
 

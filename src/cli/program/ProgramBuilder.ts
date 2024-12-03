@@ -5,27 +5,40 @@ import { Config } from "../../utils/config/Config";
 export class ProgramBuilder {
   private program: Command;
 
-  constructor(
+  public constructor(
     private config: Config,
     private version: string
   ) {
     this.program = new Command();
   }
 
-  build(): Command {
-    return this.program
-      .version(this.version)
-      .description("CodeWrangler is a tool for generating code")
-      .argument(
-        "<pattern>",
-        'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
-      )
+  public build(): Command {
+    this.buildVersion().buildDescription().buildArguments().buildOptions();
+    return this.program;
+  }
+
+  private buildVersion(): ProgramBuilder {
+    this.program.version(this.version);
+    return this;
+  }
+
+  private buildDescription(): ProgramBuilder {
+    this.program.description("CodeWrangler is a tool for generating code");
+    return this;
+  }
+
+  private buildArguments(): ProgramBuilder {
+    this.program.argument(
+      "<pattern>",
+      'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
+    );
+    return this;
+  }
+
+  // eslint-disable-next-line max-lines-per-function
+  private buildOptions(): ProgramBuilder {
+    this.program
       .option("-d, --dir <dir>", "Directory to search", this.config.get("dir"))
-      .option(
-        "-o, --output <output>",
-        "Output file",
-        this.config.get("outputFile")
-      )
       .option(
         "-c, --config <config>",
         "Config file",
@@ -38,9 +51,9 @@ export class ProgramBuilder {
         this.config.get("outputFormat")
       )
       .option(
-        "-s, --max-size <max-size>",
-        "Max file size",
-        this.config.get("maxFileSize").toString()
+        "-o, --output <output>",
+        "Output file",
+        this.config.get("outputFile")
       )
       .option(
         "-e, --exclude <exclude>",
@@ -57,5 +70,6 @@ export class ProgramBuilder {
         "Additional ignore patterns",
         this.config.get("additionalIgnoreFiles")
       );
+    return this;
   }
 }

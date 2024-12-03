@@ -48,15 +48,7 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
   }
 
   public async loadTemplates(): Promise<void> {
-    const templateDir = documentFactory.join(
-      this.config.get("rootDir") as string,
-      this.config.get("templatesDir") as string
-    );
-    // check if the templates directory exists
-    if (!documentFactory.exists(templateDir)) {
-      throw new Error(`Templates directory not found: ${templateDir}`);
-    }
-
+    const templateDir = Template.getTemplateDir(this.config);
     this.templates = {
       page: await Template.create(
         "page",

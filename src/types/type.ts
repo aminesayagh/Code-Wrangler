@@ -5,6 +5,12 @@ export const FILE_TYPE = {
 
 export type FileType = (typeof FILE_TYPE)[keyof typeof FILE_TYPE];
 
+export interface IAccessFlags {
+  readable: boolean;
+  writable: boolean;
+  executable: boolean;
+}
+
 export interface IFileStats {
   size: number;
   created: Date;
@@ -12,11 +18,7 @@ export interface IFileStats {
   accessed: Date;
   isDirectory: boolean;
   isFile: boolean;
-  permissions: {
-    readable: boolean;
-    writable: boolean;
-    executable: boolean;
-  };
+  permissions: IAccessFlags;
 }
 
 export interface IReadOptions {

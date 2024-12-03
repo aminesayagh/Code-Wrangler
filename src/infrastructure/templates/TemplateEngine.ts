@@ -1,6 +1,7 @@
 import { ZodObject, z } from "zod";
 
 import { TemplateType } from "../../types/template";
+import { Config } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import { documentFactory } from "../filesystem/DocumentFactory";
 
@@ -37,6 +38,18 @@ export class Template<
     this.validate();
   }
 
+  public static getTemplateDir(config: Config): string {
+    const dir = documentFactory.join(
+      config.get("rootDir") as string,
+      config.get("templatesDir") as string
+    );
+    console.log(documentFactory.exists(dir));
+    if (!documentFactory.exists(dir)) {
+      throw new Error(`Templates directory not found: ${dir}`);
+    }
+    return dir;
+  }
+
   public get content(): string {
     if (!this._content) {
       throw new Error(`Template content is not loaded for ${this.type}`);
@@ -57,35 +70,39 @@ export class Template<
 
   public render(data: Record<string, string | number | boolean>): string {
     try {
-      this.schema.parse(data);
-      const contentTokens = this.getTemplateTokens();
-      const missingTokens = contentTokens.filter(token => {
-        // Check if the token is required and not provided in values
-        const isRequired = this.schema.shape[token]?.isOptional() === false;
-        return isRequired && !(token in data);
-      });
-
-      if (missingTokens.length > 0) {
-        throw new Error(
-          `Missing required values for tokens: ${missingTokens.join(", ")}`
-        );
-      }
-
-      const templateContent = this.content;
-      return templateContent.replace(
-        new RegExp(`\\{\\{(${contentTokens.join("|")})\\}\\}`, "g"),
-        (_, key) => (key in data ? String(data[key]) : `{{${key}}}`)
-      );
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        throw new Error(
-          `Template content validation failed for ${this.type}: ${error.errors
-            .map(e => `${e.path.join(".")}: ${e.message}`)
-            .join(", ")}`
-        );
-      }
-      throw error;
+      this.validateData(data);
+      return this.replaceTokens(data);
+    } catch {
+      throw new Error(`Template content validation failed for ${this.type}`);
     }
+  }
+
+  private validateData(data: Record<string, string | number | boolean>): void {
+    this.schema.parse(data);
+    this.validateRequiredTokens(data);
+  }
+
+  private validateRequiredTokens(
+    data: Record<string, string | number | boolean>
+  ): void {
+    const contentTokens = this.getTemplateTokens();
+    const missingTokens = this.findMissingRequiredTokens(contentTokens, data);
+
+    if (missingTokens.length > 0) {
+      throw new Error(
+        `Missing required values for tokens: ${missingTokens.join(", ")}`
+      );
+    }
+  }
+
+  private findMissingRequiredTokens(
+    tokens: string[],
+    data: Record<string, string | number | boolean>
+  ): string[] {
+    return tokens.filter(token => {
+      const isRequired = this.schema.shape[token]?.isOptional() === false;
+      return isRequired && !(token in data);
+    });
   }
 
   private getTemplateTokens(): string[] {
@@ -102,6 +119,17 @@ export class Template<
     }
 
     return tokens;
+  }
+
+  private replaceTokens(
+    data: Record<string, string | number | boolean>
+  ): string {
+    const contentTokens = this.getTemplateTokens();
+    const pattern = new RegExp(`\\{\\{(${contentTokens.join("|")})\\}\\}`, "g");
+
+    return this.content.replace(pattern, (_, key) =>
+      key in data ? String(data[key]) : `{{${key}}}`
+    );
   }
 
   private validate(): void {
