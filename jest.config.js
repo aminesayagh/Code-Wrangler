@@ -11,6 +11,15 @@ module.exports = {
     }]
   },
   coverageDirectory: "coverage",
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  },
+  testEnvironment: "node",
   coverageReporters: ["text", "lcov", "clover"],
   transformIgnorePatterns: [
     '/node_modules/(?!(unified|remark-parse|remark-stringify|unist-util-visit|unist)/)',

@@ -2,18 +2,28 @@ import { ZodObject, z } from "zod";
 import { TemplateType } from "../../types/template";
 
 import { DocumentFactory } from "../filesystem/DocumentFactory";
+import { logger } from "../../utils/logger";
 
-type TemplateValue = z.ZodType<string | number | boolean>;
+type TemplateValue = z.ZodType<string | number | boolean | undefined>;
 
 export class Template<
   T extends Record<string, TemplateValue> = Record<string, TemplateValue>
 > {
   private _content: string = "";
-
+  private schema: ZodObject<T>;
   public constructor(
     private type: TemplateType,
-    private schema: ZodObject<T>
-  ) {}
+    schema: ZodObject<T>
+  ) {
+    // convert all fields to optional
+    const optionalFields = Object.fromEntries(
+      Object.entries(schema.shape).map(([key, value]) => [
+        key,
+        value.optional()
+      ])
+    );
+    this.schema = schema.extend(optionalFields) as unknown as ZodObject<T>;
+  }
 
   public async load(
     path: string,
@@ -37,14 +47,14 @@ export class Template<
     const tokens = this.getTemplateTokens();
     const requiredFields = Object.keys(this.schema.shape);
     const missingRequired = requiredFields.filter(
-      (field) => !tokens.includes(field)
+      field => !tokens.includes(field)
     );
 
     if (missingRequired.length > 0) {
-      throw new Error(
-        `Missing required tokens in ${
-          this.type
-        } template: ${missingRequired.join(", ")}`
+      logger.warn(
+        `Missing required tokens in ${this.type} template: ${missingRequired.join(
+          ", "
+        )}`
       );
     }
   }
@@ -79,14 +89,27 @@ export class Template<
   public render(values: Record<string, string | number | boolean>): string {
     try {
       this.schema.parse(values);
+      const contentTokens = this.getTemplateTokens();
+      const missingTokens = contentTokens.filter(token => {
+        // Check if the token is required and not provided in values
+        const isRequired = this.schema.shape[token]?.isOptional() === false;
+        return isRequired && !(token in values);
+      });
+
+      if (missingTokens.length > 0) {
+        throw new Error(
+          `Missing required values for tokens: ${missingTokens.join(", ")}`
+        );
+      }
+
       return this.content.replace(/\{\{(\w+)\}\}/g, (_, key) =>
-        values[key] !== undefined ? String(values[key]) : `{{${key}}}`
+        key in values ? String(values[key]) : `{{${key}}`
       );
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new Error(
           `Template content validation failed for ${this.type}: ${error.errors
-            .map((e) => `${e.path.join(".")}: ${e.message}`)
+            .map(e => `${e.path.join(".")}: ${e.message}`)
             .join(", ")}`
         );
       }

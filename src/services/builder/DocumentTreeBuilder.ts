@@ -1,5 +1,5 @@
 import { FileTreeBuilder, IFileTreeNode } from "./FileTreeBuilder";
-import { RenderableDirectory } from "../../core/entities/NodeDIrectory";
+import { RenderableDirectory } from "../../core/entities/NodeDirectory";
 import { RenderableFile } from "../../core/entities/NodeFile";
 import { IRenderStrategy } from "../renderer/RenderStrategy";
 import { Config } from "../../utils/config";
@@ -9,7 +9,10 @@ import { FileType } from "../../types/type";
 export class DocumentTreeBuilder {
   private root: RenderableDirectory | RenderableFile | undefined;
   private builder: FileTreeBuilder;
-  constructor(config: Config, private renderStrategy: IRenderStrategy[]) {
+  constructor(
+    config: Config,
+    private renderStrategy: IRenderStrategy[]
+  ) {
     this.builder = new FileTreeBuilder(config);
   }
 

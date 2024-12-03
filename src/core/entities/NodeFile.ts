@@ -7,7 +7,7 @@ interface IPropsFile {
 }
 
 const defaultPropsFile: IPropsFile = {
-  extension: "",
+  extension: ""
 };
 
 export abstract class NodeFile extends NodeBase {
@@ -43,7 +43,7 @@ export abstract class NodeFile extends NodeBase {
   // secondary props
   public get secondaryProps(): Record<string, unknown> | undefined {
     return {
-      extension: this.extension,
+      extension: this.extension
     };
   }
 
@@ -74,14 +74,12 @@ export class RenderableFile extends NodeFile {
 
   // render
   public render(): void {
-    this.renderStrategy.map((strategy) => strategy.renderFile(this));
+    this.renderStrategy.map(strategy => strategy.renderFile(this));
   }
 
   // dispose
   public override async dispose(): Promise<void> {
     await super.dispose();
-    await Promise.all(
-      this.renderStrategy.map((strategy) => strategy.dispose())
-    );
+    await Promise.all(this.renderStrategy.map(strategy => strategy.dispose()));
   }
 }

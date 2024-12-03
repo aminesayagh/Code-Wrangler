@@ -16,9 +16,9 @@ const defaultProps: IPropsNode = {
     permissions: {
       readable: false,
       writable: false,
-      executable: false,
-    },
-  },
+      executable: false
+    }
+  }
 };
 
 interface INodeLifeCycle {
@@ -40,7 +40,7 @@ export abstract class NodeBase implements INodeLifeCycle {
 
   private validatePath(path: string): boolean {
     if (!DocumentFactory.exists(path)) {
-      throw new Error("Path does not exist");
+      throw new Error(`Path ${path} does not exist`);
     }
     if (!DocumentFactory.isAbsolute(path)) {
       throw new Error("Path is not absolute");
@@ -107,7 +107,8 @@ export abstract class NodeBase implements INodeLifeCycle {
 
   // props
   get props(): IPropsNode {
-    return { ...this._props, ...this.secondaryProps };
+    const props = { ...this._props, ...this.secondaryProps };
+    return props;
   }
 
   public async dispose(): Promise<void> {

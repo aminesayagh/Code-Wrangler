@@ -3,8 +3,8 @@ import FileHidden from "../FileHidden";
 
 jest.mock("../../../utils/config", () => ({
   Config: {
-    load: jest.fn(),
-  },
+    load: jest.fn()
+  }
 }));
 
 describe("FileHidden", () => {
@@ -13,7 +13,7 @@ describe("FileHidden", () => {
 
   beforeEach(() => {
     mockConfig = {
-      get: jest.fn(),
+      get: jest.fn()
     } as unknown as jest.Mocked<Config>;
 
     // Set default mock values

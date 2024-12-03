@@ -32,7 +32,7 @@ const DEFAULT_CONFIG: IDocumentConfig = {
   outputPath: "documentation.md",
   excludePatterns: ["node_modules/**", "**/dist/**", "**/*.test.ts"],
   maxFileSize: 1024 * 1024, // 1MB
-  ignoreHidden: true,
+  ignoreHidden: true
 };
 
 // Tree visualization functions
@@ -42,7 +42,7 @@ const generateTreeSymbols = (depth: number, isLast: boolean[]): string => {
   return (
     isLast
       .slice(0, -1)
-      .map((last) => (last ? "    " : "│   "))
+      .map(last => (last ? "    " : "│   "))
       .join("") + (isLast[isLast.length - 1] ? "└── " : "├── ")
   );
 };
@@ -76,14 +76,14 @@ const createTreeNode = async (
       name,
       path: relativePath || name,
       type: "directory",
-      children,
+      children
     };
   } else if (isMatchingFile(nodePath, config)) {
     return {
       name,
       path: relativePath || name,
       type: "file",
-      children: [],
+      children: []
     };
   }
 
@@ -126,7 +126,7 @@ const shouldInclude = (
   }
 
   // Check against exclude patterns
-  const isExcluded = excludePatterns.some((pattern) =>
+  const isExcluded = excludePatterns.some(pattern =>
     new RegExp(pattern.replace(/\*/g, ".*")).test(filePath)
   );
 
@@ -245,8 +245,7 @@ async function generateDocumentation(
             content,
             ext: path.extname(filePath),
             size: stats.size,
-            lines: content.split("\n").filter((line) => line.trim() !== "")
-              .length,
+            lines: content.split("\n").filter(line => line.trim() !== "").length
           });
         }
       }
@@ -265,10 +264,6 @@ if (require.main === module) {
     pattern: /\.ts$/,
     outputPath: "demo.md",
     ignoreHidden: true,
-    excludePatterns: [
-      "node_modules/**",
-      "**/dist/**",
-      "coverage/**",
-    ],
+    excludePatterns: ["node_modules/**", "**/dist/**", "coverage/**"]
   }).catch(console.error);
 }

@@ -1,7 +1,7 @@
 
 # Code Documentation
-Generated on: 2024-12-01T18:06:46.012Z
-Total files: 46
+Generated on: 2024-12-02T09:21:53.304Z
+Total files: 43
 
 ## Project Structure
 
@@ -35,7 +35,7 @@ codewrangler
     ├── core
     │   ├── entities
     │   │   ├── NodeBase.ts
-    │   │   ├── NodeDIrectory.ts
+    │   │   ├── NodeDirectory.ts
     │   │   ├── NodeFile.ts
     │   │   └── __tests__
     │   │       ├── NodeBase.test.ts
@@ -54,7 +54,6 @@ codewrangler
     │   └── templates
     │       ├── TemplateEngine.ts
     │       ├── __tests__
-    │       │   └── TemplateEngine.test.ts
     │       └── zod.ts
     ├── services
     │   ├── builder
@@ -68,8 +67,6 @@ codewrangler
     │   └── renderer
     │       ├── RenderStrategy.ts
     │       ├── __tests__
-    │       │   ├── HTMLStrategy.test.ts
-    │       │   ├── MarkdownStrategy.test.ts
     │       │   └── RenderStrategy.test.ts
     │       └── strategies
     │           ├── HTMLStrategy.ts
@@ -234,7 +231,7 @@ codewrangler
 
 ## File: DemoCommand.ts
 - Path: `/root/git/codewrangler/src/cli/commands/DemoCommand.ts`
-- Size: 6.41 KB
+- Size: 6.40 KB
 - Extension: .ts
 - Lines of code: 231
 - Content:
@@ -505,7 +502,7 @@ codewrangler
 263 | if (require.main === module) {
 264 |   generateDocumentation({
 265 |     pattern: /\.ts$/,
-266 |     outputPath: "documentation.md",
+266 |     outputPath: "demo.md",
 267 |     ignoreHidden: true,
 268 |     excludePatterns: [
 269 |       "node_modules/**",
@@ -727,9 +724,9 @@ codewrangler
 
 ## File: NodeBase.ts
 - Path: `/root/git/codewrangler/src/core/entities/NodeBase.ts`
-- Size: 2.64 KB
+- Size: 2.67 KB
 - Extension: .ts
-- Lines of code: 104
+- Lines of code: 105
 - Content:
 
 ```ts
@@ -842,25 +839,26 @@ codewrangler
 107 | 
 108 |   // props
 109 |   get props(): IPropsNode {
-110 |     return { ...this._props, ...this.secondaryProps };
-111 |   }
-112 | 
-113 |   public async dispose(): Promise<void> {
-114 |     this._props = { ...defaultProps };
-115 |   }
-116 | 
-117 |   public async clone(): Promise<NodeBase> {
-118 |     return Object.assign(Object.create(this), this);
-119 |   }
-120 | }
-121 | 
+110 |     const props = { ...this._props, ...this.secondaryProps };
+111 |     return props;
+112 |   }
+113 | 
+114 |   public async dispose(): Promise<void> {
+115 |     this._props = { ...defaultProps };
+116 |   }
+117 | 
+118 |   public async clone(): Promise<NodeBase> {
+119 |     return Object.assign(Object.create(this), this);
+120 |   }
+121 | }
+122 | 
 ```
 
 ---------------------------------------------------------------------------
 
 
-## File: NodeDIrectory.ts
-- Path: `/root/git/codewrangler/src/core/entities/NodeDIrectory.ts`
+## File: NodeDirectory.ts
+- Path: `/root/git/codewrangler/src/core/entities/NodeDirectory.ts`
 - Size: 2.60 KB
 - Extension: .ts
 - Lines of code: 84
@@ -1220,7 +1218,7 @@ codewrangler
 - Content:
 
 ```ts
- 1 | import { NodeDirectory } from "../NodeDIrectory";
+ 1 | import { NodeDirectory } from "../NodeDirectory";
  2 | import { NodeFile } from "../NodeFile";
  3 | import { mockPath } from "../../../__mocks__/mockFileSystem";
  4 | 
@@ -1855,9 +1853,9 @@ codewrangler
 
 ## File: DocumentFactory.test.ts
 - Path: `/root/git/codewrangler/src/infrastructure/filesystem/__tests__/DocumentFactory.test.ts`
-- Size: 17.79 KB
+- Size: 22.02 KB
 - Extension: .ts
-- Lines of code: 456
+- Lines of code: 563
 - Content:
 
 ```ts
@@ -2401,8 +2399,136 @@ codewrangler
 538 |       expect(stats.isFile).toBe(true);
 539 |     });
 540 |   });
-541 | });
-542 | 
+541 | 
+542 |   // Test for line 33 (error handling in type method)
+543 |   describe("type error handling", () => {
+544 |     it("should handle system errors correctly", async () => {
+545 |       // Mock the entire fs module
+546 |       jest.mock("fs/promises", () => ({
+547 |         ...jest.requireActual("fs/promises"),
+548 |         stat: jest.fn().mockRejectedValue(new Error("System error")),
+549 |       }));
+550 | 
+551 |       await expect(DocumentFactory.type("/some/path")).rejects.toThrow(
+552 |         "Document error at /some/path: File not found"
+553 |       );
+554 |     });
+555 |   });
+556 | 
+557 |   describe("checkAccess", () => {
+558 |     it("should handle access check failures", async () => {
+559 |       const result = await DocumentFactory.checkAccess("/nonexistent/path");
+560 |       expect(result).toEqual({
+561 |         readable: false,
+562 |         writable: false,
+563 |         executable: false,
+564 |       });
+565 |     });
+566 |   });
+567 | 
+568 |   // Tests for lines 137-159 (readJsonSync method)
+569 |   describe("readJsonSync", () => {
+570 |     const jsonFilePath = path.join(tempDir, "test.json");
+571 | 
+572 |     beforeEach(async () => {
+573 |       await fs.writeFile(jsonFilePath, JSON.stringify({ key: "value" }));
+574 |     });
+575 | 
+576 |     it("should successfully read and parse JSON file", async () => {
+577 |       const result = await DocumentFactory.readJsonSync(jsonFilePath);
+578 |       expect(result).toEqual({ key: "value" });
+579 |     });
+580 | 
+581 |     it("should throw error for non-existent file", async () => {
+582 |       await expect(
+583 |         DocumentFactory.readJsonSync("/nonexistent.json")
+584 |       ).rejects.toThrow(
+585 |         "Document error at /nonexistent.json: Error: File not found: /nonexistent.json"
+586 |       );
+587 |     });
+588 | 
+589 |     it("should throw error for empty file", async () => {
+590 |       await fs.writeFile(jsonFilePath, "");
+591 |       await expect(DocumentFactory.readJsonSync(jsonFilePath)).rejects.toThrow(
+592 |         `File is empty: ${jsonFilePath}`
+593 |       );
+594 |     });
+595 | 
+596 |     it("should throw error for invalid JSON", async () => {
+597 |       await fs.writeFile(jsonFilePath, "invalid json");
+598 |       await expect(DocumentFactory.readJsonSync(jsonFilePath)).rejects.toThrow(
+599 |         `Invalid JSON in file ${jsonFilePath}`
+600 |       );
+601 |     });
+602 |   });
+603 | 
+604 |   // Test for line 337 (error handling in appendFile)
+605 |   describe("appendFile error handling", () => {
+606 |     it("should handle appendFile errors", async () => {
+607 |       const invalidPath = path.join(tempDir, "nonexistent", "test.txt");
+608 |       await expect(
+609 |         DocumentFactory.appendFile(invalidPath, "content")
+610 |       ).rejects.toThrow("Document error at");
+611 |     });
+612 |   });
+613 | 
+614 |   // Tests for lines 383-389 (directory copying edge cases)
+615 |   describe("copyDir edge cases", () => {
+616 |     const tempDir = path.join(MOCK_PATH, "temp_edge");
+617 |     const sourceDir = path.join(tempDir, "source");
+618 |     const targetDir = path.join(tempDir, "target");
+619 | 
+620 |     beforeEach(async () => {
+621 |       // Clean up before each test
+622 |       await fs.rm(tempDir, { recursive: true, force: true });
+623 |       await fs.mkdir(tempDir, { recursive: true });
+624 |     });
+625 | 
+626 |     afterEach(async () => {
+627 |       // Cleanup after each test
+628 |       await fs.rm(tempDir, { recursive: true, force: true });
+629 |     });
+630 | 
+631 |     it("should handle errors during directory creation while copying", async () => {
+632 |       // Create a source directory with content
+633 |       await fs.mkdir(sourceDir);
+634 |       await fs.writeFile(path.join(sourceDir, "test.txt"), "test content");
+635 | 
+636 |       // Mock ensureDirectory to simulate failure
+637 |       const originalEnsureDirectory = DocumentFactory.ensureDirectory;
+638 |       DocumentFactory.ensureDirectory = jest
+639 |         .fn()
+640 |         .mockRejectedValue(new Error("Permission denied"));
+641 | 
+642 |       await expect(
+643 |         DocumentFactory.copyDir(sourceDir, targetDir)
+644 |       ).rejects.toThrow();
+645 | 
+646 |       DocumentFactory.ensureDirectory = originalEnsureDirectory;
+647 |     });
+648 | 
+649 |     it("should handle nested directory structures correctly", async () => {
+650 |       const nestedDir = path.join(sourceDir, "nested");
+651 | 
+652 |       await fs.mkdir(sourceDir);
+653 |       await fs.mkdir(nestedDir);
+654 |       await fs.writeFile(path.join(sourceDir, "test1.txt"), "content1");
+655 |       await fs.writeFile(path.join(nestedDir, "test2.txt"), "content2");
+656 | 
+657 |       await DocumentFactory.copyDir(sourceDir, targetDir);
+658 | 
+659 |       expect(
+660 |         await DocumentFactory.exists(path.join(targetDir, "test1.txt"))
+661 |       ).toBe(true);
+662 |       expect(
+663 |         await DocumentFactory.exists(
+664 |           path.join(targetDir, "nested", "test2.txt")
+665 |         )
+666 |       ).toBe(true);
+667 |     });
+668 |   });
+669 | });
+670 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2518,63 +2644,62 @@ codewrangler
 ---------------------------------------------------------------------------
 
 
-## File: TemplateEngine.test.ts
-- Path: `/root/git/codewrangler/src/infrastructure/templates/__tests__/TemplateEngine.test.ts`
-- Size: 0.00 B
-- Extension: .ts
-- Lines of code: 0
-- Content:
-
-```ts
-1 | 
-```
-
----------------------------------------------------------------------------
-
-
 ## File: zod.ts
 - Path: `/root/git/codewrangler/src/infrastructure/templates/zod.ts`
-- Size: 987.00 B
+- Size: 1.23 KB
 - Extension: .ts
-- Lines of code: 28
+- Lines of code: 38
 - Content:
 
 ```ts
  1 | import { z } from "zod";
  2 | 
- 3 | export const BaseTemplateSchema = z.object({
- 4 |   PROJECT_NAME: z.string(),
- 5 |   GENERATION_DATE: z.string().datetime(),
- 6 |   DIRECTORY_STRUCTURE: z.string(),
- 7 |   TOTAL_FILES: z.number(),
- 8 |   TOTAL_DIRECTORIES: z.number(),
- 9 |   TOTAL_SIZE: z.number(),
-10 |   CONTENT: z.string(),
-11 | });
-12 | 
-13 | export type BaseTemplate = z.infer<typeof BaseTemplateSchema>;
-14 | export type BaseTemplateString = keyof BaseTemplate;
+ 3 | const OTHER_KEYS = [
+ 4 |   "PROJECT_NAME",
+ 5 |   "GENERATION_DATE",
+ 6 |   "DIRECTORY_STRUCTURE",
+ 7 |   "TOTAL_FILES",
+ 8 |   "TOTAL_DIRECTORIES",
+ 9 |   "TOTAL_SIZE",
+10 | ] as const;
+11 | 
+12 | export type OtherKeys = (typeof OTHER_KEYS)[number];
+13 | 
+14 | export const OTHER_KEYS_SCHEMA = z.enum(OTHER_KEYS);
 15 | 
-16 | export const FileTemplateSchema = z.object({
-17 |   FILE_NAME: z.string(),
-18 |   FILE_EXTENSION: z.string(),
-19 |   FILE_SIZE: z.number(),
-20 |   FILE_CONTENTS: z.string(),
-21 | });
-22 | 
-23 | export type FileTemplate = z.infer<typeof FileTemplateSchema>;
-24 | export type FileTemplateString = keyof FileTemplate;
+16 | export const BaseTemplateSchema = z.object({
+17 |   PROJECT_NAME: z.string(),
+18 |   GENERATION_DATE: z.string().datetime(),
+19 |   DIRECTORY_STRUCTURE: z.string(),
+20 |   TOTAL_FILES: z.number(),
+21 |   TOTAL_DIRECTORIES: z.number(),
+22 |   TOTAL_SIZE: z.number(),
+23 |   CONTENT: z.string(),
+24 | });
 25 | 
-26 | export const DirectoryTemplateSchema = z.object({
-27 |   DIRECTORY_NAME: z.string(),
-28 |   DIRECTORY_PATH: z.string(),
-29 |   DIRECTORY_SIZE: z.number(),
-30 |   CONTENT: z.string(),
-31 | });
-32 | 
-33 | export type DirectoryTemplate = z.infer<typeof DirectoryTemplateSchema>;
-34 | export type DirectoryTemplateString = keyof DirectoryTemplate;
+26 | export type BaseTemplate = z.infer<typeof BaseTemplateSchema>;
+27 | export type BaseTemplateString = keyof BaseTemplate;
+28 | 
+29 | export const FileTemplateSchema = z.object({
+30 |   FILE_NAME: z.string(),
+31 |   FILE_EXTENSION: z.string(),
+32 |   FILE_SIZE: z.number(),
+33 |   FILE_CONTENTS: z.string(),
+34 | });
 35 | 
+36 | export type FileTemplate = z.infer<typeof FileTemplateSchema>;
+37 | export type FileTemplateString = keyof FileTemplate;
+38 | 
+39 | export const DirectoryTemplateSchema = z.object({
+40 |   DIRECTORY_NAME: z.string(),
+41 |   DIRECTORY_PATH: z.string(),
+42 |   DIRECTORY_SIZE: z.number(),
+43 |   DIRECTORY_CONTENT: z.string(),
+44 | });
+45 | 
+46 | export type DirectoryTemplate = z.infer<typeof DirectoryTemplateSchema>;
+47 | export type DirectoryTemplateString = keyof DirectoryTemplate;
+48 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2589,7 +2714,7 @@ codewrangler
 
 ```ts
  1 | import { FileTreeBuilder, IFileTreeNode } from "./FileTreeBuilder";
- 2 | import { RenderableDirectory } from "../../core/entities/NodeDIrectory";
+ 2 | import { RenderableDirectory } from "../../core/entities/NodeDirectory";
  3 | import { RenderableFile } from "../../core/entities/NodeFile";
  4 | import { IRenderStrategy } from "../renderer/RenderStrategy";
  5 | import { Config } from "../../utils/config";
@@ -2810,13 +2935,226 @@ codewrangler
 
 ## File: DocumentTreeBuild.test.ts
 - Path: `/root/git/codewrangler/src/services/builder/__tests__/DocumentTreeBuild.test.ts`
-- Size: 0.00 B
+- Size: 6.11 KB
 - Extension: .ts
-- Lines of code: 0
+- Lines of code: 178
 - Content:
 
 ```ts
-1 | 
+  1 | import { DocumentTreeBuilder } from "../DocumentTreeBuilder";
+  2 | import { FileTreeBuilder } from "../FileTreeBuilder";
+  3 | import { RenderableDirectory } from "../../../core/entities/NodeDirectory";
+  4 | import { RenderableFile } from "../../../core/entities/NodeFile";
+  5 | import { IRenderStrategy } from "../../renderer/RenderStrategy";
+  6 | import { Config } from "../../../utils/config";
+  7 | import { logger } from "../../../utils/logger";
+  8 | import { FileType } from "../../../types/type";
+  9 | 
+ 10 | jest.mock("../FileTreeBuilder");
+ 11 | jest.mock("../../../core/entities/NodeDirectory");
+ 12 | jest.mock("../../../core/entities/NodeFile");
+ 13 | jest.mock("../../../utils/logger");
+ 14 | jest.mock("../../../utils/config");
+ 15 | 
+ 16 | describe("DocumentTreeBuilder", () => {
+ 17 |   let mockConfig: jest.Mocked<Config>;
+ 18 |   let mockRenderStrategy: jest.Mocked<IRenderStrategy>;
+ 19 |   let documentTreeBuilder: DocumentTreeBuilder;
+ 20 |   let mockFileTreeBuilder: jest.Mocked<FileTreeBuilder>;
+ 21 | 
+ 22 |   beforeEach(() => {
+ 23 |     // Reset all mocks
+ 24 |     jest.clearAllMocks();
+ 25 | 
+ 26 |     // Set up mock config
+ 27 |     mockConfig = {
+ 28 |       get: jest.fn(),
+ 29 |     } as unknown as jest.Mocked<Config>;
+ 30 | 
+ 31 |     // Set up mock render strategy
+ 32 |     mockRenderStrategy = {
+ 33 |       renderFile: jest.fn(),
+ 34 |       renderDirectory: jest.fn(),
+ 35 |       loadTemplates: jest.fn(),
+ 36 |       render: jest.fn(),
+ 37 |       dispose: jest.fn(),
+ 38 |     };
+ 39 | 
+ 40 |     // Set up mock FileTreeBuilder
+ 41 |     mockFileTreeBuilder = {
+ 42 |       build: jest.fn(),
+ 43 |     } as unknown as jest.Mocked<FileTreeBuilder>;
+ 44 | 
+ 45 |     (FileTreeBuilder as jest.Mock).mockImplementation(
+ 46 |       () => mockFileTreeBuilder
+ 47 |     );
+ 48 | 
+ 49 |     // Create instance of DocumentTreeBuilder
+ 50 |     documentTreeBuilder = new DocumentTreeBuilder(mockConfig, [
+ 51 |       mockRenderStrategy,
+ 52 |     ]);
+ 53 |   });
+ 54 | 
+ 55 |   describe("build", () => {
+ 56 |     it("should successfully build a document tree with a single file", async () => {
+ 57 |       const mockFileNode = {
+ 58 |         name: "test.txt",
+ 59 |         path: "/test/test.txt",
+ 60 |         type: FileType.File,
+ 61 |       };
+ 62 | 
+ 63 |       mockFileTreeBuilder.build.mockResolvedValue(mockFileNode);
+ 64 | 
+ 65 |       (RenderableFile as jest.Mock).mockImplementation(() => ({
+ 66 |         bundle: jest.fn().mockResolvedValue(undefined),
+ 67 |       }));
+ 68 | 
+ 69 |       await documentTreeBuilder.build();
+ 70 | 
+ 71 |       expect(mockFileTreeBuilder.build).toHaveBeenCalledTimes(1);
+ 72 |       expect(RenderableFile).toHaveBeenCalledWith(
+ 73 |         "test.txt",
+ 74 |         "/test/test.txt",
+ 75 |         [mockRenderStrategy]
+ 76 |       );
+ 77 |     });
+ 78 | 
+ 79 |     it("should successfully build a document tree with a directory structure", async () => {
+ 80 |       const mockTree = {
+ 81 |         name: "root",
+ 82 |         path: "/test",
+ 83 |         type: FileType.Directory,
+ 84 |         children: [
+ 85 |           {
+ 86 |             name: "test.txt",
+ 87 |             path: "/test/test.txt",
+ 88 |             type: FileType.File,
+ 89 |           },
+ 90 |           {
+ 91 |             name: "subdir",
+ 92 |             path: "/test/subdir",
+ 93 |             type: FileType.Directory,
+ 94 |             children: [
+ 95 |               {
+ 96 |                 name: "subfile.txt",
+ 97 |                 path: "/test/subdir/subfile.txt",
+ 98 |                 type: FileType.File,
+ 99 |               },
+100 |             ],
+101 |           },
+102 |         ],
+103 |       };
+104 | 
+105 |       mockFileTreeBuilder.build.mockResolvedValue(mockTree);
+106 | 
+107 |       const mockDirectory = {
+108 |         addChild: jest.fn().mockResolvedValue(undefined),
+109 |         bundle: jest.fn().mockResolvedValue(undefined),
+110 |       };
+111 | 
+112 |       (RenderableDirectory as jest.Mock).mockImplementation(
+113 |         () => mockDirectory
+114 |       );
+115 |       (RenderableFile as jest.Mock).mockImplementation(() => ({
+116 |         bundle: jest.fn().mockResolvedValue(undefined),
+117 |       }));
+118 | 
+119 |       await documentTreeBuilder.build();
+120 | 
+121 |       expect(mockFileTreeBuilder.build).toHaveBeenCalledTimes(1);
+122 |       expect(RenderableDirectory).toHaveBeenCalledTimes(2);
+123 |       expect(RenderableFile).toHaveBeenCalledTimes(2);
+124 |       expect(mockDirectory.addChild).toHaveBeenCalledTimes(3);
+125 |     });
+126 | 
+127 |     it("should handle errors during tree building", async () => {
+128 |       const error = new Error("Build failed");
+129 |       mockFileTreeBuilder.build.mockRejectedValue(error);
+130 | 
+131 |       await expect(documentTreeBuilder.build()).rejects.toThrow("Build failed");
+132 |       expect(logger.error).toHaveBeenCalledWith(
+133 |         "Error building document tree",
+134 |         error
+135 |       );
+136 |     });
+137 | 
+138 |     it("should handle errors during document structure creation", async () => {
+139 |       const mockTree = {
+140 |         name: "root",
+141 |         path: "/test",
+142 |         type: FileType.Directory,
+143 |         children: [
+144 |           {
+145 |             name: "test.txt",
+146 |             path: "/test/test.txt",
+147 |             type: FileType.File,
+148 |           },
+149 |         ],
+150 |       };
+151 | 
+152 |       mockFileTreeBuilder.build.mockResolvedValue(mockTree);
+153 |       (RenderableDirectory as jest.Mock).mockImplementation(() => {
+154 |         throw new Error("Failed to create directory");
+155 |       });
+156 | 
+157 |       await expect(documentTreeBuilder.build()).rejects.toThrow(
+158 |         "Failed to create directory"
+159 |       );
+160 |       expect(logger.error).toHaveBeenCalled();
+161 |     });
+162 | 
+163 |     it("should handle errors during bundle process", async () => {
+164 |       const mockTree = {
+165 |         name: "root",
+166 |         path: "/test",
+167 |         type: FileType.Directory,
+168 |         children: [],
+169 |       };
+170 | 
+171 |       mockFileTreeBuilder.build.mockResolvedValue(mockTree);
+172 | 
+173 |       const mockDirectory = {
+174 |         addChild: jest.fn().mockResolvedValue(undefined),
+175 |         bundle: jest.fn().mockRejectedValue(new Error("Bundle failed")),
+176 |       };
+177 | 
+178 |       (RenderableDirectory as jest.Mock).mockImplementation(
+179 |         () => mockDirectory
+180 |       );
+181 | 
+182 |       await expect(documentTreeBuilder.build()).rejects.toThrow(
+183 |         "Bundle failed"
+184 |       );
+185 |       expect(logger.error).toHaveBeenCalled();
+186 |     });
+187 | 
+188 |     it("should handle empty file trees", async () => {
+189 |       const mockTree = {
+190 |         name: "root",
+191 |         path: "/test",
+192 |         type: FileType.Directory,
+193 |         children: [],
+194 |       };
+195 | 
+196 |       mockFileTreeBuilder.build.mockResolvedValue(mockTree);
+197 | 
+198 |       const mockDirectory = {
+199 |         addChild: jest.fn().mockResolvedValue(undefined),
+200 |         bundle: jest.fn().mockResolvedValue(undefined),
+201 |       };
+202 | 
+203 |       (RenderableDirectory as jest.Mock).mockImplementation(
+204 |         () => mockDirectory
+205 |       );
+206 | 
+207 |       await documentTreeBuilder.build();
+208 | 
+209 |       expect(mockDirectory.addChild).not.toHaveBeenCalled();
+210 |       expect(mockDirectory.bundle).toHaveBeenCalled();
+211 |     });
+212 |   });
+213 | });
+214 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2989,13 +3327,268 @@ codewrangler
 
 ## File: FileTreeBuilder.test.ts
 - Path: `/root/git/codewrangler/src/services/builder/__tests__/FileTreeBuilder.test.ts`
-- Size: 0.00 B
+- Size: 7.71 KB
 - Extension: .ts
-- Lines of code: 0
+- Lines of code: 223
 - Content:
 
 ```ts
-1 | 
+  1 | import { FileTreeBuilder } from "../FileTreeBuilder";
+  2 | import { Config } from "../../../utils/config";
+  3 | import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+  4 | import { FileType } from "../../../types/type";
+  5 | import FileHidden from "../FileHidden";
+  6 | 
+  7 | jest.mock("../../../utils/config");
+  8 | jest.mock("../../../infrastructure/filesystem/DocumentFactory");
+  9 | jest.mock("../FileHidden");
+ 10 | 
+ 11 | describe("FileTreeBuilder", () => {
+ 12 |   let mockConfig: jest.Mocked<Config>;
+ 13 |   let fileTreeBuilder: FileTreeBuilder;
+ 14 | 
+ 15 |   beforeEach(() => {
+ 16 |     jest.clearAllMocks();
+ 17 | 
+ 18 |     mockConfig = {
+ 19 |       get: jest.fn(),
+ 20 |     } as unknown as jest.Mocked<Config>;
+ 21 | 
+ 22 |     mockConfig.get.mockImplementation((key: string) => {
+ 23 |       switch (key) {
+ 24 |         case "dir":
+ 25 |           return "/test/dir";
+ 26 |         case "pattern":
+ 27 |           return ".*";
+ 28 |         case "maxDepth":
+ 29 |           return 10;
+ 30 |         case "excludePatterns":
+ 31 |           return ["node_modules/**"];
+ 32 |         case "additionalIgnoreFiles":
+ 33 |           return [];
+ 34 |         default:
+ 35 |           return undefined;
+ 36 |       }
+ 37 |     });
+ 38 | 
+ 39 |     // Configure FileHidden mock with default behavior
+ 40 |     (FileHidden as jest.Mock).mockImplementation(() => ({
+ 41 |       shouldExclude: jest.fn().mockReturnValue(false),
+ 42 |     }));
+ 43 | 
+ 44 |     fileTreeBuilder = new FileTreeBuilder(mockConfig);
+ 45 |   });
+ 46 | 
+ 47 |   describe("initialization", () => {
+ 48 |     it("should initialize with correct config values", () => {
+ 49 |       expect(mockConfig.get).toHaveBeenCalledWith("dir");
+ 50 |       expect(mockConfig.get).toHaveBeenCalledWith("pattern");
+ 51 |       expect(mockConfig.get).toHaveBeenCalledWith("maxDepth");
+ 52 |       expect(mockConfig.get).toHaveBeenCalledWith("excludePatterns");
+ 53 |       expect(mockConfig.get).toHaveBeenCalledWith("additionalIgnoreFiles");
+ 54 |     });
+ 55 |   });
+ 56 | 
+ 57 |   describe("build", () => {
+ 58 |     it("should throw error if root directory doesn't exist", async () => {
+ 59 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
+ 60 |       await expect(fileTreeBuilder.build()).rejects.toThrow(
+ 61 |         "Directory /test/dir does not exist"
+ 62 |       );
+ 63 |     });
+ 64 | 
+ 65 |     it("should build root node with no children if directory is empty", async () => {
+ 66 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
+ 67 |       (DocumentFactory.getStats as jest.Mock).mockResolvedValue({
+ 68 |         isDirectory: true,
+ 69 |         isFile: false,
+ 70 |         size: 0,
+ 71 |         created: new Date(),
+ 72 |         modified: new Date(),
+ 73 |         accessed: new Date(),
+ 74 |         permissions: {
+ 75 |           readable: true,
+ 76 |           writable: true,
+ 77 |           executable: true,
+ 78 |         },
+ 79 |       });
+ 80 |       (DocumentFactory.baseName as jest.Mock).mockReturnValue("dir");
+ 81 |       (DocumentFactory.readDir as jest.Mock).mockResolvedValue([]);
+ 82 | 
+ 83 |       const result = await fileTreeBuilder.build();
+ 84 | 
+ 85 |       expect(result).toEqual({
+ 86 |         name: "dir",
+ 87 |         path: "/test/dir",
+ 88 |         type: FileType.Directory,
+ 89 |         children: [],
+ 90 |       });
+ 91 |     });
+ 92 | 
+ 93 |     it("should build tree with files and directories", async () => {
+ 94 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
+ 95 |       (DocumentFactory.baseName as jest.Mock).mockImplementation((path) =>
+ 96 |         path.split("/").pop()
+ 97 |       );
+ 98 |       (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
+ 99 |         paths.join("/")
+100 |       );
+101 | 
+102 |       // Setup mock responses for each path
+103 |       const mockStats = new Map([
+104 |         ["/test/dir", { isDirectory: true, isFile: false }],
+105 |         ["/test/dir/file1.txt", { isDirectory: false, isFile: true }],
+106 |         ["/test/dir/subdir", { isDirectory: true, isFile: false }],
+107 |         ["/test/dir/subdir/file2.txt", { isDirectory: false, isFile: true }],
+108 |       ]);
+109 | 
+110 |       (DocumentFactory.getStats as jest.Mock).mockImplementation(
+111 |         async (path) => ({
+112 |           ...mockStats.get(path),
+113 |           size: 1000,
+114 |           created: new Date(),
+115 |           modified: new Date(),
+116 |           accessed: new Date(),
+117 |           permissions: { readable: true, writable: true, executable: true },
+118 |         })
+119 |       );
+120 | 
+121 |       (DocumentFactory.readDir as jest.Mock)
+122 |         .mockResolvedValueOnce(["file1.txt", "subdir"])
+123 |         .mockResolvedValueOnce(["file2.txt"]);
+124 | 
+125 |       const result = await fileTreeBuilder.build();
+126 | 
+127 |       expect(result).toEqual({
+128 |         name: "dir",
+129 |         path: "/test/dir",
+130 |         type: FileType.Directory,
+131 |         children: [
+132 |           {
+133 |             name: "file1.txt",
+134 |             path: "/test/dir/file1.txt",
+135 |             type: FileType.File,
+136 |           },
+137 |           {
+138 |             name: "subdir",
+139 |             path: "/test/dir/subdir",
+140 |             type: FileType.Directory,
+141 |             children: [
+142 |               {
+143 |                 name: "file2.txt",
+144 |                 path: "/test/dir/subdir/file2.txt",
+145 |                 type: FileType.File,
+146 |               },
+147 |             ],
+148 |           },
+149 |         ],
+150 |       });
+151 |     });
+152 | 
+153 |     it("should respect maxDepth configuration", async () => {
+154 |       mockConfig.get.mockImplementation((key) =>
+155 |         key === "maxDepth" ? 1 : mockConfig.get(key)
+156 |       );
+157 | 
+158 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
+159 |       (DocumentFactory.baseName as jest.Mock).mockImplementation((path) =>
+160 |         path.split("/").pop()
+161 |       );
+162 |       (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
+163 |         paths.join("/")
+164 |       );
+165 | 
+166 |       const mockStats = new Map([
+167 |         ["/test/dir", { isDirectory: true, isFile: false }],
+168 |         ["/test/dir/subdir", { isDirectory: true, isFile: false }],
+169 |       ]);
+170 | 
+171 |       (DocumentFactory.getStats as jest.Mock).mockImplementation(
+172 |         async (path) => ({
+173 |           ...mockStats.get(path),
+174 |           size: 1000,
+175 |           created: new Date(),
+176 |           modified: new Date(),
+177 |           accessed: new Date(),
+178 |           permissions: { readable: true, writable: true, executable: true },
+179 |         })
+180 |       );
+181 | 
+182 |       (DocumentFactory.readDir as jest.Mock).mockResolvedValue(["subdir"]);
+183 | 
+184 |       const result = await fileTreeBuilder.build();
+185 | 
+186 |       expect(result).toEqual({
+187 |         name: "dir",
+188 |         path: "/test/dir",
+189 |         type: FileType.Directory,
+190 |         children: [
+191 |           {
+192 |             name: "subdir",
+193 |             path: "/test/dir/subdir",
+194 |             type: FileType.Directory,
+195 |             children: [
+196 |               {
+197 |                 name: "subdir",
+198 |                 path: "/test/dir/subdir/subdir",
+199 |                 type: FileType.File,
+200 |               },
+201 |             ],
+202 |           },
+203 |         ],
+204 |       });
+205 |     });
+206 | 
+207 |     it("should handle file exclusion", async () => {
+208 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
+209 |       (DocumentFactory.baseName as jest.Mock).mockImplementation((path) =>
+210 |         path.split("/").pop()
+211 |       );
+212 |       (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
+213 |         paths.join("/")
+214 |       );
+215 | 
+216 |       const mockFileHidden = {
+217 |         shouldExclude: jest
+218 |           .fn()
+219 |           .mockReturnValueOnce(false) // include.txt
+220 |           .mockReturnValueOnce(true), // exclude.txt
+221 |       };
+222 | 
+223 |       (FileHidden as jest.Mock).mockImplementation(() => mockFileHidden);
+224 | 
+225 |       (DocumentFactory.getStats as jest.Mock).mockImplementation(
+226 |         async (path) => ({
+227 |           isDirectory: path === "/test/dir",
+228 |           isFile: path !== "/test/dir",
+229 |           size: 1000,
+230 |           created: new Date(),
+231 |           modified: new Date(),
+232 |           accessed: new Date(),
+233 |           permissions: { readable: true, writable: true, executable: true },
+234 |         })
+235 |       );
+236 | 
+237 |       (DocumentFactory.readDir as jest.Mock).mockResolvedValue([
+238 |         "include.txt",
+239 |         "exclude.txt",
+240 |       ]);
+241 | 
+242 |       const result = await fileTreeBuilder.build();
+243 | 
+244 |       expect(result.children).toHaveLength(2);
+245 |       const children = result.children;
+246 |       expect(children).not.toBeNull();
+247 |       if (children) {
+248 |         const child1 = children[0];
+249 |         const child2 = children[1];
+250 |         expect(child1?.name).toBe("include.txt");
+251 |         expect(child2?.name).toBe("exclude.txt");
+252 |       }
+253 |     });
+254 |   });
+255 | });
+256 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3003,14 +3596,14 @@ codewrangler
 
 ## File: RenderStrategy.ts
 - Path: `/root/git/codewrangler/src/services/renderer/RenderStrategy.ts`
-- Size: 4.37 KB
+- Size: 4.43 KB
 - Extension: .ts
-- Lines of code: 134
+- Lines of code: 136
 - Content:
 
 ```ts
   1 | import { NodeFile } from "../../core/entities/NodeFile";
-  2 | import { NodeDirectory } from "../../core/entities/NodeDIrectory";
+  2 | import { NodeDirectory } from "../../core/entities/NodeDirectory";
   3 | import { Config, OutputFormatExtension } from "../../utils/config";
   4 | import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
   5 | import { Template } from "../../infrastructure/templates/TemplateEngine";
@@ -3096,95 +3689,69 @@ codewrangler
  85 |       FILE_EXTENSION: file.extension,
  86 |       FILE_SIZE: file.size,
  87 |       FILE_CONTENTS: file.content || "",
- 88 |     });
- 89 |   }
- 90 | 
- 91 |   public renderDirectory(directory: NodeDirectory): string {
- 92 |     const content = directory.children
- 93 |       .map(
- 94 |         (child) =>
- 95 |           child instanceof NodeFile
- 96 |             ? this.renderFile(child)
- 97 |             : this.renderDirectory(child) // save the rendering result on the object after bundling execution
- 98 |       )
- 99 |       .join("");
-100 |     if (!this.templates.directory) {
-101 |       throw new Error("Directory template is not loaded");
-102 |     }
-103 |     return this.replaceSelectors(this.templates.directory.content, {
-104 |       DIRECTORY_NAME: directory.name,
-105 |       DIRECTORY_PATH: directory.path,
-106 |       DIRECTORY_SIZE: directory.size,
-107 |       CONTENT: content,
-108 |     });
-109 |   }
-110 | 
-111 |   protected replaceSelectors(
-112 |     template: string,
-113 |     values: BaseTemplate | FileTemplate | DirectoryTemplate
-114 |   ): string {
-115 |     return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-116 |       const typedKey = key as keyof typeof values;
-117 |       return values[typedKey] !== undefined
-118 |         ? String(values[typedKey])
-119 |         : `{{${key}}}`;
-120 |     });
-121 |   }
-122 | 
-123 |   public async render(rootDirectory: NodeDirectory): Promise<string> {
-124 |     const directoryContent = this.renderDirectory(rootDirectory);
-125 |     if (!this.templates.page) {
-126 |       throw new Error("Page template is not loaded");
-127 |     }
-128 |     return this.replaceSelectors(this.templates.page.content, {
-129 |       PROJECT_NAME:
-130 |         this.config.get("projectName") || rootDirectory.name || "Project",
-131 |       GENERATION_DATE: new Date().toLocaleDateString(),
-132 |       DIRECTORY_STRUCTURE: directoryContent,
-133 |       TOTAL_FILES: rootDirectory.length,
-134 |       TOTAL_DIRECTORIES: rootDirectory.deepLength,
-135 |       TOTAL_SIZE: rootDirectory.size,
-136 |       CONTENT: directoryContent,
-137 |     });
-138 |   }
-139 | 
-140 |   public async dispose(): Promise<void> {
-141 |     this.templates = {
-142 |       page: null,
-143 |       file: null,
-144 |       directory: null,
-145 |     };
-146 |   }
-147 | }
-148 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: HTMLStrategy.test.ts
-- Path: `/root/git/codewrangler/src/services/renderer/__tests__/HTMLStrategy.test.ts`
-- Size: 0.00 B
-- Extension: .ts
-- Lines of code: 0
-- Content:
-
-```ts
-1 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: MarkdownStrategy.test.ts
-- Path: `/root/git/codewrangler/src/services/renderer/__tests__/MarkdownStrategy.test.ts`
-- Size: 0.00 B
-- Extension: .ts
-- Lines of code: 0
-- Content:
-
-```ts
-1 | 
+ 88 |       ...file.props
+ 89 |     });
+ 90 |   }
+ 91 | 
+ 92 |   public renderDirectory(directory: NodeDirectory): string {
+ 93 |     const content = directory.children
+ 94 |       .map(
+ 95 |         (child) =>
+ 96 |           child instanceof NodeFile
+ 97 |             ? this.renderFile(child)
+ 98 |             : this.renderDirectory(child) // save the rendering result on the object after bundling execution
+ 99 |       )
+100 |       .join("");
+101 |     if (!this.templates.directory) {
+102 |       throw new Error("Directory template is not loaded");
+103 |     }
+104 |     return this.replaceSelectors(this.templates.directory.content, {
+105 |       DIRECTORY_NAME: directory.name,
+106 |       DIRECTORY_PATH: directory.path,
+107 |       DIRECTORY_SIZE: directory.size,
+108 |       DIRECTORY_CONTENT: content,
+109 |       ...directory.props,
+110 |     });
+111 |   }
+112 | 
+113 |   protected replaceSelectors(
+114 |     template: string,
+115 |     values: BaseTemplate | FileTemplate | DirectoryTemplate
+116 |   ): string {
+117 |     return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+118 |       const typedKey = key as keyof typeof values;
+119 |       return values[typedKey] !== undefined
+120 |         ? String(values[typedKey])
+121 |         : `{{${key}}}`;
+122 |     });
+123 |   }
+124 | 
+125 |   public async render(rootDirectory: NodeDirectory): Promise<string> {
+126 |     const directoryContent = this.renderDirectory(rootDirectory);
+127 |     if (!this.templates.page) {
+128 |       throw new Error("Page template is not loaded");
+129 |     }
+130 |     return this.replaceSelectors(this.templates.page.content, {
+131 |       PROJECT_NAME:
+132 |         this.config.get("projectName") || rootDirectory.name || "Project",
+133 |       GENERATION_DATE: new Date().toLocaleDateString(),
+134 |       DIRECTORY_STRUCTURE: directoryContent,
+135 |       TOTAL_FILES: rootDirectory.length,
+136 |       TOTAL_DIRECTORIES: rootDirectory.deepLength,
+137 |       TOTAL_SIZE: rootDirectory.size,
+138 |       CONTENT: directoryContent,
+139 |     });
+140 |   }
+141 | 
+142 |   public async dispose(): Promise<void> {
+143 |     this.templates = {
+144 |       page: null,
+145 |       file: null,
+146 |       directory: null,
+147 |     };
+148 |   }
+149 | }
+150 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3192,13 +3759,139 @@ codewrangler
 
 ## File: RenderStrategy.test.ts
 - Path: `/root/git/codewrangler/src/services/renderer/__tests__/RenderStrategy.test.ts`
-- Size: 0.00 B
+- Size: 3.88 KB
 - Extension: .ts
-- Lines of code: 0
+- Lines of code: 103
 - Content:
 
 ```ts
-1 | 
+  1 | import { BaseRenderStrategy } from "../RenderStrategy";
+  2 | import { Config } from "../../../utils/config";
+  3 | import { NodeFile } from "../../../core/entities/NodeFile";
+  4 | import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+  5 | import { Template } from "../../../infrastructure/templates/TemplateEngine";
+  6 | import { OutputFormatExtension } from "../../../utils/config/schema";
+  7 | 
+  8 | jest.mock("../../../utils/config");
+  9 | jest.mock("../../../core/entities/NodeFile");
+ 10 | jest.mock("../../../infrastructure/filesystem/DocumentFactory");
+ 11 | jest.mock("../../../infrastructure/templates/TemplateEngine");
+ 12 | 
+ 13 | class TestRenderStrategy extends BaseRenderStrategy {
+ 14 |   constructor(config: Config) {
+ 15 |     super(config, "md" as OutputFormatExtension);
+ 16 |   }
+ 17 | }
+ 18 | 
+ 19 | describe("BaseRenderStrategy", () => {
+ 20 |   let mockConfig: jest.Mocked<Config>;
+ 21 |   let renderStrategy: TestRenderStrategy;
+ 22 |   let mockTemplate: jest.Mocked<Template>;
+ 23 | 
+ 24 |   beforeEach(() => {
+ 25 |     jest.clearAllMocks();
+ 26 | 
+ 27 |     // Configure mock config
+ 28 |     mockConfig = {
+ 29 |       get: jest.fn().mockImplementation((key: string) => {
+ 30 |         switch (key) {
+ 31 |           case "rootDir":
+ 32 |             return "/test";
+ 33 |           case "templatesDir":
+ 34 |             return "templates";
+ 35 |           case "projectName":
+ 36 |             return "Test Project";
+ 37 |           default:
+ 38 |             return undefined;
+ 39 |         }
+ 40 |       }),
+ 41 |     } as unknown as jest.Mocked<Config>;
+ 42 | 
+ 43 |     // Configure mock template
+ 44 |     mockTemplate = {
+ 45 |       content: "Template content with {{FILE_NAME}}",
+ 46 |       load: jest.fn().mockResolvedValue(undefined),
+ 47 |       render: jest.fn().mockReturnValue("Rendered content"),
+ 48 |     } as unknown as jest.Mocked<Template>;
+ 49 | 
+ 50 |     (Template.create as jest.Mock).mockResolvedValue(mockTemplate);
+ 51 | 
+ 52 |     (DocumentFactory.join as jest.Mock).mockImplementation((...paths) =>
+ 53 |       paths.join("/")
+ 54 |     );
+ 55 |     (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
+ 56 | 
+ 57 |     renderStrategy = new TestRenderStrategy(mockConfig);
+ 58 |   });
+ 59 | 
+ 60 |   describe("loadTemplates", () => {
+ 61 |     it("should successfully load all templates", async () => {
+ 62 |       await renderStrategy.loadTemplates();
+ 63 | 
+ 64 |       expect(DocumentFactory.join).toHaveBeenCalledWith("/test", "templates");
+ 65 |       expect(DocumentFactory.exists).toHaveBeenCalled();
+ 66 |       expect(Template.create).toHaveBeenCalledTimes(3);
+ 67 |     });
+ 68 | 
+ 69 |     it("should throw error if templates directory doesn't exist", async () => {
+ 70 |       (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
+ 71 | 
+ 72 |       await expect(renderStrategy.loadTemplates()).rejects.toThrow(
+ 73 |         "Templates directory not found"
+ 74 |       );
+ 75 |     });
+ 76 |   });
+ 77 | 
+ 78 |   describe("renderFile", () => {
+ 79 |     it("should render file content correctly", async () => {
+ 80 |       const mockFile = {
+ 81 |         name: "test.txt",
+ 82 |         extension: ".txt",
+ 83 |         size: 1000,
+ 84 |         content: "Test content",
+ 85 |       } as NodeFile;
+ 86 | 
+ 87 |       await renderStrategy.loadTemplates();
+ 88 |       const result = renderStrategy.renderFile(mockFile);
+ 89 | 
+ 90 |       expect(result).toBe("Template content with test.txt");
+ 91 |     });
+ 92 | 
+ 93 |     it("should handle null file content", async () => {
+ 94 |       const mockFile = {
+ 95 |         name: "test.txt",
+ 96 |         extension: ".txt",
+ 97 |         size: 1000,
+ 98 |         content: null,
+ 99 |       } as NodeFile;
+100 | 
+101 |       await renderStrategy.loadTemplates();
+102 |       const result = renderStrategy.renderFile(mockFile);
+103 | 
+104 |       expect(result).toBe("Template content with test.txt");
+105 |     });
+106 | 
+107 |     it("should throw error if file template is not loaded", () => {
+108 |       const mockFile = {} as NodeFile;
+109 | 
+110 |       expect(() => renderStrategy.renderFile(mockFile)).toThrow(
+111 |         "File template is not loaded"
+112 |       );
+113 |     });
+114 |   });
+115 | 
+116 |   describe("dispose", () => {
+117 |     it("should clear all templates", async () => {
+118 |       await renderStrategy.loadTemplates();
+119 |       await renderStrategy.dispose();
+120 | 
+121 |       expect(renderStrategy["templates"].page).toBeNull();
+122 |       expect(renderStrategy["templates"].file).toBeNull();
+123 |       expect(renderStrategy["templates"].directory).toBeNull();
+124 |     });
+125 |   });
+126 | });
+127 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3947,13 +4640,187 @@ codewrangler
 
 ## File: Logger.test.ts
 - Path: `/root/git/codewrangler/src/utils/logger/__tests__/Logger.test.ts`
-- Size: 0.00 B
+- Size: 5.30 KB
 - Extension: .ts
-- Lines of code: 0
+- Lines of code: 147
 - Content:
 
 ```ts
-1 | 
+  1 | /* eslint-disable no-console */
+  2 | import { LOG_VALUES, LogLevel, Logger } from "../Logger";
+  3 | import { Config } from "../../config/Config";
+  4 | import colors from "colors";
+  5 | 
+  6 | jest.mock("../../config/Config");
+  7 | jest.spyOn(console, "log").mockImplementation(() => {});
+  8 | 
+  9 | describe("Logger", () => {
+ 10 |   let logger: Logger;
+ 11 |   let mockConfig: jest.Mocked<Config>;
+ 12 | 
+ 13 |   beforeEach(() => {
+ 14 |     jest.clearAllMocks();
+ 15 | 
+ 16 |     mockConfig = {
+ 17 |       get: jest.fn(),
+ 18 |       set: jest.fn(),
+ 19 |     } as unknown as jest.Mocked<Config>;
+ 20 | 
+ 21 |     logger = Logger.load();
+ 22 |   });
+ 23 | 
+ 24 |   describe("Singleton Pattern", () => {
+ 25 |     it("should create only one instance of Logger", () => {
+ 26 |       const instance1 = Logger.load();
+ 27 |       const instance2 = Logger.load();
+ 28 |       expect(instance1).toBe(instance2);
+ 29 |     });
+ 30 |   });
+ 31 | 
+ 32 |   describe("Configuration", () => {
+ 33 |     it("should set config correctly", () => {
+ 34 |       const result = logger.setConfig(mockConfig);
+ 35 |       expect(result).toBe(logger);
+ 36 |       expect(logger["config"]).toBe(mockConfig);
+ 37 |     });
+ 38 | 
+ 39 |     it("should set log level when config is present", () => {
+ 40 |       logger.setConfig(mockConfig);
+ 41 |       const result = logger.setLogLevel("DEBUG");
+ 42 | 
+ 43 |       expect(result).toBe(logger);
+ 44 |       expect(mockConfig.set).toHaveBeenCalledWith("logLevel", "DEBUG");
+ 45 |     });
+ 46 | 
+ 47 |     it("should not set log level when config is not present", () => {
+ 48 |       const result = logger.setLogLevel("DEBUG");
+ 49 | 
+ 50 |       expect(result).toBe(logger);
+ 51 |       expect(mockConfig.set).not.toHaveBeenCalled();
+ 52 |     });
+ 53 | 
+ 54 |     it("should return ERROR level when config returns undefined", () => {
+ 55 |       logger.setConfig(mockConfig);
+ 56 |       mockConfig.get.mockReturnValue(undefined);
+ 57 |       expect(logger["logLevel"]).toBe(LogLevel.ERROR);
+ 58 |     });
+ 59 | 
+ 60 |     it("should return correct log level from config", () => {
+ 61 |       logger.setConfig(mockConfig);
+ 62 |       mockConfig.get.mockReturnValue("DEBUG");
+ 63 |       expect(logger["logLevel"]).toBe(LogLevel.DEBUG);
+ 64 |     });
+ 65 |   });
+ 66 | 
+ 67 |   describe("Logging Methods", () => {
+ 68 |     beforeEach(() => {
+ 69 |       logger.setConfig(mockConfig);
+ 70 |     });
+ 71 | 
+ 72 |     describe("error", () => {
+ 73 |       it("should log error messages when level is ERROR or higher", () => {
+ 74 |         mockConfig.get.mockReturnValue("ERROR");
+ 75 |         logger.error("Test error");
+ 76 |         expect(console.log).toHaveBeenCalledWith(
+ 77 |           colors.red("[ERROR] Test error")
+ 78 |         );
+ 79 |       });
+ 80 | 
+ 81 |       it("should log error with stack trace when error object is provided", () => {
+ 82 |         mockConfig.get.mockReturnValue("ERROR");
+ 83 |         const error = new Error("Test error");
+ 84 |         logger.error("Error occurred", error);
+ 85 | 
+ 86 |         expect(console.log).toHaveBeenCalledWith(
+ 87 |           colors.red("[ERROR] Error occurred")
+ 88 |         );
+ 89 |         expect(console.log).toHaveBeenCalledWith(colors.red(error.stack ?? ""));
+ 90 |       });
+ 91 | 
+ 92 |       it("should log additional arguments", () => {
+ 93 |         mockConfig.get.mockReturnValue("ERROR");
+ 94 |         logger.error("Test error", undefined, { details: "test" });
+ 95 |         expect(console.log).toHaveBeenCalledWith(
+ 96 |           colors.red("[ERROR] Test error"),
+ 97 |           { details: "test" }
+ 98 |         );
+ 99 |       });
+100 |     });
+101 | 
+102 |     describe("warn", () => {
+103 |       it("should log warn messages when level is WARN or higher", () => {
+104 |         mockConfig.get.mockReturnValue("WARN");
+105 |         logger.warn("Test warning");
+106 |         expect(console.log).toHaveBeenCalledWith(
+107 |           colors.yellow("[WARN] Test warning")
+108 |         );
+109 |       });
+110 | 
+111 |       it("should not log warn messages when level is ERROR", () => {
+112 |         mockConfig.get.mockReturnValue("ERROR");
+113 |         logger.warn("Test warning");
+114 |         expect(console.log).not.toHaveBeenCalled();
+115 |       });
+116 |     });
+117 | 
+118 |     describe("info", () => {
+119 |       it("should log info messages when level is INFO or higher", () => {
+120 |         mockConfig.get.mockReturnValue("INFO");
+121 |         logger.info("Test info");
+122 |         expect(console.log).toHaveBeenCalledWith(
+123 |           colors.blue("[INFO] Test info")
+124 |         );
+125 |       });
+126 | 
+127 |       it("should not log info messages when level is WARN", () => {
+128 |         mockConfig.get.mockReturnValue("WARN");
+129 |         logger.info("Test info");
+130 |         expect(console.log).not.toHaveBeenCalled();
+131 |       });
+132 |     });
+133 | 
+134 |     describe("debug", () => {
+135 |       it("should log debug messages when level is DEBUG", () => {
+136 |         mockConfig.get.mockReturnValue("DEBUG");
+137 |         logger.debug("Test debug");
+138 |         expect(console.log).toHaveBeenCalledWith(
+139 |           colors.gray("[DEBUG] Test debug")
+140 |         );
+141 |       });
+142 | 
+143 |       it("should not log debug messages when level is INFO", () => {
+144 |         mockConfig.get.mockReturnValue("INFO");
+145 |         logger.debug("Test debug");
+146 |         expect(console.log).not.toHaveBeenCalled();
+147 |       });
+148 |     });
+149 | 
+150 |     describe("success", () => {
+151 |       it("should always log success messages in green", () => {
+152 |         mockConfig.get.mockReturnValue("ERROR");
+153 |         logger.success("Operation successful");
+154 |         expect(console.log).toHaveBeenCalledWith(
+155 |           colors.green("Operation successful")
+156 |         );
+157 |       });
+158 |     });
+159 | 
+160 |     describe("log", () => {
+161 |       it("should always log plain messages without color", () => {
+162 |         mockConfig.get.mockReturnValue("ERROR");
+163 |         logger.log("Plain message");
+164 |         expect(console.log).toHaveBeenCalledWith("Plain message");
+165 |       });
+166 |     });
+167 |   });
+168 | 
+169 |   describe("Log Values", () => {
+170 |     it("should export correct log level values", () => {
+171 |       expect(LOG_VALUES).toEqual(["ERROR", "WARN", "INFO", "DEBUG"]);
+172 |     });
+173 |   });
+174 | });
+175 | 
 ```
 
 ---------------------------------------------------------------------------

@@ -6,6 +6,7 @@ CodeWrangler is an extensible documentation automation platform that transforms 
 
 - [Overview](#overview)
 - [Key Features](#key-features)
+- [Demo](#demo)
 - [Quick Start](#quick-start)
 - [Template System](#template-system)
 - [Command Line Interface](#command-line-interface)
@@ -28,9 +29,17 @@ CodeWrangler streamlines the process of generating comprehensive documentation f
 - ⚡ **High Performance**: Parallel processing and caching capabilities for efficient handling of large repositories
 - 🔄 **Incremental Updates**: Smart change detection for efficient documentation maintenance
 
+## Development Status and Demo
+
+This library is currently in active development. The core functionality has been implemented, but there are still some features and improvements that are in progress. We welcome any feedback or contributions from the community as we work towards a stable release.
+
+![Demo](./demo.md)
+
 ## Quick Start
 
 ### Installation
+
+Supports Node.js 18.x and above
 
 ```bash
 npm install -g codewrangler
@@ -154,7 +163,57 @@ CODEWRANGLER_LOG_LEVEL=DEBUG
 
 CodeWrangler supports plugins for extending functionality. Plugins can hook into various stages of the documentation process.
 
-### Creating a Plugin
+### 1. Repository Tree Visualizer
+- Generates visual and textual representations of repository structure
+- Features:
+  - ASCII tree visualization
+  - Interactive HTML tree view
+  - Directory size analysis
+  - Custom ignore patterns
+  - Multiple export formats (ASCII, HTML, JSON)
+- Use Case: Quickly understand project structure and organization
+
+### 2. Smart Prompt Engine
+- Enhances AI interactions by providing contextual code references
+- Features:
+  - Links questions to specific code files and line numbers
+  - Maintains conversation history with code context
+  - Suggests relevant files for current discussion
+  - Tracks code changes during conversation
+  - Generates contextual prompts for better AI responses
+- Use Case: More efficient and context-aware AI assistance
+
+### 3. Documentation Crawler
+- Automatically aggregates and indexes library documentation
+- Features:
+  - Identifies project dependencies
+  - Scrapes official documentation sites
+  - Creates offline documentation cache
+  - Integrates with popular package managers (npm, pip, composer)
+  - Generates dependency graphs
+- Use Case: Centralized documentation access and dependency understanding
+
+### 4. Environment Analyzer
+- Analyzes and reports on development environment configuration
+- Features:
+  - Runtime environment detection
+  - Installed tools and versions
+  - System capabilities assessment
+  - Configuration compatibility checks
+  - Environment-specific recommendations
+- Use Case: Environment-aware assistance and troubleshooting
+
+### 5. Code Summarizer
+- Creates concise versions of code files by removing non-essential parts
+- Features:
+  - Smart comment preservation
+  - Redundant code detection
+  - Configuration file summarization
+  - Custom summarization rules
+  - Diff view support
+- Use Case: Focus on essential code components
+
+### Creating a Plugin (In development)
 
 ```typescript
 import { Plugin, BaseNode } from "codewrangler";

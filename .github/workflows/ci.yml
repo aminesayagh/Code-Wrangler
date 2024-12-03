@@ -7,40 +7,63 @@ on:
     branches: [main, develop]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    name: Test on Node ${{ matrix.node }} and ${{ matrix.os }}
+    name: Test on Node ${{ matrix.node }} and ${{ matrix.os }} (${{ matrix.typescript }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: [16.x, 18.x, 20.x]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        node: [18.x, 20.x]
+        os: [ubuntu-latest, macOS-latest] # windows-latest is not supported for the first version of code wrangler
+        typescript: [4.9.x, 5.5.x, 5.6.x]
+      fail-fast: false # run all tests even if some fail
+
+    env:
+      ESLINT_USE_FLAT_CONFIG: true
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node }}
           cache: "npm"
 
+      - name: Cache TypeScript
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm/typescript
+          key: typescript-${{ matrix.typescript }}
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Install TypeScript
+        run: npm install -g typescript@${{ matrix.typescript }}
 
       - name: Run linting
         run: npm run lint
 
+      - name: Run build
+        run: npm run build
+
       - name: Run tests with coverage
         run: npm run test -- --coverage
 
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: matrix.os == 'ubuntu-latest' && matrix.node == '20.x'
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
+          name: test-results-${{ matrix.os }}-node-${{ matrix.node }}-ts-${{ matrix.typescript }}
+          path: |
+            coverage/
+            junit.xml
+          if-no-files-found: warn
 
   build:
     name: Build package
@@ -69,3 +92,10 @@ jobs:
           name: dist
           path: dist/
           if-no-files-found: error
+
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: build-${{ github.sha }}

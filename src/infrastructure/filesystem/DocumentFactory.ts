@@ -9,7 +9,7 @@ import {
   IDirectoryOptions,
   IFileStats,
   IReadOptions,
-  IWriteOptions,
+  IWriteOptions
 } from "../../types/type";
 
 export const DocumentFactory = {
@@ -81,8 +81,8 @@ export const DocumentFactory = {
         permissions: {
           readable: accessFlags.readable,
           writable: accessFlags.writable,
-          executable: accessFlags.executable,
-        },
+          executable: accessFlags.executable
+        }
       };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -115,7 +115,7 @@ export const DocumentFactory = {
     return {
       readable: await check(fs.constants.R_OK),
       writable: await check(fs.constants.W_OK),
-      executable: await check(fs.constants.X_OK),
+      executable: await check(fs.constants.X_OK)
     };
   },
 
@@ -129,7 +129,7 @@ export const DocumentFactory = {
   readFileSync(filePath: string, options: IReadOptions = {}): string {
     return fsSync.readFileSync(filePath, {
       encoding: options.encoding ?? "utf-8",
-      flag: options.flag,
+      flag: options.flag
     });
   },
 
@@ -175,7 +175,7 @@ export const DocumentFactory = {
     try {
       return await fs.readFile(filePath, {
         encoding: options.encoding ?? "utf-8",
-        flag: options.flag,
+        flag: options.flag
       });
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -201,7 +201,7 @@ export const DocumentFactory = {
       await fs.writeFile(filePath, data, {
         encoding: options.encoding ?? "utf-8",
         mode: options.mode,
-        flag: options.flag,
+        flag: options.flag
       });
     } catch (error) {
       throw new DocumentError(String(error), filePath);
@@ -224,7 +224,7 @@ export const DocumentFactory = {
       await fs.appendFile(filePath, content, {
         encoding: options.encoding ?? "utf-8",
         mode: options.mode,
-        flag: options.flag,
+        flag: options.flag
       });
     } catch (error) {
       throw new DocumentError(String(error), filePath);
@@ -307,9 +307,9 @@ export const DocumentFactory = {
   ): Promise<Array<{ name: string; type: FileType }>> {
     try {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
-      return entries.map((entry) => ({
+      return entries.map(entry => ({
         name: entry.name,
-        type: entry.isDirectory() ? FileType.Directory : FileType.File,
+        type: entry.isDirectory() ? FileType.Directory : FileType.File
       }));
     } catch (error) {
       throw new DocumentError(String(error), dirPath);
@@ -330,7 +330,7 @@ export const DocumentFactory = {
       if (!this.exists(dirPath)) {
         await fs.mkdir(dirPath, {
           recursive: options.recursive ?? true,
-          mode: options.mode,
+          mode: options.mode
         });
       }
     } catch (error) {
@@ -398,5 +398,5 @@ export const DocumentFactory = {
    */
   join(...paths: string[]): string {
     return path.join(...paths);
-  },
+  }
 };

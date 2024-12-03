@@ -17,11 +17,11 @@ export default class FileHidden {
       return true;
     }
 
-    if (this.patterns.some((pattern) => minimatch(fileName, pattern))) {
+    if (this.patterns.some(pattern => minimatch(fileName, pattern))) {
       return true;
     }
 
-    if (this.additionalIgnoreFiles.some((file) => minimatch(fileName, file))) {
+    if (this.additionalIgnoreFiles.some(file => minimatch(fileName, file))) {
       // Additional ignore files are always excluded
       return true;
     }

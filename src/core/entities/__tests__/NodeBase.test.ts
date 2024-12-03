@@ -10,8 +10,8 @@ jest.mock("../../../infrastructure/filesystem/DocumentFactory", () => ({
     extension: jest.fn(),
     size: jest.fn(),
     readFile: jest.fn(),
-    getStats: jest.fn(),
-  },
+    getStats: jest.fn()
+  }
 }));
 
 class TestNode extends NodeBase {
@@ -27,7 +27,7 @@ describe("NodeBase", () => {
     jest.clearAllMocks();
     (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
     (DocumentFactory.isAbsolute as jest.Mock).mockReturnValue(true);
-    (DocumentFactory.resolve as jest.Mock).mockImplementation((path) => path);
+    (DocumentFactory.resolve as jest.Mock).mockImplementation(path => path);
   });
 
   describe("constructor", () => {
@@ -40,7 +40,7 @@ describe("NodeBase", () => {
     it("should throw error for non-existent path", () => {
       (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
       expect(() => new TestNode("test", "/invalid/path")).toThrow(
-        "Path does not exist"
+        "Path /invalid/path does not exist"
       );
     });
 
@@ -77,7 +77,7 @@ describe("NodeBase", () => {
           name: "test",
           path: "/test/path",
           size: 100,
-          deep: 2,
+          deep: 2
         })
       );
     });
@@ -107,8 +107,8 @@ describe("NodeBase", () => {
           permissions: {
             executable: false,
             readable: false,
-            writable: false,
-          },
+            writable: false
+          }
         })
       );
     });
