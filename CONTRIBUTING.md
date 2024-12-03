@@ -102,7 +102,7 @@ graph TD
 **Key Components:**
 
 - **DocumentTreeBuilder:** Constructs the document tree representation
-- **FileTreeBuilder:** Builds the file system tree
+- **NodeTreeBuilder:** Builds the node tree
 - **RenderStrategy:** Abstract rendering strategy
 - **Rendering Implementations:** Concrete implementations for different formats
 

@@ -1,17 +1,18 @@
 /* eslint-disable no-console */
 import colors from "colors";
+
 import { Config } from "../config/Config";
 
-export const LogLevel = {
+export const LOG_LEVEL = {
   ERROR: 0,
   WARN: 1,
   INFO: 2,
   DEBUG: 3
 } as const;
 
-type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
-export type LogLevelString = keyof typeof LogLevel;
-export const LOG_VALUES = Object.keys(LogLevel) as LogLevelString[];
+type LogLevel = (typeof LOG_LEVEL)[keyof typeof LOG_LEVEL];
+export type LogLevelString = keyof typeof LOG_LEVEL;
+export const LOG_VALUES = Object.keys(LOG_LEVEL) as LogLevelString[];
 
 export class Logger {
   private static instance: Logger;
@@ -39,11 +40,11 @@ export class Logger {
     const configLogLevel = this.config?.get("logLevel") as
       | LogLevelString
       | undefined;
-    return configLogLevel ? LogLevel[configLogLevel] : LogLevel.ERROR;
+    return configLogLevel ? LOG_LEVEL[configLogLevel] : LOG_LEVEL.ERROR;
   }
 
   public error(message: string, error?: Error, ...other: unknown[]): void {
-    if (this.logLevel >= LogLevel.ERROR) {
+    if (this.logLevel >= LOG_LEVEL.ERROR) {
       console.log(colors.red(`[ERROR] ${message}`), ...other);
       if (error instanceof Error && error.stack) {
         console.log(colors.red(error.stack));
@@ -52,19 +53,19 @@ export class Logger {
   }
 
   public warn(message: string): void {
-    if (this.logLevel >= LogLevel.WARN) {
+    if (this.logLevel >= LOG_LEVEL.WARN) {
       console.log(colors.yellow(`[WARN] ${message}`));
     }
   }
 
   public info(message: string): void {
-    if (this.logLevel >= LogLevel.INFO) {
+    if (this.logLevel >= LOG_LEVEL.INFO) {
       console.log(colors.blue(`[INFO] ${message}`));
     }
   }
 
   public debug(message: string): void {
-    if (this.logLevel >= LogLevel.DEBUG) {
+    if (this.logLevel >= LOG_LEVEL.DEBUG) {
       console.log(colors.gray(`[DEBUG] ${message}`));
     }
   }

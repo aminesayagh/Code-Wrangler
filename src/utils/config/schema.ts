@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { LOG_VALUES } from "../logger/Logger";
 
 export const OUTPUT_FORMATS = {
@@ -10,19 +11,19 @@ export type OutputFormats = typeof OUTPUT_FORMATS;
 export type OutputFormatName = keyof OutputFormats;
 export type OutputFormatExtension = OutputFormats[OutputFormatName];
 
-export const OutputFormatSchema = z.enum(["markdown", "html"] as const);
+export const outputFormatSchema = z.enum(["markdown", "html"] as const);
 
-export const FileExtensionSchema = z.enum(["md", "html"] as const);
+export const fileExtensionSchema = z.enum(["md", "html"] as const);
 
-export type OutputFormat = z.infer<typeof OutputFormatSchema>;
-export type FileExtension = z.infer<typeof FileExtensionSchema>;
+export type OutputFormat = z.infer<typeof outputFormatSchema>;
+export type FileExtension = z.infer<typeof fileExtensionSchema>;
 
 export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
   markdown: "md",
   html: "html"
 };
 
-export const ConfigSchema = z
+export const configSchema = z
   .object({
     dir: z.string().default(process.cwd()),
     rootDir: z.string().default(process.cwd()),
@@ -33,7 +34,7 @@ export const ConfigSchema = z
       .default(".*"),
     outputFile: z.string().default("output"),
     logLevel: z.enum(LOG_VALUES as [string, ...string[]]).default("INFO"),
-    outputFormat: z.array(OutputFormatSchema).default(["markdown"]),
+    outputFormat: z.array(outputFormatSchema).default(["markdown"]),
     maxFileSize: z.number().positive().default(1048576),
     maxDepth: z.number().default(100),
     excludePatterns: z
@@ -50,7 +51,7 @@ export const ConfigSchema = z
   })
   .strict();
 
-export type ConfigOptions = z.infer<typeof ConfigSchema>;
+export type ConfigOptions = z.infer<typeof configSchema>;
 // get a type listing all the keys of the config
 export type ConfigKeys = keyof ConfigOptions;
 

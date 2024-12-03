@@ -1,5 +1,6 @@
-import { Config } from "../../utils/config";
 import { minimatch } from "minimatch";
+
+import { Config } from "../../utils/config";
 
 export default class FileHidden {
   private ignoreHiddenFiles: boolean;

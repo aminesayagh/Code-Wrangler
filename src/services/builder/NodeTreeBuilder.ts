@@ -1,16 +1,16 @@
-import { Config, ConfigOptions } from "../../utils/config";
-import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-import { FileType } from "../../types/type";
 import FileHidden from "./FileHidden";
+import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+import { FILE_TYPE, FileType } from "../../types/type";
+import { Config, ConfigOptions } from "../../utils/config";
 
-export interface IFileTreeNode {
+export interface INodeTree {
   name: string;
   path: string;
   type: FileType;
-  children?: IFileTreeNode[];
+  children?: INodeTree[];
 }
 
-export interface IFileTreeBuilderOptions
+export interface INodeTreeBuilderOptions
   extends Pick<
     ConfigOptions,
     | "additionalIgnoreFiles"
@@ -23,9 +23,9 @@ export interface IFileTreeBuilderOptions
   returnType: "paths" | "details";
 }
 
-export class FileTreeBuilder {
+export class NodeTreeBuilder {
   private config: Config;
-  private options: IFileTreeBuilderOptions;
+  private options: INodeTreeBuilderOptions;
   private fileHidden: FileHidden;
 
   constructor(config: Config) {
@@ -34,7 +34,15 @@ export class FileTreeBuilder {
     this.fileHidden = new FileHidden(config);
   }
 
-  private initializeOptions(): IFileTreeBuilderOptions {
+  public async build(): Promise<INodeTree> {
+    const rootDir = this.options.dir;
+    if (!documentFactory.exists(rootDir)) {
+      throw new Error(`Directory ${rootDir} does not exist`);
+    }
+    return await this.buildTree(rootDir);
+  }
+
+  private initializeOptions(): INodeTreeBuilderOptions {
     return {
       dir: this.config.get("dir"),
       pattern: new RegExp(this.config.get("pattern")),
@@ -45,25 +53,18 @@ export class FileTreeBuilder {
       followSymlinks: false
     };
   }
-  public async build(): Promise<IFileTreeNode> {
-    const rootDir = this.options.dir;
-    if (!DocumentFactory.exists(rootDir)) {
-      throw new Error(`Directory ${rootDir} does not exist`);
-    }
-    return await this.buildTree(rootDir);
-  }
 
   private async buildTree(
     nodePath: string,
     depth: number = 0
-  ): Promise<IFileTreeNode> {
-    const stats = await DocumentFactory.getStats(nodePath);
-    const name = DocumentFactory.baseName(nodePath);
+  ): Promise<INodeTree> {
+    const stats = await documentFactory.getStats(nodePath);
+    const name = documentFactory.baseName(nodePath);
 
-    const node: IFileTreeNode = {
+    const node: INodeTree = {
       name,
       path: nodePath,
-      type: stats.isDirectory ? FileType.Directory : FileType.File
+      type: stats.isDirectory ? FILE_TYPE.Directory : FILE_TYPE.File
     };
 
     if (stats.isDirectory) {
@@ -76,11 +77,11 @@ export class FileTreeBuilder {
       }
 
       // Read directory entries
-      const entries = await DocumentFactory.readDir(nodePath);
-      const children: IFileTreeNode[] = [];
+      const entries = await documentFactory.readDir(nodePath);
+      const children: INodeTree[] = [];
 
       for (const entry of entries) {
-        const childPath = DocumentFactory.join(nodePath, entry);
+        const childPath = documentFactory.join(nodePath, entry);
 
         // Skip if should be excluded
         if (this.fileHidden.shouldExclude(entry)) {

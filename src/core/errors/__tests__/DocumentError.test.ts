@@ -1,19 +1,20 @@
+import { DirectoryNotFoundError } from "../DirectoryNotFoundError";
 import { DocumentError } from "../DocumentError";
 import { FileNotFoundError } from "../FileNotFoundError";
-import { DirectoryNotFoundError } from "../DirectoryNotFoundError";
 
 describe("Error Classes", () => {
+  const TEST_PATH = "/path/to/file";
+
   describe("DocumentError", () => {
-    it("should create an instance with the correct properties", () => {
-      const path = "/path/to/file";
+    it("should create an instance with the correct properties for DocumentError", () => {
       const message = "Test error message";
-      const error = new DocumentError(message, path);
+      const error = new DocumentError(message, TEST_PATH);
 
       expect(error).toBeInstanceOf(Error);
       expect(error).toBeInstanceOf(DocumentError);
       expect(error.name).toBe("DocumentError");
-      expect(error.path).toBe(path);
-      expect(error.message).toBe(`Document error at ${path}: ${message}`);
+      expect(error.path).toBe(TEST_PATH);
+      expect(error.message).toBe(`Document error at ${TEST_PATH}: ${message}`);
     });
 
     it("should handle empty message and path", () => {
@@ -33,16 +34,17 @@ describe("Error Classes", () => {
   });
 
   describe("FileNotFoundError", () => {
-    it("should create an instance with the correct properties", () => {
-      const path = "/path/to/file";
-      const error = new FileNotFoundError(path);
+    it("should create an instance with the correct properties for DocumentError", () => {
+      const error = new FileNotFoundError(TEST_PATH);
 
       expect(error).toBeInstanceOf(Error);
       expect(error).toBeInstanceOf(DocumentError);
       expect(error).toBeInstanceOf(FileNotFoundError);
       expect(error.name).toBe("FileNotFoundError");
-      expect(error.path).toBe(path);
-      expect(error.message).toBe(`Document error at ${path}: File not found`);
+      expect(error.path).toBe(TEST_PATH);
+      expect(error.message).toBe(
+        `Document error at ${TEST_PATH}: File not found`
+      );
     });
 
     it("should handle empty path", () => {
@@ -53,7 +55,7 @@ describe("Error Classes", () => {
       expect(error.message).toBe("Document error at : File not found");
     });
 
-    it("should preserve stack trace", () => {
+    it("should preserve stack trace for FileNotFoundError", () => {
       const error = new FileNotFoundError("path");
 
       expect(error.stack).toBeDefined();
@@ -61,7 +63,7 @@ describe("Error Classes", () => {
     });
 
     it("should be catchable as DocumentError", () => {
-      const error = new FileNotFoundError("/path/to/file");
+      const error = new FileNotFoundError(TEST_PATH);
 
       try {
         throw error;
@@ -72,7 +74,7 @@ describe("Error Classes", () => {
   });
 
   describe("DirectoryNotFoundError", () => {
-    it("should create an instance with the correct properties", () => {
+    it("should create an instance with the correct properties for DirectoryNotFoundError", () => {
       const path = "/path/to/directory";
       const error = new DirectoryNotFoundError(path);
 
@@ -94,7 +96,7 @@ describe("Error Classes", () => {
       expect(error.message).toBe("Document error at : Directory not found");
     });
 
-    it("should preserve stack trace", () => {
+    it("should preserve stack trace for DirectoryNotFoundError", () => {
       const error = new DirectoryNotFoundError("path");
 
       expect(error.stack).toBeDefined();
@@ -106,7 +108,6 @@ describe("Error Classes", () => {
 
       try {
         throw error;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         expect(e instanceof DocumentError).toBe(true);
       }

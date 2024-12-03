@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { Template } from "../TemplateEngine";
-import { DocumentFactory } from "../../filesystem/DocumentFactory";
+
 import { logger } from "../../../utils/logger";
+import { documentFactory } from "../../filesystem/DocumentFactory";
+import { Template } from "../TemplateEngine";
 
 // Mock DocumentFactory
 jest.mock("../../filesystem/DocumentFactory", () => ({
-  DocumentFactory: {
+  documentFactory: {
     readFile: jest.fn()
   }
 }));
@@ -25,6 +26,8 @@ describe("Template", () => {
     ACTIVE: z.boolean().optional()
   });
 
+  const TEMPLATE_PATH = "test/template";
+
   // Reset mocks before each test
   beforeEach(() => {
     jest.clearAllMocks();
@@ -42,12 +45,12 @@ describe("Template", () => {
       "Hello {{TITLE}}, Count: {{COUNT}}, Active: {{ACTIVE}}, Extra: {{EXTRA}}";
 
     beforeEach(() => {
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
     });
 
     it("should load template content successfully", async () => {
       const template = new Template("page", basicSchema);
-      await template.load("test.template");
+      await template.load(TEMPLATE_PATH);
       expect(template.content).toBe(mockContent);
     });
 
@@ -56,17 +59,17 @@ describe("Template", () => {
       const additionalFields = {
         EXTRA: z.string()
       };
-      await template.load("test.template", additionalFields);
+      await template.load(TEMPLATE_PATH, additionalFields);
       expect(template.content).toBe(mockContent);
     });
 
     it("should throw error when required tokens are missing", async () => {
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(
         "No tokens here"
       );
       const template = new Template("page", basicSchema);
 
-      await template.load("test.template");
+      await template.load(TEMPLATE_PATH);
       // check if logger.warn was called
       expect(logger.warn).toHaveBeenCalledWith(
         "Missing required tokens in page template: TITLE, COUNT, ACTIVE"
@@ -74,12 +77,12 @@ describe("Template", () => {
     });
 
     it("should throw error when DocumentFactory fails", async () => {
-      (DocumentFactory.readFile as jest.Mock).mockRejectedValue(
+      (documentFactory.readFile as jest.Mock).mockRejectedValue(
         new Error("File read error")
       );
       const template = new Template("page", basicSchema);
 
-      await expect(template.load("test.template")).rejects.toThrow(
+      await expect(template.load(TEMPLATE_PATH)).rejects.toThrow(
         "File read error"
       );
     });
@@ -95,10 +98,10 @@ describe("Template", () => {
 
     it("should return content after loading", async () => {
       const mockContent = "Hello {{TITLE}}";
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
 
       const template = new Template("page", basicSchema);
-      await template.load("test.template");
+      await template.load(TEMPLATE_PATH);
       expect(template.content).toBe(mockContent);
     });
   });
@@ -107,12 +110,12 @@ describe("Template", () => {
     it("should create and load template in one step", async () => {
       const mockContent =
         "Hello {{TITLE}}, Count: {{COUNT}}, Active: {{ACTIVE}}";
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
 
       const template = await Template.create(
         "page",
         basicSchema,
-        "test.template"
+        TEMPLATE_PATH
       );
       expect(template).toBeInstanceOf(Template);
       expect(template.content).toBe(mockContent);
@@ -120,7 +123,7 @@ describe("Template", () => {
 
     it("should create template with additional fields", async () => {
       const mockContent = "Hello {{TITLE}}, Extra: {{EXTRA}}";
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
 
       const additionalFields = {
         EXTRA: z.string()
@@ -129,7 +132,7 @@ describe("Template", () => {
       const template = await Template.create(
         "page",
         basicSchema,
-        "test.template",
+        TEMPLATE_PATH,
         additionalFields
       );
       expect(template).toBeInstanceOf(Template);
@@ -137,12 +140,12 @@ describe("Template", () => {
     });
 
     it("should throw error when creation fails", async () => {
-      (DocumentFactory.readFile as jest.Mock).mockRejectedValue(
+      (documentFactory.readFile as jest.Mock).mockRejectedValue(
         new Error("Creation failed")
       );
 
       await expect(
-        Template.create("page", basicSchema, "test.template")
+        Template.create("page", basicSchema, TEMPLATE_PATH)
       ).rejects.toThrow("Creation failed");
     });
   });
@@ -151,10 +154,10 @@ describe("Template", () => {
     it("should render template with valid values", async () => {
       const mockContent =
         "Hello {{TITLE}}, Count: {{COUNT}}, Active: {{ACTIVE}}";
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
 
       const template = new Template("page", basicSchema);
-      await template.load("test.template");
+      await template.load(TEMPLATE_PATH);
 
       const rendered = template.render({
         TITLE: "World",
@@ -167,10 +170,10 @@ describe("Template", () => {
 
     it("should throw error for invalid values", async () => {
       const mockContent = "Hello {{TITLE}}, Count: {{COUNT}}";
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
 
       const template = new Template("page", basicSchema);
-      await template.load("test.template");
+      await template.load(TEMPLATE_PATH);
 
       expect(() => template.render({ TITLE: 123, COUNT: "invalid" })).toThrow(
         "Template content validation failed for page"
@@ -184,10 +187,10 @@ describe("Template", () => {
       });
 
       const mockContent = "{{REQUIRED}} {{OPTIONAL}}";
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
 
       const template = new Template("page", optionalSchema);
-      await template.load("test.template");
+      await template.load(TEMPLATE_PATH);
 
       try {
         template.render({ REQUIRED: "Hello" });
@@ -201,10 +204,10 @@ describe("Template", () => {
 
     it("should handle complex token patterns", async () => {
       const mockContent = "{{TITLE}} {{TITLE}} {{COUNT}} {{TITLE}}";
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
 
       const template = new Template("page", basicSchema);
-      await template.load("test.template");
+      await template.load(TEMPLATE_PATH);
 
       const rendered = template.render({
         TITLE: "Hello",
@@ -219,11 +222,11 @@ describe("Template", () => {
   describe("Error Handling", () => {
     it("should handle template with no tokens", async () => {
       const mockContent = "Hello World";
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
 
       const template = new Template("page", basicSchema);
 
-      await template.load("test.template");
+      await template.load(TEMPLATE_PATH);
       // template should be invalid
       const rendered = template.render({});
       expect(rendered).toBe(mockContent);
@@ -231,10 +234,10 @@ describe("Template", () => {
 
     it("should handle undefined token values", async () => {
       const mockContent = "Hello {{TITLE}}";
-      (DocumentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
+      (documentFactory.readFile as jest.Mock).mockResolvedValue(mockContent);
 
       const template = new Template("page", basicSchema);
-      await template.load("test.template");
+      await template.load(TEMPLATE_PATH);
 
       try {
         template.render({});

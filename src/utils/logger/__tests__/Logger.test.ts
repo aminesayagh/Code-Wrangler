@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
-import { LOG_VALUES, LogLevel, Logger } from "../Logger";
-import { Config } from "../../config/Config";
 import colors from "colors";
+
+import { Config } from "../../config/Config";
+import { LOG_LEVEL, LOG_VALUES, Logger } from "../Logger";
 
 jest.mock("../../config/Config");
 jest.spyOn(console, "log").mockImplementation(() => {});
@@ -54,13 +55,13 @@ describe("Logger", () => {
     it("should return ERROR level when config returns undefined", () => {
       logger.setConfig(mockConfig);
       mockConfig.get.mockReturnValue(undefined);
-      expect(logger["logLevel"]).toBe(LogLevel.ERROR);
+      expect(logger["logLevel"]).toBe(LOG_LEVEL.ERROR);
     });
 
     it("should return correct log level from config", () => {
       logger.setConfig(mockConfig);
       mockConfig.get.mockReturnValue("DEBUG");
-      expect(logger["logLevel"]).toBe(LogLevel.DEBUG);
+      expect(logger["logLevel"]).toBe(LOG_LEVEL.DEBUG);
     });
   });
 
@@ -68,19 +69,20 @@ describe("Logger", () => {
     beforeEach(() => {
       logger.setConfig(mockConfig);
     });
+    const TEST_ERROR = "Test error";
 
     describe("error", () => {
       it("should log error messages when level is ERROR or higher", () => {
         mockConfig.get.mockReturnValue("ERROR");
-        logger.error("Test error");
+        logger.error(TEST_ERROR);
         expect(console.log).toHaveBeenCalledWith(
-          colors.red("[ERROR] Test error")
+          colors.red(`[ERROR] ${TEST_ERROR}`)
         );
       });
 
       it("should log error with stack trace when error object is provided", () => {
         mockConfig.get.mockReturnValue("ERROR");
-        const error = new Error("Test error");
+        const error = new Error(TEST_ERROR);
         logger.error("Error occurred", error);
 
         expect(console.log).toHaveBeenCalledWith(
@@ -91,9 +93,9 @@ describe("Logger", () => {
 
       it("should log additional arguments", () => {
         mockConfig.get.mockReturnValue("ERROR");
-        logger.error("Test error", undefined, { details: "test" });
+        logger.error(TEST_ERROR, undefined, { details: "test" });
         expect(console.log).toHaveBeenCalledWith(
-          colors.red("[ERROR] Test error"),
+          colors.red(`[ERROR] ${TEST_ERROR}`),
           { details: "test" }
         );
       });

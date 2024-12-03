@@ -1,9 +1,9 @@
-import { NodeBase } from "../NodeBase";
-import { DocumentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
+import { INodeContent, NodeBase } from "../NodeBase";
 
 // Mock DocumentFactory
 jest.mock("../../../infrastructure/filesystem/DocumentFactory", () => ({
-  DocumentFactory: {
+  documentFactory: {
     exists: jest.fn(),
     isAbsolute: jest.fn(),
     resolve: jest.fn(),
@@ -16,36 +16,39 @@ jest.mock("../../../infrastructure/filesystem/DocumentFactory", () => ({
 
 class TestNode extends NodeBase {
   async bundle(): Promise<void> {}
-  render(): void {}
+  render(): INodeContent {
+    return { content: "" };
+  }
   get secondaryProps(): Record<string, unknown> | undefined {
     return {};
   }
 }
 
 describe("NodeBase", () => {
+  const TEST_PATH = "/test/path";
   beforeEach(() => {
     jest.clearAllMocks();
-    (DocumentFactory.exists as jest.Mock).mockReturnValue(true);
-    (DocumentFactory.isAbsolute as jest.Mock).mockReturnValue(true);
-    (DocumentFactory.resolve as jest.Mock).mockImplementation(path => path);
+    (documentFactory.exists as jest.Mock).mockReturnValue(true);
+    (documentFactory.isAbsolute as jest.Mock).mockReturnValue(true);
+    (documentFactory.resolve as jest.Mock).mockImplementation(path => path);
   });
 
   describe("constructor", () => {
     it("should initialize node with correct props", () => {
-      const testNode = new TestNode("test", "/test/path");
+      const testNode = new TestNode("test", TEST_PATH);
       expect(testNode.name).toBe("test");
-      expect(testNode.path).toBe("/test/path");
+      expect(testNode.path).toBe(TEST_PATH);
     });
 
     it("should throw error for non-existent path", () => {
-      (DocumentFactory.exists as jest.Mock).mockReturnValue(false);
+      (documentFactory.exists as jest.Mock).mockReturnValue(false);
       expect(() => new TestNode("test", "/invalid/path")).toThrow(
         new Error("Path /invalid/path does not exist")
       );
     });
 
     it("should throw error for non-absolute path", () => {
-      (DocumentFactory.isAbsolute as jest.Mock).mockReturnValue(false);
+      (documentFactory.isAbsolute as jest.Mock).mockReturnValue(false);
       expect(() => new TestNode("test", "relative/path")).toThrow(
         new Error("Path relative/path is not absolute")
       );
@@ -56,7 +59,7 @@ describe("NodeBase", () => {
     let node: TestNode;
 
     beforeEach(() => {
-      node = new TestNode("test", "/test/path");
+      node = new TestNode("test", TEST_PATH);
     });
 
     it("should get and set deep property", () => {
@@ -75,7 +78,7 @@ describe("NodeBase", () => {
       expect(node.props).toEqual(
         expect.objectContaining({
           name: "test",
-          path: "/test/path",
+          path: TEST_PATH,
           size: 100,
           deep: 2
         })
@@ -87,7 +90,7 @@ describe("NodeBase", () => {
     let node: TestNode;
 
     beforeEach(() => {
-      node = new TestNode("test", "/test/path");
+      node = new TestNode("test", TEST_PATH);
     });
 
     it("should dispose correctly", async () => {
@@ -118,7 +121,7 @@ describe("NodeBase", () => {
       const clone = await node.clone();
       expect(clone.size).toBe(100);
       expect(clone.name).toBe("test");
-      expect(clone.path).toBe("/test/path");
+      expect(clone.path).toBe(TEST_PATH);
     });
   });
 });

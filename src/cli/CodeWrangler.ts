@@ -1,8 +1,9 @@
 import { Command } from "commander";
-import { Config } from "../utils/config/Config";
+
 import { GenerateCommand } from "./commands/GenerateCommand";
-import { ProgramBuilder } from "./program/ProgramBuilder";
 import { ICommandOptions } from "./commands/types";
+import { ProgramBuilder } from "./program/ProgramBuilder";
+import { Config } from "../utils/config/Config";
 
 export class CodeWrangler {
   private static instance: CodeWrangler | undefined;
@@ -19,12 +20,6 @@ export class CodeWrangler {
     this.setupCommands();
   }
 
-  private setupCommands(): void {
-    this.program.action(async (pattern: string, options: ICommandOptions) => {
-      await this.generateCommand.execute([pattern], options);
-    });
-  }
-
   public static async run(): Promise<boolean> {
     if (!CodeWrangler.instance) {
       const config = await Config.load();
@@ -33,5 +28,11 @@ export class CodeWrangler {
       return true;
     }
     throw new Error("CodeWrangler already initialized");
+  }
+
+  private setupCommands(): void {
+    this.program.action(async (pattern: string, options: ICommandOptions) => {
+      await this.generateCommand.execute([pattern], options);
+    });
   }
 }

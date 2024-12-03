@@ -1,10 +1,11 @@
 import { ObjectEncodingOptions } from "fs";
-import * as fs from "fs/promises";
 import * as fsSync from "fs";
+import * as fs from "fs/promises";
 import * as path from "path";
 
 import { DocumentError, FileNotFoundError } from "../../core/errors";
 import {
+  FILE_TYPE,
   FileType,
   IDirectoryOptions,
   IFileStats,
@@ -12,9 +13,7 @@ import {
   IWriteOptions
 } from "../../types/type";
 
-export const DocumentFactory = {
-  VERSION: "1.0.0",
-
+export const documentFactory = {
   /**
    * Gets the type of a file system entry
    * @param filePath - The path to check
@@ -25,7 +24,7 @@ export const DocumentFactory = {
   async type(filePath: string): Promise<FileType> {
     try {
       const stats = await fs.stat(filePath);
-      return stats.isDirectory() ? FileType.Directory : FileType.File;
+      return stats.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         throw new FileNotFoundError(filePath);
@@ -42,7 +41,7 @@ export const DocumentFactory = {
    * @throws {DocumentError} For other file system errors or if path is a directory
    */
   async size(filePath: string): Promise<number> {
-    const isDirectory = (await this.type(filePath)) === FileType.Directory;
+    const isDirectory = (await this.type(filePath)) === FILE_TYPE.Directory;
     if (isDirectory) {
       throw new DocumentError("Path is a directory", filePath);
     }
@@ -309,7 +308,7 @@ export const DocumentFactory = {
       const entries = await fs.readdir(dirPath, { withFileTypes: true });
       return entries.map(entry => ({
         name: entry.name,
-        type: entry.isDirectory() ? FileType.Directory : FileType.File
+        type: entry.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File
       }));
     } catch (error) {
       throw new DocumentError(String(error), dirPath);

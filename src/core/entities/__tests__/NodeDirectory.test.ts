@@ -1,16 +1,25 @@
+import * as fs from "fs/promises";
+import * as path from "path";
+
+import { IRenderStrategy } from "../../../services/renderer/RenderStrategy";
+import { INodeContent } from "../NodeBase";
 import { NodeDirectory } from "../NodeDirectory";
 import { NodeFile } from "../NodeFile";
-import * as path from "path";
-import * as fs from "fs/promises";
 
 class TestDirectory extends NodeDirectory {
-  render(): string {
-    return "render";
+  public render(_: IRenderStrategy): INodeContent {
+    return {
+      content: "render"
+    };
   }
 }
 
 class TestFile extends NodeFile {
-  public render(): void {}
+  public render(_: IRenderStrategy): INodeContent {
+    return {
+      content: "render"
+    };
+  }
 }
 
 describe("Directory", () => {
@@ -37,8 +46,8 @@ describe("Directory", () => {
     expect(testDirectory.children).toEqual([]);
   });
 
-  it("addChild throws error for invalid child type", async () => {
-    await expect(testDirectory.addChild({} as NodeFile)).rejects.toThrow(
+  it("addChild throws error for invalid child type", () => {
+    expect(() => testDirectory.addChild({} as NodeFile)).toThrow(
       "Invalid child type"
     );
   });
@@ -82,11 +91,11 @@ describe("Directory", () => {
         path.join(MOCK_PATH, "dir/file4.js")
       );
 
-      await testDirectory.addChild(mockFile1);
-      await testDirectory.addChild(mockFile2);
-      await testDirectory.addChild(mockSubDir);
-      await mockSubDir.addChild(mockFile3);
-      await mockSubDir.addChild(mockFile4);
+      testDirectory.addChild(mockFile1);
+      testDirectory.addChild(mockFile2);
+      testDirectory.addChild(mockSubDir);
+      mockSubDir.addChild(mockFile3);
+      mockSubDir.addChild(mockFile4);
 
       await testDirectory.bundle(1);
 

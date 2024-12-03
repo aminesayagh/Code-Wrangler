@@ -57,7 +57,6 @@ classDiagram
         #_props: PropsNode
         +constructor(name: string, path: string)
         -initNode(name: string, path: string): void
-        -validatePath(path: string): boolean
         +validate(): boolean
         +bundle(deep: number)*: Promise~void~
         +render()*: void
@@ -116,30 +115,51 @@ classDiagram
         +dispose(): Promise~void~
     }
 
-    %% Builder Classes
-    class DocumentTreeBuilder {
-        -root: RenderableDirectory|RenderableFile
-        -builder: FileTreeBuilder
-        +constructor(config: Config, renderStrategy: RenderStrategy[])
-        +build(): Promise~void~
-        -createDocumentStructure(node: FileTreeNode): Promise~RenderableDirectory|RenderableFile~
-    }
-
-    class FileTreeBuilder {
+    %% Tree Builder
+    class NodeTreeBuilder {
         -config: Config
-        -options: FileTreeBuilderOptions
+        -options: NodeTreeBuilderOptions
         -fileHidden: FileHidden
         +constructor(config: Config)
         +build(): Promise~FileTreeNode~
         -buildTree(nodePath: string, depth: number): Promise~FileTreeNode~
     }
 
+    class DocumentTreeBuilder {
+        -root: RenderableDirectory|RenderableFile
+        -builder: NodeTreeBuilder
+        +constructor(config: Config, renderStrategy: RenderStrategy[])
+        +build(): Promise~void~
+        -createDocumentStructure(node: FileTreeNode): Promise~RenderableDirectory|RenderableFile~
+    }
+
+    %% Template Engine
+    class TemplateEngine {
+        -schema: Record~string, unknown~
+        +constructor()
+        +load(path: string): Promise~void~
+        +render(data: Record~string, unknown~): string
+        +getTemplateTokens(): string[]
+        +dispose(): Promise~void~
+    }
+
+    %% Hidden Files Filter
     class FileHidden {
         -ignoreHiddenFiles: boolean
         -patterns: string[]
         -additionalIgnoreFiles: string[]
         +constructor(config: Config)
         +shouldExclude(fileName: string): boolean
+    }
+
+    %% Render Strategy
+    class IRenderStrategy {
+        <<interface>>
+        +renderFile(file: NodeFile): string
+        +renderDirectory(directory: NodeDirectory): string
+        +loadTemplates(): Promise~void~
+        +render(rootDirectory: NodeDirectory): Promise~string~
+        +dispose(): Promise~void~
     }
 
     class BaseRenderStrategy {
@@ -159,9 +179,11 @@ classDiagram
     NodeBase .. PropsNode: implements
     PropsNode .. FileStats: implements
     FileStats .. FilePermissions: implements
-    FileTreeBuilder o-- FileHidden: uses
-    DocumentTreeBuilder o-- FileTreeBuilder: uses
+    NodeTreeBuilder o-- FileHidden: uses
+    DocumentTreeBuilder o-- NodeTreeBuilder: uses
     RenderableFile o-- BaseRenderStrategy: extends
+    RenderStrategy <|-- BaseRenderStrategy: implements
+    IRenderStrategy <|-- RenderStrategy: implements
     RenderableDirectory o-- BaseRenderStrategy: extends
     BaseRenderStrategy <|-- RenderStrategy: implements
     NodeDirectory o-- NodeFile: contains

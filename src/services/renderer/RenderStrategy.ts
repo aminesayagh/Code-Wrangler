@@ -1,30 +1,30 @@
-import { NodeFile } from "../../core/entities/NodeFile";
 import { NodeDirectory } from "../../core/entities/NodeDirectory";
-import { Config, OutputFormatExtension } from "../../utils/config";
-import { DocumentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+import { NodeFile } from "../../core/entities/NodeFile";
+import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import { Template } from "../../infrastructure/templates/TemplateEngine";
 import {
   BaseTemplate,
-  BaseTemplateSchema,
   DirectoryTemplate,
-  DirectoryTemplateSchema,
   FileTemplate,
-  FileTemplateSchema
+  baseTemplateSchema,
+  directoryTemplateSchema,
+  fileTemplateSchema
 } from "../../infrastructure/templates/zod";
 import { TemplateType } from "../../types/template";
+import { Config, OutputFormatExtension } from "../../utils/config";
 
 interface IContentRenderer {
-  renderFile(file: NodeFile): string;
-  renderDirectory(directory: NodeDirectory): string;
+  renderFile: (file: NodeFile) => string;
+  renderDirectory: (directory: NodeDirectory) => string;
 }
 
 interface ITemplateLoader {
-  loadTemplates(): Promise<void>;
+  loadTemplates: () => Promise<void>;
 }
 
 interface IDocumentRenderer {
-  render(rootDirectory: NodeDirectory): Promise<string>;
-  dispose(): Promise<void>;
+  render: (rootDirectory: NodeDirectory) => string;
+  dispose: () => void;
 }
 
 export interface IRenderStrategy
@@ -47,31 +47,31 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
     this.extension = extension;
   }
 
-  async loadTemplates(): Promise<void> {
-    const templateDir = DocumentFactory.join(
+  public async loadTemplates(): Promise<void> {
+    const templateDir = documentFactory.join(
       this.config.get("rootDir") as string,
       this.config.get("templatesDir") as string
     );
     // check if the templates directory exists
-    if (!DocumentFactory.exists(templateDir)) {
+    if (!documentFactory.exists(templateDir)) {
       throw new Error(`Templates directory not found: ${templateDir}`);
     }
 
     this.templates = {
       page: await Template.create(
         "page",
-        BaseTemplateSchema,
-        DocumentFactory.join(templateDir, `page.${this.extension}`)
+        baseTemplateSchema,
+        documentFactory.join(templateDir, `page.${this.extension}`)
       ),
       file: await Template.create(
         "file",
-        FileTemplateSchema,
-        DocumentFactory.join(templateDir, `file.${this.extension}`)
+        fileTemplateSchema,
+        documentFactory.join(templateDir, `file.${this.extension}`)
       ),
       directory: await Template.create(
         "directory",
-        DirectoryTemplateSchema,
-        DocumentFactory.join(templateDir, `directory.${this.extension}`)
+        directoryTemplateSchema,
+        documentFactory.join(templateDir, `directory.${this.extension}`)
       )
     };
   }
@@ -110,19 +110,7 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
     });
   }
 
-  protected replaceSelectors(
-    template: string,
-    values: BaseTemplate | FileTemplate | DirectoryTemplate
-  ): string {
-    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-      const typedKey = key as keyof typeof values;
-      return values[typedKey] !== undefined
-        ? String(values[typedKey])
-        : `{{${key}}}`;
-    });
-  }
-
-  public async render(rootDirectory: NodeDirectory): Promise<string> {
+  public render(rootDirectory: NodeDirectory): string {
     const directoryContent = this.renderDirectory(rootDirectory);
     if (!this.templates.page) {
       throw new Error("Page template is not loaded");
@@ -139,11 +127,23 @@ export abstract class BaseRenderStrategy implements IRenderStrategy {
     });
   }
 
-  public async dispose(): Promise<void> {
+  public dispose(): void {
     this.templates = {
       page: null,
       file: null,
       directory: null
     };
+  }
+
+  protected replaceSelectors(
+    template: string,
+    values: BaseTemplate | FileTemplate | DirectoryTemplate
+  ): string {
+    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+      const typedKey = key as keyof typeof values;
+      return values[typedKey] !== undefined
+        ? String(values[typedKey])
+        : `{{${key}}}`;
+    });
   }
 }
