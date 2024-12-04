@@ -18,7 +18,7 @@ CodeWrangler is an extensible documentation automation platform that transforms 
 
 ## Overview
 
-CodeWrangler streamlines the process of generating comprehensive documentation from source code. By leveraging intelligent scanning and customizable templates, it produces consistent, high-quality documentation that can be enhanced through AI-powered analysis.
+CodeWrangler is an intelligent documentation assistant that automatically creates comprehensive knowledge bases from your code repositories. It's designed to bridge the gap between your codebase and AI language models like ChatGPT and Claude, making it easier to have meaningful conversations about your code.
 
 ## Key Features
 
@@ -76,24 +76,61 @@ templates/
 #### Page Template
 
 ```md
-# {{PROJECT_NAME}}
+# Project Documentation: {{PROJECT_NAME}}
 
-Generated: {{GENERATION_DATE}}
+## Overview
 
+This documentation was automatically generated on {{GENERATION_DATE}}.
+
+## Directory Structure
+
+\`\`\`
 {{DIRECTORY_STRUCTURE}}
+\`\`\`
 
-## Content
+## File Contents
 
-{{CONTENT}}
+{{DIRECTORY_CONTENT}}
+
+## Summary
+
+- Total Files: {{TOTAL_FILES}}
+- Total Directories: {{TOTAL_DIRECTORIES}}
+- Total Size: {{TOTAL_SIZE}}
 ```
 
 #### File Template
 
 ```md
-### {{FILE_NAME}}
+### File: {{NAME}}
 
-{{FILE_EXTENSION}}
-{{FILE_CONTENTS}}
+- **Path:** {{PATH}}
+- **Extension:** {{EXTENSION}}
+- **Size:** {{SIZE}} bytes
+- **Depth:** {{DEEP}}
+- **Lines:** {{LINES}}
+
+### Content:
+
+\`\`\`{{EXTENSION}}
+{{CONTENT}}
+\`\`\`
+```
+
+#### Directory Template
+
+```md
+### Directory: {{NAME}}
+
+- **Path:** {{PATH}}
+- **Size:** {{SIZE}} bytes
+- **Files:** {{LENGTH}}
+- **Total Files (including subdirectories):** {{DEEP_LENGTH}}
+- **Depth:** {{DEEP}}
+
+#### Contents:
+
+{{CONTENT}}
 ```
 
 ### Custom Templates
@@ -143,20 +180,22 @@ Options:
     }
   },
   "plugins": {
+    "tree-visualizer": {
+      "enabled": true,
+      "format": "ascii"
+    },
+    "compress": {
+      "enabled": true
+    },
     "ai-summary": {
       "enabled": true,
       "model": "gpt-4"
+    },
+    "relative-documentation": {
+      "enabled": true
     }
   }
 }
-```
-
-### Environment Variables
-
-```bash
-CODEWRANGLER_CONFIG_PATH=./config/codewrangler.json
-CODEWRANGLER_TEMPLATE_DIR=./templates
-CODEWRANGLER_LOG_LEVEL=DEBUG
 ```
 
 ## Plugin System

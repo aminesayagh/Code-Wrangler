@@ -4,6 +4,7 @@
 - **Extension:** {{EXTENSION}}
 - **Size:** {{SIZE}} bytes
 - **Depth:** {{DEEP}}
+- **Lines:** {{LINES}}
 
 ##### Content:
 
