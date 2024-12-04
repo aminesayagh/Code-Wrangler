@@ -31,6 +31,8 @@ export class GenerateCommand implements ICommand {
       outputFormat.map(format => new CONFIG_FROM_FORMAT[format](this.config));
       const builder = new DocumentTreeBuilder(this.config);
       await builder.build();
+
+      // Execute rendering
     } catch (error) {
       logger.error("Generation failed:", error as Error);
       throw error;

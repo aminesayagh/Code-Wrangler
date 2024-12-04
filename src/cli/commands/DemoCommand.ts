@@ -238,7 +238,9 @@ ${files.map(file => generateFileSection(file)).join("\n")}
 `
     : `
 # Code documentation
+\`\`\`
 ${treeContent}
+\`\`\`
 ${files.map(file => generateFileSection(file, true)).join("\n")}
 `;
 
@@ -317,6 +319,6 @@ if (require.main === module) {
       "**/__tests__",
       "**/*.test.ts"
     ],
-    compress: true
+    compress: false
   }).catch(console.error);
 }
