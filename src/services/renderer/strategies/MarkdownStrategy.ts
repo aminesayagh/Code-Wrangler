@@ -4,7 +4,7 @@ import { OUTPUT_FORMATS } from "../../../utils/config/schema";
 import { BaseRenderStrategy } from "../RenderStrategy";
 
 export class MarkdownStrategy extends BaseRenderStrategy {
-  constructor(config: Config) {
+  public constructor(config: Config) {
     super(config, OUTPUT_FORMATS.markdown);
   }
 

@@ -7,7 +7,7 @@ export default class FileHidden {
   private patterns: string[];
   private additionalIgnoreFiles: string[];
 
-  constructor(config: Config) {
+  public constructor(config: Config) {
     this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
     this.patterns = [...config.get("excludePatterns")];
     this.additionalIgnoreFiles = config.get("additionalIgnoreFiles");
