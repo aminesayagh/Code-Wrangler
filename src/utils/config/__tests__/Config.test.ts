@@ -7,7 +7,8 @@ import { DEFAULT_CONFIG } from "../schema";
 jest.mock("../../../infrastructure/filesystem/DocumentFactory");
 jest.mock("../../logger/Logger", () => ({
   logger: { error: jest.fn() },
-  LOG_VALUES: ["ERROR", "WARN", "INFO", "DEBUG"]
+  LOG_VALUES: ["ERROR", "WARN", "INFO", "DEBUG"],
+  setConfig: jest.fn()
 }));
 jest.mock("../../../infrastructure/filesystem/JsonReader");
 

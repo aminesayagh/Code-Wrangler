@@ -1,7 +1,6 @@
 import { Command } from "commander";
 
 import { MainCICommand } from "./commands/MainCICommand";
-import { ICommandOptions } from "./commands/types";
 import { ProgramBuilder } from "./program/ProgramBuilder";
 import { Config } from "../utils/config/Config";
 
@@ -26,9 +25,11 @@ export class CodeWrangler {
   }
 
   private setupCommands(): void {
-    this.program.action(async (pattern: string, options: ICommandOptions) => {
-      const command = new MainCICommand(this.config);
-      await command.execute([pattern], options);
-    });
+    this.program.action(
+      async (pattern: string, options: Record<string, string>) => {
+        const command = new MainCICommand(this.config);
+        await command.execute([pattern], options);
+      }
+    );
   }
 }

@@ -34,8 +34,6 @@ export abstract class BaseCommand {
     _: string[],
     options: ICommandOptions
   ): Promise<void> {
-    this.config.override({ ...options });
-
     if (options.verbose) {
       this.logVerbose();
     }

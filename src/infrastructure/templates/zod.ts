@@ -5,6 +5,8 @@ export const baseTemplateSchema = z.object({
   GENERATION_DATE: z.string().datetime(),
   DIRECTORY_STRUCTURE: z.string(),
   TOTAL_SIZE: z.number(),
+  TOTAL_FILES: z.number(),
+  TOTAL_DIRECTORIES: z.number(),
   CONTENT: z.string()
 });
 
@@ -31,6 +33,7 @@ export const directoryTemplateSchema = z.object({
   DIRECTORY_LENGTH: z.number(),
   DIRECTORY_DEEP_LENGTH: z.number(),
   DIRECTORY_DEPTH: z.number(),
+  DIRECTORY_NUMBER_OF_FILES: z.number(),
   DIRECTORY_CONTENT: z.string()
 });
 

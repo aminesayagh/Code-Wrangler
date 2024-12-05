@@ -6,7 +6,7 @@ import {
   DirectoryTemplate,
   FileTemplate
 } from "../../infrastructure/templates/zod";
-import { Config } from "../../utils/config";
+import { Config, OutputFormat } from "../../utils/config";
 
 interface IContentRenderer {
   renderFile: (file: NodeFile) => string;
@@ -19,7 +19,7 @@ interface IDocumentRenderer {
 }
 
 export interface IRenderStrategy extends IContentRenderer, IDocumentRenderer {
-  getName: () => string;
+  getName: () => OutputFormat;
 }
 
 export abstract class RenderBaseStrategy implements IRenderStrategy {
@@ -29,7 +29,7 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
 
   protected constructor(
     private readonly config: Config,
-    public readonly name: string,
+    public readonly name: OutputFormat,
     templatePage: Template,
     templateDirectory: Template,
     templateFile: Template
@@ -39,17 +39,17 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
     this.templateFile = templateFile;
   }
 
-  public getName(): string {
+  public getName(): OutputFormat {
     return this.name;
   }
 
   public renderFile(file: NodeFile): string {
     return this.templateFile.render({
       FILE_NAME: file.name,
-      FILE_EXTENSION: file.extension,
+      FILE_EXTENSION: file.extension.replace(".", ""),
       FILE_SIZE: file.size,
       FILE_DEPTH: file.deep,
-      FILE_LINES: 0,
+      FILE_LINES: file.content?.split("\n").length || 0,
       FILE_PATH: file.path,
       FILE_CONTENTS: file.content || ""
     } as FileTemplate & Record<string, string>);
@@ -63,6 +63,7 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
       DIRECTORY_PATH: directory.path,
       DIRECTORY_SIZE: directory.size,
       DIRECTORY_LENGTH: directory.length,
+      DIRECTORY_NUMBER_OF_FILES: directory.numberOfFiles,
       DIRECTORY_DEEP_LENGTH: directory.deepLength,
       DIRECTORY_DEPTH: directory.deep,
       DIRECTORY_CONTENT: content
@@ -72,14 +73,20 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
   public render(rootDirectory: NodeDirectory | NodeFile): string {
     const rootContent = this.renderNode(rootDirectory);
 
-    return this.templatePage.render({
+    const templateConfig = {
       PROJECT_NAME:
         this.config.get("projectName") || rootDirectory.name || "Project",
-      GENERATION_DATE: new Date().toLocaleDateString(),
-      DIRECTORY_STRUCTURE: rootContent,
+      GENERATION_DATE: new Date().toISOString(),
       TOTAL_SIZE: rootDirectory.size,
       CONTENT: rootContent
-    } as BaseTemplate & Record<string, string>);
+    } as BaseTemplate & Record<string, string>;
+
+    if (rootDirectory.type === "directory") {
+      templateConfig["TOTAL_FILES"] = rootDirectory.length;
+      templateConfig["TOTAL_DIRECTORIES"] = rootDirectory.deepLength;
+    }
+
+    return this.templatePage.render(templateConfig);
   }
 
   public dispose(): void {

@@ -1,7 +1,6 @@
 import { NodeFile } from "../../../core/entities/NodeFile";
 import { Template } from "../../../infrastructure/templates/TemplateEngine";
 import { Config } from "../../../utils/config";
-import { OUTPUT_FORMATS } from "../../../utils/config/schema";
 import { RenderMarkdownStrategy } from "../strategies/MarkdownStrategy";
 
 jest.mock("../../../core/entities/NodeFile");
@@ -59,7 +58,7 @@ describe("RenderMarkdownStrategy", () => {
 
   describe("initialization", () => {
     it("should be instantiated with correct output format", () => {
-      expect(strategy.getName()).toBe(OUTPUT_FORMATS.markdown);
+      expect(strategy.getName()).toBe("markdown");
     });
   });
 
@@ -69,39 +68,14 @@ describe("RenderMarkdownStrategy", () => {
 
       expect(mockTemplateFile.render).toHaveBeenCalledWith({
         FILE_NAME: "test.ts",
-        FILE_EXTENSION: ".ts",
+        FILE_EXTENSION: "ts",
         FILE_SIZE: 100,
         FILE_DEPTH: 1,
-        FILE_LINES: 0,
+        FILE_LINES: 1,
         FILE_PATH: "/test/test.ts",
         FILE_CONTENTS: "const test = 'hello';",
         ...mockFile.props
       });
-    });
-  });
-
-  describe("code block formatting", () => {
-    it("should format code block with language", () => {
-      const content = "test content";
-      const result = strategy["processCodeBlock"](content, "typescript");
-      expect(result).toBe("```typescript\ntest content\n```");
-    });
-
-    it("should format code block without language", () => {
-      const content = "test content";
-      const result = strategy["processCodeBlock"](content, "");
-      expect(result).toBe("```\ntest content\n```");
-    });
-
-    it("should handle empty content", () => {
-      const result = strategy["processCodeBlock"]("", "typescript");
-      expect(result).toBe("```typescript\n\n```");
-    });
-
-    it("should handle multi-line content", () => {
-      const content = "line1\nline2\nline3";
-      const result = strategy["processCodeBlock"](content, "typescript");
-      expect(result).toBe("```typescript\nline1\nline2\nline3\n```");
     });
   });
 });

@@ -1,17 +1,20 @@
 import { BaseCommand } from "./Command";
-import { ICommandOptions } from "./types";
 import { DocumentOrchestratorBuilder } from "../../orchestration/DocumentOrchestratorBuilder";
 import { DocumentTreeBuilder } from "../../services/builder/DocumentTreeBuilder";
 import { renderStrategyFactory } from "../../services/renderer/RenderStrategyFactory";
+import { OutputFormat } from "../../utils/config/schema";
 import { logger } from "../../utils/logger/Logger";
 
 export class MainCICommand extends BaseCommand {
   protected override async beforeExecution(
     args: string[],
-    options: ICommandOptions
+    options: Record<string, string>
   ): Promise<void> {
     await super.beforeExecution(args, options);
     this.config.set("pattern", args[0]);
+    if (!this.updateOptions(options)) {
+      throw new Error("Invalid configuration value");
+    }
   }
 
   protected override async processExecution(): Promise<void> {
@@ -47,5 +50,24 @@ export class MainCICommand extends BaseCommand {
       `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
     );
     logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
+  }
+
+  private updateOptions(options: Record<string, string>): boolean {
+    try {
+      this.config.set("dir", options["dir"]);
+      this.config.set("codeConfigFile", options["config"]);
+      this.config.set("logLevel", options["verbose"] ? "DEBUG" : "INFO");
+      this.config.set(
+        "outputFormat",
+        options["format"] as unknown as OutputFormat[]
+      );
+      this.config.set("outputFile", options["output"]);
+      this.config.set("ignoreHiddenFiles", options["ignoreHidden"]);
+      this.config.set("additionalIgnoreFiles", options["additionalIgnore"]);
+    } catch (error) {
+      logger.error(`Invalid configuration value: ${error}`);
+      return false;
+    }
+    return true;
   }
 }

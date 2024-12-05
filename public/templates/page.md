@@ -4,12 +4,6 @@
 
 This documentation was automatically generated on {{GENERATION_DATE}}.
 
-## Directory Structure
-
-```
-{{DIRECTORY_STRUCTURE}}
-```
-
 ## Summary
 
 - Total Files: {{TOTAL_FILES}}

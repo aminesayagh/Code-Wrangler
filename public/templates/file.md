@@ -6,8 +6,6 @@
 - **Depth:** {{FILE_DEPTH}}
 - **Lines:** {{FILE_LINES}}
 
-##### Content:
-
 ```{{FILE_EXTENSION}}
 {{FILE_CONTENTS}}
 ```

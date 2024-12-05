@@ -4,6 +4,7 @@ import { NodeFile } from "../core/entities/NodeFile";
 import { documentFactory } from "../infrastructure/filesystem/DocumentFactory";
 import { IRenderStrategy } from "../services/renderer/RenderStrategy";
 import { Config } from "../utils/config/Config";
+import { OUTPUT_FORMATS, OutputFormat } from "../utils/config/schema";
 import { logger } from "../utils/logger/Logger";
 
 export class DocumentOrchestrator implements IDocumentOrchestrator {
@@ -35,8 +36,8 @@ export class DocumentOrchestrator implements IDocumentOrchestrator {
       }
 
       const content = this.strategy.render(this.root as NodeDirectory);
-
-      const outputPath = this.resolveOutputPath();
+      const outputFormat = this.strategy.getName();
+      const outputPath = this.resolveOutputPath(outputFormat);
       await this.ensureOutputDirectory(outputPath);
       await this.writeOutput(outputPath, content);
 
@@ -56,30 +57,30 @@ export class DocumentOrchestrator implements IDocumentOrchestrator {
   }
 
   private initialize(): void {
-    if (!this.strategy) {
-      throw new Error("Strategy is not set");
-    }
-
     this.validateStructure();
   }
 
   private validateStructure(): void {
-    if (
-      !(this.root instanceof NodeDirectory) &&
-      !(this.root instanceof NodeFile)
-    ) {
+    if (!(this.root.type == "directory") && !(this.root.type == "file")) {
       throw new Error("Invalid root node type");
     }
   }
 
-  private resolveOutputPath(): string {
+  private resolveOutputPath(outputFormat: OutputFormat): string {
     const outputFile = this.config.get("outputFile");
-    const outputFormat = this.config.get("outputFormat")[0];
-    return documentFactory.resolve(`${outputFile}.${outputFormat}`);
+    return documentFactory.resolve(
+      `${outputFile}.${OUTPUT_FORMATS[outputFormat]}`
+    );
   }
 
   private async ensureOutputDirectory(outputPath: string): Promise<void> {
     const directory = documentFactory.baseName(outputPath);
+    if (
+      outputPath.endsWith(`.${OUTPUT_FORMATS.html}`) ||
+      outputPath.endsWith(`.${OUTPUT_FORMATS.markdown}`)
+    ) {
+      return;
+    }
     await documentFactory.ensureDirectory(directory);
   }
 

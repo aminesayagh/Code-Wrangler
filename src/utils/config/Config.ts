@@ -34,8 +34,11 @@ export class Config {
 
   public set(
     key: keyof ConfigOptions,
-    value: ConfigOptions[keyof ConfigOptions]
+    value: ConfigOptions[keyof ConfigOptions] | undefined
   ): void {
+    if (value === undefined) {
+      return;
+    }
     const updatedConfig = { ...this.config, [key]: value };
     try {
       configSchema.parse(updatedConfig);

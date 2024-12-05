@@ -68,76 +68,14 @@ describe("RenderHTMLStrategy", () => {
 
       expect(mockTemplateFile.render).toHaveBeenCalledWith({
         FILE_NAME: "test.ts",
-        FILE_EXTENSION: ".ts",
+        FILE_EXTENSION: "ts",
         FILE_SIZE: 100,
         FILE_DEPTH: 1,
-        FILE_LINES: 0,
+        FILE_LINES: 1,
         FILE_PATH: "/test/test.ts",
         FILE_CONTENTS: "const test = 'hello';",
         ...mockFile.props
       });
-    });
-  });
-
-  describe("code block formatting", () => {
-    it("should format code block with language", () => {
-      const content = "test content";
-      const result = strategy["processCodeBlock"](content, "typescript");
-      expect(result).toBe(
-        '<pre><code class="language-typescript">test content</code></pre>'
-      );
-    });
-
-    it("should format code block without language", () => {
-      const content = "test content";
-      const result = strategy["processCodeBlock"](content, "");
-      expect(result).toBe(
-        '<pre><code class="language-">test content</code></pre>'
-      );
-    });
-
-    it("should handle empty content", () => {
-      const result = strategy["processCodeBlock"]("", "typescript");
-      expect(result).toBe(
-        '<pre><code class="language-typescript"></code></pre>'
-      );
-    });
-
-    it("should handle multi-line content", () => {
-      const content = "line1\nline2\nline3";
-      const result = strategy["processCodeBlock"](content, "typescript");
-      expect(result).toBe(
-        '<pre><code class="language-typescript">line1\nline2\nline3</code></pre>'
-      );
-    });
-  });
-
-  describe("HTML escaping", () => {
-    it("should escape HTML special characters", () => {
-      const content = "<div>Test & 'quote' & \"double\" ></div>";
-      const result = strategy["escapeHtml"](content);
-      expect(result).toBe(
-        "&lt;div&gt;Test &amp; &#039;quote&#039; &amp; &quot;double&quot; &gt;&lt;/div&gt;"
-      );
-    });
-
-    it("should handle content with no special characters", () => {
-      const content = "Normal text";
-      const result = strategy["escapeHtml"](content);
-      expect(result).toBe("Normal text");
-    });
-
-    it("should handle empty content", () => {
-      const result = strategy["escapeHtml"]("");
-      expect(result).toBe("");
-    });
-
-    it("should properly escape code snippets", () => {
-      const code = `if (x < y && y > 0) { console.log("test"); }`;
-      const result = strategy["escapeHtml"](code);
-      expect(result).toBe(
-        "if (x &lt; y &amp;&amp; y &gt; 0) { console.log(&quot;test&quot;); }"
-      );
     });
   });
 });

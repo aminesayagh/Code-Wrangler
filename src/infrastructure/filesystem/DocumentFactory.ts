@@ -137,12 +137,20 @@ export const documentFactory = {
     options: IWriteOptions = {}
   ): Promise<void> {
     try {
+      // Ensure parent directory exists
+      const parentDir = path.dirname(filePath);
+      await fs.mkdir(parentDir, { recursive: true });
+
+      // Write the file
       await fs.writeFile(filePath, data, {
         encoding: options.encoding ?? "utf-8",
         mode: options.mode,
         flag: options.flag
       });
     } catch (error) {
+      if (error instanceof DocumentError) {
+        throw error;
+      }
       throw new DocumentError(String(error), filePath);
     }
   },

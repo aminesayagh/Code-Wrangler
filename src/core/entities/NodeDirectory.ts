@@ -7,11 +7,15 @@ import { IPropsDirectoryNode } from "../../types/type";
 interface IPropsDirectory {
   length: number;
   deepLength: number;
+  numberOfFiles: number;
+  numberOfDirectories: number;
 }
 
 const defaultPropsDirectory: IPropsDirectory = {
   length: 0,
-  deepLength: 0
+  deepLength: 0,
+  numberOfFiles: 0,
+  numberOfDirectories: 0
 };
 
 export abstract class NodeDirectory extends NodeBase {
@@ -36,6 +40,12 @@ export abstract class NodeDirectory extends NodeBase {
   public set deepLength(deepLength: number) {
     this._propsDirectory.deepLength = deepLength;
   }
+  public get numberOfFiles(): number {
+    return this._propsDirectory.numberOfFiles;
+  }
+  public set numberOfFiles(numberOfFiles: number) {
+    this._propsDirectory.numberOfFiles = numberOfFiles;
+  }
   public override get props(): IPropsDirectoryNode {
     return {
       ...super.props,
@@ -59,9 +69,12 @@ export abstract class NodeDirectory extends NodeBase {
     await Promise.all(this.children.map(child => child.bundle(deep + 1)));
 
     // set the length of the directory
-    this.length = this.children.filter(
-      child => child instanceof NodeFile
-    ).length;
+    this.length = this.children.filter(child => child.type === "file").length;
+    this.numberOfFiles =
+      this.length +
+      this.children
+        .filter(child => child.type === "directory")
+        .reduce((acc, child) => acc + child.numberOfFiles, 0);
 
     // set the deep length of the directory
     this.deepLength = this.children.reduce(

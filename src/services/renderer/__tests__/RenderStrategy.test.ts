@@ -16,7 +16,7 @@ class TestRenderStrategy extends RenderBaseStrategy {
     templateDirectory: Template,
     templateFile: Template
   ) {
-    super(config, "test", templatePage, templateDirectory, templateFile);
+    super(config, "markdown", templatePage, templateDirectory, templateFile);
   }
 }
 
@@ -105,7 +105,8 @@ describe("RenderBaseStrategy", () => {
       expect(mockTemplatePage.render).toHaveBeenCalledWith({
         PROJECT_NAME,
         GENERATION_DATE: expect.any(String),
-        DIRECTORY_STRUCTURE: RENDERED_DIRECTORY,
+        TOTAL_FILES: 2,
+        TOTAL_DIRECTORIES: 3,
         TOTAL_SIZE: 200,
         CONTENT: RENDERED_DIRECTORY
       });
@@ -118,7 +119,6 @@ describe("RenderBaseStrategy", () => {
       expect(mockTemplatePage.render).toHaveBeenCalledWith({
         PROJECT_NAME,
         GENERATION_DATE: expect.any(String),
-        DIRECTORY_STRUCTURE: RENDERED_FILE,
         TOTAL_SIZE: 100,
         CONTENT: RENDERED_FILE
       });
@@ -150,10 +150,10 @@ describe("RenderBaseStrategy", () => {
 
       expect(mockTemplateFile.render).toHaveBeenCalledWith({
         FILE_NAME: "test.ts",
-        FILE_EXTENSION: ".ts",
+        FILE_EXTENSION: "ts",
         FILE_SIZE: 100,
         FILE_DEPTH: 1,
-        FILE_LINES: 0,
+        FILE_LINES: 1,
         FILE_PATH: "/test/test.ts",
         FILE_CONTENTS: "test content",
         ...mockFile.props
@@ -177,7 +177,7 @@ describe("RenderBaseStrategy", () => {
 
   describe("name", () => {
     it("should return the strategy name", () => {
-      expect(strategy.getName()).toBe("test");
+      expect(strategy.getName()).toBe("markdown");
     });
   });
 });
