@@ -1,13 +1,13 @@
-#### File: {{NAME}}
+#### File: {{FILE_NAME}}
 
-- **Path:** {{PATH}}
-- **Extension:** {{EXTENSION}}
-- **Size:** {{SIZE}} bytes
-- **Depth:** {{DEEP}}
-- **Lines:** {{LINES}}
+- **Path:** {{FILE_PATH}}
+- **Extension:** {{FILE_EXTENSION}}
+- **Size:** {{FILE_SIZE}} bytes
+- **Depth:** {{FILE_DEPTH}}
+- **Lines:** {{FILE_LINES}}
 
 ##### Content:
 
-```{{EXTENSION}}
-{{CONTENT}}
+```{{FILE_EXTENSION}}
+{{FILE_CONTENTS}}
 ```

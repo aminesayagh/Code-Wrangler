@@ -2,17 +2,11 @@ import { INodeContent, NodeBase } from "./NodeBase";
 import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
 import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
-
-interface IPropsFile {
-  extension: string;
-}
-
-const defaultPropsFile: IPropsFile = {
-  extension: ""
-};
+import { IPropsFileNode } from "../../types/type";
 
 export abstract class NodeFile extends NodeBase {
-  private _propsFile: IPropsFile = { ...defaultPropsFile };
+  public readonly type = "file";
+  private _extension: string = "";
   private _content: string | null = null;
 
   public constructor(name: string, pathName: string) {
@@ -23,10 +17,10 @@ export abstract class NodeFile extends NodeBase {
   // getters and setters
   // extension
   public get extension(): string {
-    return this._propsFile.extension;
+    return this._extension;
   }
   protected set extension(extension: string) {
-    this._propsFile.extension = extension;
+    this._extension = extension;
   }
   // content
   public get content(): string | null {
@@ -36,8 +30,9 @@ export abstract class NodeFile extends NodeBase {
     this._content = content;
   }
   // secondary props
-  public get secondaryProps(): Record<string, unknown> | undefined {
+  public override get props(): IPropsFileNode {
     return {
+      ...super.props,
       extension: this.extension
     };
   }
@@ -58,7 +53,6 @@ export abstract class NodeFile extends NodeBase {
   public abstract override render(strategy: IRenderStrategy): INodeContent;
 
   private initFile(name: string): void {
-    this._propsFile = { ...defaultPropsFile };
     this.extension = documentFactory.extension(name);
     this._content = null;
   }
@@ -73,7 +67,7 @@ export class RenderableFile extends NodeFile {
   }
 
   // dispose
-  public override async dispose(): Promise<void> {
-    await super.dispose();
+  public override dispose(): void {
+    super.dispose();
   }
 }

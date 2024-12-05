@@ -58,54 +58,52 @@ export abstract class NodeBase implements INodeLifeCycle {
   // abstract methods
   public abstract bundle(deep: number): Promise<void>;
   public abstract render(strategy: IRenderStrategy): INodeContent;
-  public abstract get secondaryProps(): Record<string, unknown> | undefined;
 
   // getters and setters
   // deep
-  get deep(): number {
+  public get deep(): number {
     return this._props.deep;
   }
-  set deep(deep: number) {
+  public set deep(deep: number) {
     this._props.deep = deep;
   }
 
   // size
-  get size(): number {
+  public get size(): number {
     return this._props.size;
   }
-  set size(size: number) {
+  public set size(size: number) {
     this._props.size = size;
   }
 
   // name
-  get name(): string {
+  public get name(): string {
     return this._props.name;
   }
-  set name(name: string) {
+  public set name(name: string) {
     this._props.name = name;
   }
 
   // path
-  get path(): string {
+  public get path(): string {
     return this._props.path;
   }
-  set path(path: string) {
+  public set path(path: string) {
     this._props.path = path;
   }
 
   // stats
-  get stats(): IFileStats | undefined {
+  public get stats(): IFileStats | undefined {
     return this._props.stats;
   }
-  set stats(stats: IFileStats | undefined) {
+  public set stats(stats: IFileStats | undefined) {
     this._props.stats = stats;
   }
 
   // props
-  get props(): IPropsNode {
+  public get props(): IPropsNode {
     return {
-      ...this._props,
-      ...this.secondaryProps
+      ...this._props
     };
   }
 

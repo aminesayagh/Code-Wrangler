@@ -2,6 +2,7 @@ import { INodeContent, NodeBase } from "./NodeBase";
 import { NodeFile } from "./NodeFile";
 import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
 import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
+import { IPropsDirectoryNode } from "../../types/type";
 
 interface IPropsDirectory {
   length: number;
@@ -14,6 +15,7 @@ const defaultPropsDirectory: IPropsDirectory = {
 };
 
 export abstract class NodeDirectory extends NodeBase {
+  public readonly type = "directory";
   public children: (NodeFile | NodeDirectory)[] = [];
   private _propsDirectory: IPropsDirectory = { ...defaultPropsDirectory };
 
@@ -34,8 +36,9 @@ export abstract class NodeDirectory extends NodeBase {
   public set deepLength(deepLength: number) {
     this._propsDirectory.deepLength = deepLength;
   }
-  public get secondaryProps(): Record<string, unknown> {
+  public override get props(): IPropsDirectoryNode {
     return {
+      ...super.props,
       ...this._propsDirectory
     };
   }

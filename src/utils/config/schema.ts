@@ -43,6 +43,7 @@ export const configSchema = z
     ignoreHiddenFiles: z.boolean().default(true),
     additionalIgnoreFiles: z.array(z.string()).optional().default([]),
     projectName: z.string().optional(),
+    verbose: z.boolean().default(false),
     followSymlinks: z.boolean().default(false),
     codeConfigFile: z
       .string()
@@ -67,6 +68,7 @@ export const DEFAULT_CONFIG: ConfigOptions = {
   maxDepth: 100,
   codeConfigFile: "public/codewrangler.json",
   projectName: undefined,
+  verbose: false,
   followSymlinks: false,
   ignoreHiddenFiles: true, // Default value
   additionalIgnoreFiles: [],

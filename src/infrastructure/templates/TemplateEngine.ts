@@ -76,6 +76,10 @@ export class Template<
     }
   }
 
+  public dispose(): void {
+    this._content = "";
+  }
+
   private validateData(data: Record<string, string | number | boolean>): void {
     this.schema.parse(data);
     this.validateRequiredTokens(data);

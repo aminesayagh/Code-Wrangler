@@ -1,11 +1,23 @@
 import { NodeFile } from "../../../core/entities/NodeFile";
+import { Template } from "../../../infrastructure/templates/TemplateEngine";
 import { Config } from "../../../utils/config";
 import { OUTPUT_FORMATS } from "../../../utils/config/schema";
-import { BaseRenderStrategy } from "../RenderStrategy";
+import { RenderBaseStrategy } from "../RenderStrategy";
 
-export class MarkdownStrategy extends BaseRenderStrategy {
-  public constructor(config: Config) {
-    super(config, OUTPUT_FORMATS.markdown);
+export class RenderMarkdownStrategy extends RenderBaseStrategy {
+  public constructor(
+    config: Config,
+    templatePage: Template,
+    templateDirectory: Template,
+    templateFile: Template
+  ) {
+    super(
+      config,
+      OUTPUT_FORMATS.markdown,
+      templatePage,
+      templateDirectory,
+      templateFile
+    );
   }
 
   public override renderFile(file: NodeFile): string {
