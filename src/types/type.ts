@@ -50,3 +50,12 @@ export interface IPropsNode {
   extension?: string;
   stats?: IFileStats;
 }
+
+export interface IPropsDirectoryNode extends IPropsNode {
+  deepLength: number;
+  length: number;
+}
+
+export interface IPropsFileNode extends IPropsNode {
+  extension: string;
+}

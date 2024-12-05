@@ -349,7 +349,7 @@ npm test
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+We welcome contributions! Please see our [Contributing Guide](./documentation/CONTRIBUTING.md) for details on:
 
 ## License
 
@@ -357,4 +357,6 @@ Apache 2.0 License - See [LICENSE](LICENSE.md) for details.
 
 Built with ❤️ by the CodeWrangler team
 
-For more information, visit our [Documentation](CONTRIBUTING.md).
+For more information, visit our [Documentation](documentation/CONTRIBUTING.md).
+For check out the [Demo](demo/demo.md)
+For communicate with the team, visit our [Discussions](https://github.com/aminesayagh/Code-Wrangler/discussions) or [Issues](https://github.com/aminesayagh/Code-Wrangler/issues)

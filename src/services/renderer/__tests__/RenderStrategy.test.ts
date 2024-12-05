@@ -1,130 +1,183 @@
+import { NodeDirectory } from "../../../core/entities/NodeDirectory";
 import { NodeFile } from "../../../core/entities/NodeFile";
-import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
-import { fileStatsService } from "../../../infrastructure/filesystem/FileStats";
 import { Template } from "../../../infrastructure/templates/TemplateEngine";
 import { Config } from "../../../utils/config";
-import { OutputFormatExtension } from "../../../utils/config/schema";
-import { BaseRenderStrategy } from "../RenderStrategy";
+import { RenderBaseStrategy } from "../RenderStrategy";
 
-jest.mock("../../../utils/config");
 jest.mock("../../../core/entities/NodeFile");
-jest.mock("../../../infrastructure/filesystem/DocumentFactory");
+jest.mock("../../../core/entities/NodeDirectory");
 jest.mock("../../../infrastructure/templates/TemplateEngine");
-jest.mock("../../../infrastructure/filesystem/FileStats");
+jest.mock("../../../utils/config");
 
-class TestRenderStrategy extends BaseRenderStrategy {
-  public constructor(config: Config) {
-    super(config, "md" as OutputFormatExtension);
+class TestRenderStrategy extends RenderBaseStrategy {
+  public constructor(
+    config: Config,
+    templatePage: Template,
+    templateDirectory: Template,
+    templateFile: Template
+  ) {
+    super(config, "markdown", templatePage, templateDirectory, templateFile);
   }
 }
 
-describe("BaseRenderStrategy", () => {
+describe("RenderBaseStrategy", () => {
+  const PROJECT_NAME = "Test Project";
+  const RENDERED_FILE = "rendered file";
+  const RENDERED_DIRECTORY = "rendered directory";
+  const RENDERED_PAGE = "rendered page";
+
   let mockConfig: jest.Mocked<Config>;
-  let renderStrategy: TestRenderStrategy;
-  let mockTemplate: jest.Mocked<Template>;
+  let mockTemplatePage: jest.Mocked<Template>;
+  let mockTemplateDirectory: jest.Mocked<Template>;
+  let mockTemplateFile: jest.Mocked<Template>;
+  let strategy: TestRenderStrategy;
+  let mockFile: jest.Mocked<NodeFile>;
+  let mockDirectory: jest.Mocked<NodeDirectory>;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Configure mock config
     mockConfig = {
-      get: jest.fn().mockImplementation((key: string) => {
-        switch (key) {
-          case "rootDir":
-            return "/test";
-          case "templatesDir":
-            return "templates";
-          case "projectName":
-            return "Test Project";
-          default:
-            return undefined;
-        }
-      })
+      get: jest.fn().mockReturnValue(PROJECT_NAME)
     } as unknown as jest.Mocked<Config>;
 
-    // Configure mock template
-    mockTemplate = {
-      content: "Template content with {{FILE_NAME}}",
-      load: jest.fn().mockResolvedValue(undefined),
-      render: jest.fn().mockReturnValue("Rendered content")
+    mockTemplatePage = {
+      content: "page template",
+      render: jest.fn().mockReturnValue(RENDERED_PAGE)
     } as unknown as jest.Mocked<Template>;
 
-    (Template.create as jest.Mock).mockResolvedValue(mockTemplate);
-    (Template.getTemplateDir as jest.Mock).mockReturnValue("templates");
+    mockTemplateDirectory = {
+      content: "directory template",
+      render: jest.fn().mockReturnValue(RENDERED_DIRECTORY)
+    } as unknown as jest.Mocked<Template>;
 
-    (fileStatsService as jest.Mock).mockImplementation(() => ({
-      isDirectory: true,
-      isFile: false,
-      size: 0,
-      created: new Date(),
-      modified: new Date(),
-      accessed: new Date()
-    }));
+    mockTemplateFile = {
+      content: "file template",
+      render: jest.fn().mockReturnValue(RENDERED_FILE)
+    } as unknown as jest.Mocked<Template>;
 
-    (documentFactory.join as jest.Mock).mockImplementation((...paths) =>
-      paths.join("/")
+    mockFile = {
+      type: "file",
+      name: "test.ts",
+      path: "/test/test.ts",
+      extension: ".ts",
+      content: "test content",
+      size: 100,
+      deep: 1,
+      props: {}
+    } as unknown as jest.Mocked<NodeFile>;
+
+    mockDirectory = {
+      type: "directory",
+      name: "test",
+      path: "/test",
+      size: 200,
+      length: 2,
+      deepLength: 3,
+      deep: 0,
+      children: [],
+      props: {}
+    } as unknown as jest.Mocked<NodeDirectory>;
+
+    strategy = new TestRenderStrategy(
+      mockConfig,
+      mockTemplatePage,
+      mockTemplateDirectory,
+      mockTemplateFile
     );
-    (documentFactory.exists as jest.Mock).mockReturnValue(true);
-
-    renderStrategy = new TestRenderStrategy(mockConfig);
   });
 
-  describe("loadTemplates", () => {
-    it("should successfully load all templates", async () => {
-      await renderStrategy.loadTemplates();
+  describe("render", () => {
+    it("should render a directory with nested structure", () => {
+      const childFile = {
+        ...mockFile,
+        name: "child.ts"
+      } as unknown as jest.Mocked<NodeFile>;
+      const subDirectory = {
+        ...mockDirectory,
+        name: "subdir",
+        children: [childFile]
+      } as unknown as jest.Mocked<NodeDirectory>;
+      mockDirectory.children = [mockFile, subDirectory];
 
-      expect(renderStrategy["templates"].page).toBe(mockTemplate);
-      expect(renderStrategy["templates"].file).toBe(mockTemplate);
-      expect(renderStrategy["templates"].directory).toBe(mockTemplate);
+      const result = strategy.render(mockDirectory);
+
+      expect(mockTemplatePage.render).toHaveBeenCalledWith({
+        PROJECT_NAME,
+        GENERATION_DATE: expect.any(String),
+        TOTAL_FILES: 2,
+        TOTAL_DIRECTORIES: 3,
+        TOTAL_SIZE: 200,
+        CONTENT: RENDERED_DIRECTORY
+      });
+      expect(result).toBe(RENDERED_PAGE);
+    });
+
+    it("should render a single file", () => {
+      const result = strategy.render(mockFile as NodeFile);
+
+      expect(mockTemplatePage.render).toHaveBeenCalledWith({
+        PROJECT_NAME,
+        GENERATION_DATE: expect.any(String),
+        TOTAL_SIZE: 100,
+        CONTENT: RENDERED_FILE
+      });
+      expect(result).toBe(RENDERED_PAGE);
+    });
+
+    it("should render an empty directory", () => {
+      mockDirectory.children = [];
+
+      const result = strategy.render(mockDirectory as NodeDirectory);
+
+      expect(mockTemplateDirectory.render).toHaveBeenCalledWith({
+        DIRECTORY_NAME: "test",
+        DIRECTORY_PATH: "/test",
+        DIRECTORY_SIZE: 200,
+        DIRECTORY_LENGTH: 2,
+        DIRECTORY_DEEP_LENGTH: 3,
+        DIRECTORY_DEPTH: 0,
+        DIRECTORY_CONTENT: "",
+        ...mockDirectory.props
+      });
+      expect(result).toBe(RENDERED_PAGE);
     });
   });
 
-  describe("renderFile", () => {
-    it("should render file content correctly", async () => {
-      const mockFile = {
-        name: "test.txt",
-        extension: ".txt",
-        size: 1000,
-        content: "Test content"
-      } as NodeFile;
+  describe("template handling", () => {
+    it("should handle file template data", () => {
+      strategy.render(mockFile as NodeFile);
 
-      await renderStrategy.loadTemplates();
-      const result = renderStrategy.renderFile(mockFile);
-
-      expect(result).toBe("Template content with test.txt");
-    });
-
-    it("should handle null file content", async () => {
-      const mockFile = {
-        name: "test.txt",
-        extension: ".txt",
-        size: 1000,
-        content: null
-      } as NodeFile;
-
-      await renderStrategy.loadTemplates();
-      const result = renderStrategy.renderFile(mockFile);
-
-      expect(result).toBe("Template content with test.txt");
-    });
-
-    it("should throw error if file template is not loaded", () => {
-      const mockFile = {} as NodeFile;
-
-      expect(() => renderStrategy.renderFile(mockFile)).toThrow(
-        "File template is not loaded"
-      );
+      expect(mockTemplateFile.render).toHaveBeenCalledWith({
+        FILE_NAME: "test.ts",
+        FILE_EXTENSION: "ts",
+        FILE_SIZE: 100,
+        FILE_DEPTH: 1,
+        FILE_LINES: 1,
+        FILE_PATH: "/test/test.ts",
+        FILE_CONTENTS: "test content",
+        ...mockFile.props
+      });
     });
   });
 
-  describe("dispose", () => {
-    it("should clear all templates", async () => {
-      await renderStrategy.loadTemplates();
-      await renderStrategy.dispose();
+  describe("disposal", () => {
+    it("should dispose all templates", () => {
+      mockTemplatePage.dispose = jest.fn();
+      mockTemplateDirectory.dispose = jest.fn();
+      mockTemplateFile.dispose = jest.fn();
 
-      expect(renderStrategy["templates"].page).toBeNull();
-      expect(renderStrategy["templates"].file).toBeNull();
-      expect(renderStrategy["templates"].directory).toBeNull();
+      strategy.dispose();
+
+      expect(mockTemplatePage.dispose).toHaveBeenCalled();
+      expect(mockTemplateDirectory.dispose).toHaveBeenCalled();
+      expect(mockTemplateFile.dispose).toHaveBeenCalled();
+    });
+  });
+
+  describe("name", () => {
+    it("should return the strategy name", () => {
+      expect(strategy.getName()).toBe("markdown");
     });
   });
 });

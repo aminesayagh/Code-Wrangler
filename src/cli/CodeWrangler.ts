@@ -1,22 +1,16 @@
 import { Command } from "commander";
 
-import { GenerateCommand } from "./commands/GenerateCommand";
-import { ICommandOptions } from "./commands/types";
+import { MainCICommand } from "./commands/MainCICommand";
 import { ProgramBuilder } from "./program/ProgramBuilder";
 import { Config } from "../utils/config/Config";
 
 export class CodeWrangler {
   private static instance: CodeWrangler | undefined;
   private readonly VERSION = "1.0.0";
-  private config: Config;
   private program: Command;
-  private generateCommand: GenerateCommand;
 
-  private constructor(config: Config) {
-    this.config = config;
-    this.generateCommand = new GenerateCommand(this.config);
-    this.program = new ProgramBuilder(this.config, this.VERSION).build();
-
+  private constructor(private config: Config) {
+    this.program = new ProgramBuilder(config, this.VERSION).build();
     this.setupCommands();
   }
 
@@ -31,8 +25,11 @@ export class CodeWrangler {
   }
 
   private setupCommands(): void {
-    this.program.action(async (pattern: string, options: ICommandOptions) => {
-      await this.generateCommand.execute([pattern], options);
-    });
+    this.program.action(
+      async (pattern: string, options: Record<string, string>) => {
+        const command = new MainCICommand(this.config);
+        await command.execute([pattern], options);
+      }
+    );
   }
 }

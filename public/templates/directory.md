@@ -1,11 +1,11 @@
-### Directory: {{NAME}}
+### Directory: {{DIRECTORY_NAME}}
 
-- **Path:** {{PATH}}
-- **Size:** {{SIZE}} bytes
-- **Files:** {{LENGTH}}
-- **Total Files (including subdirectories):** {{DEEP_LENGTH}}
-- **Depth:** {{DEEP}}
+- **Path:** {{DIRECTORY_PATH}}
+- **Size:** {{DIRECTORY_SIZE}} bytes
+- **Files:** {{DIRECTORY_LENGTH}}
+- **Total Files (including subdirectories):** {{DIRECTORY_NUMBER_OF_FILES}}
+- **Depth:** {{DIRECTORY_DEPTH}}
 
 #### Contents:
 
-{{CONTENT}}
+{{DIRECTORY_CONTENT}}

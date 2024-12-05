@@ -1,6 +1,6 @@
 {
-    "dir": "public",
-    "rootDir": "public",
+    "dir": "src",
+    "rootDir": "",
     "templatesDir": "public/templates",
     "pattern": ".*",
     "outputFile": "output",

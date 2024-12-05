@@ -12,7 +12,7 @@ export class DocumentTreeBuilder {
     this.builder = new NodeTreeBuilder(config);
   }
 
-  public async build(): Promise<void> {
+  public async build(): Promise<RenderableDirectory | RenderableFile> {
     try {
       // Build file tree structure
       const fileTree = await this.builder.build();
@@ -22,6 +22,14 @@ export class DocumentTreeBuilder {
 
       // Initialize the entire document tree
       await this.root.bundle();
+
+      if (!this.root) {
+        throw new Error("No files found matching the specified pattern");
+      }
+
+      logger.info("Document tree built successfully");
+
+      return this.root;
     } catch (error) {
       logger.error("Error building document tree", error as Error);
       throw error;

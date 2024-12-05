@@ -308,8 +308,8 @@ async function generateDocumentation(
 
 if (require.main === module) {
   generateDocumentation({
-    pattern: /\.md$/,
-    outputPath: "demo_documentation.md",
+    pattern: /\.ts$/,
+    outputPath: "demo_compressed.md",
     ignoreHidden: true,
     excludePatterns: [
       "node_modules",
@@ -318,6 +318,24 @@ if (require.main === module) {
       "**/__tests__",
       "**/*.test.ts"
     ],
-    compress: false
+    compress: true
+  }).catch(console.error);
+  generateDocumentation({
+    pattern: /\.test.ts$/,
+    outputPath: "demo_test.md",
+    ignoreHidden: true,
+    excludePatterns: [
+      "node_modules",
+      "dist",
+      "coverage",
+      "**/__tests__/__mocks__"
+    ],
+    compress: true
+  }).catch(console.error);
+  generateDocumentation({
+    pattern: /\.md$/,
+    outputPath: "demo_md.md",
+    ignoreHidden: true,
+    excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"]
   }).catch(console.error);
 }

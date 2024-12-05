@@ -19,9 +19,6 @@ class TestNode extends NodeBase {
   public render(): INodeContent {
     return { content: "" };
   }
-  public get secondaryProps(): Record<string, unknown> | undefined {
-    return {};
-  }
 }
 
 describe("NodeBase", () => {

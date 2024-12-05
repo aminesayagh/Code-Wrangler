@@ -71,9 +71,16 @@ export class Template<
     try {
       this.validateData(data);
       return this.replaceTokens(data);
-    } catch {
-      throw new Error(`Template content validation failed for ${this.type}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Template content validation failed for ${this.type}`);
+      }
+      throw error;
     }
+  }
+
+  public dispose(): void {
+    this._content = "";
   }
 
   private validateData(data: Record<string, string | number | boolean>): void {
