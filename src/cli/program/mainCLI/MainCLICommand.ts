@@ -1,14 +1,17 @@
-import { BaseCommand } from "./Command";
-import { DocumentOrchestratorBuilder } from "../../orchestration/DocumentOrchestratorBuilder";
-import { DocumentTreeBuilder } from "../../services/builder/DocumentTreeBuilder";
-import { renderStrategyFactory } from "../../services/renderer/RenderStrategyFactory";
-import { OutputFormat } from "../../utils/config/schema";
-import { logger } from "../../utils/logger/Logger";
+import { IMainCLICommandOptions } from "./type";
+import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrchestratorBuilder";
+import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
+import { renderStrategyFactory } from "../../../services/renderer/RenderStrategyFactory";
+import { OutputFormat } from "../../../utils/config/schema";
+import { logger } from "../../../utils/logger/Logger";
+import { BaseCommand } from "../../commands/Command";
 
-export class MainCICommand extends BaseCommand {
+export class MainCLICommand<
+  T extends IMainCLICommandOptions
+> extends BaseCommand<T> {
   protected override async beforeExecution(
     args: string[],
-    options: Record<string, string>
+    options: T
   ): Promise<void> {
     await super.beforeExecution(args, options);
     this.config.set("pattern", args[0]);
@@ -52,7 +55,7 @@ export class MainCICommand extends BaseCommand {
     logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
   }
 
-  private updateOptions(options: Record<string, string>): boolean {
+  private updateOptions(options: IMainCLICommandOptions): boolean {
     try {
       this.config.set("dir", options["dir"]);
       this.config.set("codeConfigFile", options["config"]);

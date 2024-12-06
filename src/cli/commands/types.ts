@@ -1,13 +1,5 @@
 export interface ICommandOptions {
-  dir?: string;
-  output?: string;
-  config?: string;
-  verbose?: boolean;
-  format?: string[];
-  maxSize?: number;
-  exclude?: string[];
-  ignoreHidden?: boolean;
-  additionalIgnore?: string[];
+  verbose: boolean;
 }
 
 export interface ICommand {
