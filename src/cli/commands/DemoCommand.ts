@@ -234,14 +234,14 @@ Total files: ${files.length}
 ${treeContent}
 \`\`\`
 
-${files.map(file => generateFileSection(file)).join("\n")}
+${files.map(file => generateFileSection(file, compress)).join("\n")}
 `
     : `
 # Code documentation
 \`\`\`
 ${treeContent}
 \`\`\`
-${files.map(file => generateFileSection(file, true)).join("\n")}
+${files.map(file => generateFileSection(file, compress)).join("\n")}
 `;
 
 const compressContent = (content: string): string =>
@@ -318,7 +318,7 @@ if (require.main === module) {
       "**/__tests__",
       "**/*.test.ts"
     ],
-    compress: true
+    compress: false
   }).catch(console.error);
   generateDocumentation({
     pattern: /\.test.ts$/,
@@ -330,12 +330,13 @@ if (require.main === module) {
       "coverage",
       "**/__tests__/__mocks__"
     ],
-    compress: true
+    compress: false
   }).catch(console.error);
   generateDocumentation({
     pattern: /\.md$/,
     outputPath: "demo_md.md",
     ignoreHidden: true,
-    excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"]
+    excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"],
+    compress: false
   }).catch(console.error);
 }
