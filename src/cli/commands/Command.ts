@@ -4,13 +4,10 @@ import { Config } from "../../utils/config/Config";
 import { ProgressBar } from "../../utils/helpers/ProgressBar";
 import { logger } from "../../utils/logger/Logger";
 
-export abstract class BaseCommand {
+export abstract class BaseCommand<T extends ICommandOptions> {
   public constructor(protected config: Config) {}
 
-  public async execute(
-    args: string[],
-    options: ICommandOptions
-  ): Promise<void> {
+  public async execute(args: string[], options: T): Promise<void> {
     try {
       // Pre-execution phase
       await this.beforeExecution(args, options);
@@ -30,10 +27,7 @@ export abstract class BaseCommand {
   }
 
   // Template methods that can be overridden
-  protected async beforeExecution(
-    _: string[],
-    options: ICommandOptions
-  ): Promise<void> {
+  protected async beforeExecution(_: string[], options: T): Promise<void> {
     if (options.verbose) {
       this.logVerbose();
     }

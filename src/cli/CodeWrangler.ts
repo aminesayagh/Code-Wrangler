@@ -1,8 +1,9 @@
 import { Command } from "commander";
 
-import { MainCICommand } from "./commands/MainCICommand";
-import { ProgramBuilder } from "./program/ProgramBuilder";
+import { MainCLICommand } from "./program/mainCLI/MainCLICommand";
+import { ProgramBuilder } from "./program/mainCLI/ProgramBuilder";
 import { Config } from "../utils/config/Config";
+import { IMainCLICommandOptions } from "./program/mainCLI/type";
 
 export class CodeWrangler {
   private static instance: CodeWrangler | undefined;
@@ -26,8 +27,8 @@ export class CodeWrangler {
 
   private setupCommands(): void {
     this.program.action(
-      async (pattern: string, options: Record<string, string>) => {
-        const command = new MainCICommand(this.config);
+      async (pattern: string, options: IMainCLICommandOptions) => {
+        const command = new MainCLICommand(this.config);
         await command.execute([pattern], options);
       }
     );

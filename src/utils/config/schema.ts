@@ -56,21 +56,41 @@ export type ConfigOptions = z.infer<typeof configSchema>;
 // get a type listing all the keys of the config
 export type ConfigKeys = keyof ConfigOptions;
 
-export const DEFAULT_CONFIG: ConfigOptions = {
-  dir: process.cwd(), // current working directory, where the command is run
-  rootDir: process.cwd(),
-  templatesDir: "public/templates",
-  pattern: ".*",
-  outputFile: "output",
-  logLevel: "INFO",
-  outputFormat: ["markdown"],
-  maxFileSize: 1048576,
-  maxDepth: 100,
-  codeConfigFile: "public/codewrangler.json",
-  projectName: undefined,
-  verbose: false,
-  followSymlinks: false,
+const DEFAULT_CONFIG_IGNORE = {
   ignoreHiddenFiles: true, // Default value
   additionalIgnoreFiles: [],
   excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"]
+};
+
+const DEFAULT_CONFIG_LOG = {
+  logLevel: "INFO",
+  verbose: false
+};
+
+const DEFAULT_CONFIG_LIMITS = {
+  maxFileSize: 1048576,
+  maxDepth: 100
+};
+
+const DEFAULT_CONFIG_PATHS = {
+  templatesDir: "public/templates",
+  codeConfigFile: "public/codewrangler.json"
+};
+
+const DEFAULT_CONFIG_OUTPUT = {
+  outputFormat: ["markdown"] as OutputFormat[],
+  outputFile: "output"
+};
+
+export const DEFAULT_CONFIG: ConfigOptions = {
+  dir: process.cwd(), // current working directory, where the command is run
+  rootDir: process.cwd(),
+  projectName: undefined,
+  pattern: ".*",
+  followSymlinks: false,
+  ...DEFAULT_CONFIG_PATHS,
+  ...DEFAULT_CONFIG_LIMITS,
+  ...DEFAULT_CONFIG_IGNORE,
+  ...DEFAULT_CONFIG_LOG,
+  ...DEFAULT_CONFIG_OUTPUT
 };
