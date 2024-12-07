@@ -1,6 +1,6 @@
 import { RenderBaseStrategy } from "./RenderStrategy";
 import { RenderStrategyBuilder } from "./RenderStrategyBuilder";
-import { Config } from "../../utils/config/Config";
+import { Config } from "../../utils/config";
 import { OutputFormat } from "../../utils/config/schema";
 
 // Factory function for common render strategies

@@ -1,13 +1,13 @@
 import { minimatch } from "minimatch";
 
-import { Config } from "../../utils/config";
+import { IJobConfig } from "../../utils/config";
 
 export default class FileHidden {
   private ignoreHiddenFiles: boolean;
   private patterns: string[];
   private additionalIgnoreFiles: string[];
 
-  public constructor(config: Config) {
+  public constructor(config: IJobConfig) {
     this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
     this.patterns = [...config.get("excludePatterns")];
     this.additionalIgnoreFiles = config.get("additionalIgnoreFiles");

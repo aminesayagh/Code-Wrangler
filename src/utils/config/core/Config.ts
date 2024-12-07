@@ -1,9 +1,9 @@
 import { z } from "zod";
 
+import { ConfigManager } from "./ConfigManager";
 import { JobManager } from "./JobManager";
 import { logger } from "../../logger";
 import {
-  ConfigKeys,
   ConfigOptions,
   DEFAULT_CONFIG,
   IConfig,
@@ -11,9 +11,8 @@ import {
 } from "../schema";
 import { IConfigurationSource } from "../sources/interfaces/IConfigurationSource";
 
-export class Config {
+export class Config extends ConfigManager<IConfig> {
   private static instance: Config | undefined;
-  private config: IConfig;
   private sources: IConfigurationSource<Partial<ConfigOptions>>[] = [];
   private jobManager: JobManager;
 
@@ -21,7 +20,8 @@ export class Config {
    * Constructor for the Config class.
    */
   private constructor() {
-    this.config = configSchema.parse(DEFAULT_CONFIG);
+    super(DEFAULT_CONFIG);
+    this.validate(this.config);
     this.jobManager = new JobManager();
     logger.setConfig(Config.getInstance());
   }
@@ -36,44 +36,6 @@ export class Config {
       await Config.instance.loadSources();
     }
     return Config.instance;
-  }
-
-  /**
-   * Returns a configuration value.
-   * @param key - The key to get.
-   * @returns The configuration value.
-   */
-  public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
-    return this.config[key] as ConfigOptions[T];
-  }
-
-  /**
-   * Sets a configuration value.
-   * @param key - The key to set.
-   * @param value - The value to set.
-   */
-  public set(
-    key: keyof ConfigOptions,
-    value: ConfigOptions[keyof ConfigOptions] | undefined
-  ): void {
-    if (value === undefined) {
-      return;
-    }
-    const updatedConfig = { ...this.config, [key]: value };
-    try {
-      configSchema.parse(updatedConfig);
-      this.config = updatedConfig;
-    } catch (error) {
-      this.handleConfigError(error);
-    }
-  }
-
-  /**
-   * Returns the entire configuration.
-   * @returns The entire configuration.
-   */
-  public getAll(): ConfigOptions {
-    return this.config;
   }
 
   /**
@@ -148,11 +110,40 @@ export class Config {
       mergedConfig = {
         ...mergedConfig,
         ...sourceConfig,
-        jobs: this.jobManager.getJobs()
+        jobs: this.jobManager.getJobs().map(job => job.getAll())
       };
     });
 
     this.validate(mergedConfig);
+  }
+
+  /**
+   * Validates the configuration.
+   * @param config - The configuration to validate.
+   */
+  protected validate(config: IConfig): IConfig {
+    try {
+      return configSchema.parse(config);
+    } catch (error) {
+      this.handleConfigError(error);
+      throw error; // Re-throw the error to be handled by the caller
+    }
+  }
+
+  /**
+   * Handles configuration validation errors.
+   * @param error - The error to handle.
+   * @throws An error if the configuration is invalid.
+   */
+  protected handleConfigError(error: unknown): void {
+    if (error instanceof z.ZodError) {
+      const details = error.errors
+        .map(err => `${err.path.join(".")}: ${err.message}`)
+        .join(", ");
+      logger.error(`Configuration validation failed: ${details}`);
+      throw new Error("Configuration validation failed");
+    }
+    throw error;
   }
 
   /**
@@ -173,33 +164,5 @@ export class Config {
         );
       }
     }
-  }
-
-  /**
-   * Validates the configuration.
-   * @param config - The configuration to validate.
-   */
-  private validate(config: IConfig): void {
-    try {
-      this.config = configSchema.parse(config);
-    } catch (error) {
-      this.handleConfigError(error);
-    }
-  }
-
-  /**
-   * Handles configuration validation errors.
-   * @param error - The error to handle.
-   * @throws An error if the configuration is invalid.
-   */
-  private handleConfigError(error: unknown): void {
-    if (error instanceof z.ZodError) {
-      const details = error.errors
-        .map(err => `${err.path.join(".")}: ${err.message}`)
-        .join(", ");
-      logger.error(`Configuration validation failed: ${details}`);
-      throw new Error("Configuration validation failed");
-    }
-    throw error;
   }
 }
