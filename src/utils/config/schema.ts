@@ -25,30 +25,24 @@ export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
 
 export const configSchema = z
   .object({
-    dir: z.string().default(process.cwd()),
-    rootDir: z.string().default(process.cwd()),
-    templatesDir: z.string().default("public/templates"),
+    dir: z.string(),
+    rootDir: z.string(),
+    templatesDir: z.string(),
     pattern: z
       .string()
-      .regex(/^.*$/, "Pattern must be a valid regex")
-      .default(".*"),
-    outputFile: z.string().default("output"),
-    logLevel: z.enum(LOG_VALUES as [string, ...string[]]).default("INFO"),
-    outputFormat: z.array(outputFormatSchema).default(["markdown"]),
-    maxFileSize: z.number().positive().default(1048576),
-    maxDepth: z.number().default(100),
-    excludePatterns: z
-      .array(z.string())
-      .default(["node_modules/**", "**/*.test.ts", "dist/**"]),
-    ignoreHiddenFiles: z.boolean().default(true),
-    additionalIgnoreFiles: z.array(z.string()).optional().default([]),
+      .regex(/^.*$/, "Pattern must be a valid regex"),
+    outputFile: z.string(),
+    logLevel: z.enum(LOG_VALUES as [string, ...string[]]),
+    outputFormat: z.array(outputFormatSchema),
+    maxFileSize: z.number().positive(),
+    maxDepth: z.number(),
+    excludePatterns: z.array(z.string()),
+    ignoreHiddenFiles: z.boolean(),
+    additionalIgnoreFiles: z.array(z.string()).optional(),
     projectName: z.string().optional(),
-    verbose: z.boolean().default(false),
-    followSymlinks: z.boolean().default(false),
-    codeConfigFile: z
-      .string()
-      .regex(/\.json$/, "Config file must end with .json")
-      .default("public/codewrangler.json")
+    verbose: z.boolean(),
+    followSymlinks: z.boolean(),
+    codeConfigFile: z.string().regex(/\.json$/, "Config file must end with .json")
   })
   .strict();
 

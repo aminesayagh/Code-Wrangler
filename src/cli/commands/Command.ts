@@ -1,7 +1,6 @@
 /* eslint-disable require-await */
 import { ICommandOptions } from "./types";
 import { Config } from "../../utils/config/Config";
-import { ProgressBar } from "../../utils/helpers/ProgressBar";
 import { logger } from "../../utils/logger/Logger";
 
 export abstract class BaseCommand<T extends ICommandOptions> {
@@ -13,10 +12,7 @@ export abstract class BaseCommand<T extends ICommandOptions> {
       await this.beforeExecution(args, options);
 
       // Progress tracking
-      const progressBar = new ProgressBar(100);
-      await progressBar.execute(async () => {
-        await this.processExecution();
-      });
+      await this.processExecution();
 
       // Post-execution phase
       await this.afterExecution();

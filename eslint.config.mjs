@@ -176,17 +176,17 @@ export default [
         }
       ],
       "max-lines-per-function": ["error", {
-        max: 20,
+        max: 15,
         skipBlankLines: true,
         skipComments: true
       }],
       "max-depth": ["error", 3],
       "complexity": ["error", 10],
-      // "no-magic-numbers": ["error", {
-      //   ignore: [-1, 0, 1],
-      //   ignoreArrayIndexes: true,
-      //   enforceConst: true
-      // }],
+      "no-magic-numbers": ["error", {
+        ignore: [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        ignoreArrayIndexes: true,
+        enforceConst: true
+      }],
       "no-param-reassign": "error",
       "prefer-template": "error",
       "require-await": "error",
@@ -213,7 +213,8 @@ export default [
       "sonarjs/cognitive-complexity": "off",
       "sonarjs/no-identical-functions": "off",
       "@typescript-eslint/no-explicit-any": "off",
-      "max-depth": "off"
+      "max-depth": "off",
+      "no-magic-numbers": ["warn"]
     }
   }
 ];

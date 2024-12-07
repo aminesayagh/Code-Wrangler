@@ -30,21 +30,14 @@ export class DocumentOrchestratorBuilder {
     return this;
   }
 
-  public async build(): Promise<DocumentOrchestrator[]> {
-    if (!this.root || !this.config) {
-      throw new Error("Missing required components for DocumentOrchestrator");
-    }
-
-    if (this.strategies.length === 0) {
-      throw new Error("At least one render strategy is required");
-    }
-
+  public build(): DocumentOrchestrator[] {
+    this.validate();
     const orchestrators: DocumentOrchestrator[] = [];
 
     for (const strategy of this.strategies) {
-      const orchestrator = await DocumentOrchestrator.create(
-        this.root,
-        this.config
+      const orchestrator = DocumentOrchestrator.create(
+        this.root as NodeDirectory | NodeFile,
+        this.config as Config
       );
       orchestrator.setStrategy(strategy);
       orchestrators.push(orchestrator);
@@ -53,7 +46,7 @@ export class DocumentOrchestratorBuilder {
     return orchestrators;
   }
   public async buildAndExecute(): Promise<DocumentOrchestrator[]> {
-    const orchestrators = await this.build();
+    const orchestrators = this.build();
 
     for (const orchestrator of orchestrators) {
       try {
@@ -67,5 +60,15 @@ export class DocumentOrchestratorBuilder {
     }
 
     return orchestrators;
+  }
+
+  private validate(): void {
+    if (!this.root || !this.config) {
+      throw new Error("Missing required components for DocumentOrchestrator");
+    }
+
+    if (this.strategies.length === 0) {
+      throw new Error("At least one render strategy is required");
+    }
   }
 }

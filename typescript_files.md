@@ -2,22 +2,22 @@
 
 ## Overview
 
-This documentation was automatically generated on 2024-12-05T20:17:03.250Z.
+This documentation was automatically generated on 2024-12-06T15:26:23.790Z.
 
 ## Summary
 
 - Total Files: 0
-- Total Directories: 71
-- Total Size: 74075
+- Total Directories: 73
+- Total Size: 74481
 
 ## Content of Files
 
 ### Directory: src
 
 - **Path:** /root/git/codewrangler/src
-- **Size:** 74075 bytes
+- **Size:** 74481 bytes
 - **Files:** 0
-- **Total Files (including subdirectories):** 41
+- **Total Files (including subdirectories):** 42
 - **Depth:** 0
 
 #### Contents:
@@ -25,9 +25,9 @@ This documentation was automatically generated on 2024-12-05T20:17:03.250Z.
 ### Directory: cli
 
 - **Path:** /root/git/codewrangler/src/cli
-- **Size:** 15854 bytes
+- **Size:** 16068 bytes
 - **Files:** 2
-- **Total Files (including subdirectories):** 7
+- **Total Files (including subdirectories):** 8
 - **Depth:** 1
 
 #### Contents:
@@ -36,16 +36,17 @@ This documentation was automatically generated on 2024-12-05T20:17:03.250Z.
 
 - **Path:** /root/git/codewrangler/src/cli/CodeWrangler.ts
 - **Extension:** ts
-- **Size:** 1073 bytes
+- **Size:** 1174 bytes
 - **Depth:** 2
-- **Lines:** 34
+- **Lines:** 37
 
 ```ts
 import { Command } from "commander";
 
-import { MainCICommand } from "./commands/MainCICommand";
-import { ProgramBuilder } from "./program/ProgramBuilder";
+import { MainCLICommand } from "./program/mainCLI/MainCLICommand";
+import { ProgramBuilder } from "./program/mainCLI/ProgramBuilder";
 import { Config } from "../utils/config/Config";
+import { IMainCLICommandOptions } from "./program/mainCLI/type";
 
 export class CodeWrangler {
   private static instance: CodeWrangler | undefined;
@@ -68,10 +69,12 @@ export class CodeWrangler {
   }
 
   private setupCommands(): void {
-    this.program.action(async (pattern: string, options: Record<string, string>) => {
-      const command = new MainCICommand(this.config);
-      await command.execute([pattern], options);
-    });
+    this.program.action(
+      async (pattern: string, options: IMainCLICommandOptions) => {
+        const command = new MainCLICommand(this.config);
+        await command.execute([pattern], options);
+      }
+    );
   }
 }
 
@@ -79,9 +82,9 @@ export class CodeWrangler {
 ### Directory: commands
 
 - **Path:** /root/git/codewrangler/src/cli/commands
-- **Size:** 12445 bytes
-- **Files:** 4
-- **Total Files (including subdirectories):** 4
+- **Size:** 9545 bytes
+- **Files:** 3
+- **Total Files (including subdirectories):** 3
 - **Depth:** 2
 
 #### Contents:
@@ -90,33 +93,26 @@ export class CodeWrangler {
 
 - **Path:** /root/git/codewrangler/src/cli/commands/Command.ts
 - **Extension:** ts
-- **Size:** 1517 bytes
+- **Size:** 1323 bytes
 - **Depth:** 3
-- **Lines:** 57
+- **Lines:** 47
 
 ```ts
 /* eslint-disable require-await */
 import { ICommandOptions } from "./types";
 import { Config } from "../../utils/config/Config";
-import { ProgressBar } from "../../utils/helpers/ProgressBar";
 import { logger } from "../../utils/logger/Logger";
 
-export abstract class BaseCommand {
+export abstract class BaseCommand<T extends ICommandOptions> {
   public constructor(protected config: Config) {}
 
-  public async execute(
-    args: string[],
-    options: ICommandOptions
-  ): Promise<void> {
+  public async execute(args: string[], options: T): Promise<void> {
     try {
       // Pre-execution phase
       await this.beforeExecution(args, options);
 
       // Progress tracking
-      const progressBar = new ProgressBar(100);
-      await progressBar.execute(async () => {
-        await this.processExecution();
-      });
+      await this.processExecution();
 
       // Post-execution phase
       await this.afterExecution();
@@ -127,10 +123,7 @@ export abstract class BaseCommand {
   }
 
   // Template methods that can be overridden
-  protected async beforeExecution(
-    _: string[],
-    options: ICommandOptions
-  ): Promise<void> {
+  protected async beforeExecution(_: string[], options: T): Promise<void> {
     if (options.verbose) {
       this.logVerbose();
     }
@@ -157,9 +150,9 @@ export abstract class BaseCommand {
 
 - **Path:** /root/git/codewrangler/src/cli/commands/DemoCommand.ts
 - **Extension:** ts
-- **Size:** 8025 bytes
+- **Size:** 8062 bytes
 - **Depth:** 3
-- **Lines:** 342
+- **Lines:** 343
 
 ```ts
 /* eslint-disable max-lines-per-function */
@@ -398,14 +391,14 @@ Total files: ${files.length}
 ${treeContent}
 \`\`\`
 
-${files.map(file => generateFileSection(file)).join("\n")}
+${files.map(file => generateFileSection(file, compress)).join("\n")}
 `
     : `
 # Code documentation
 \`\`\`
 ${treeContent}
 \`\`\`
-${files.map(file => generateFileSection(file, true)).join("\n")}
+${files.map(file => generateFileSection(file, compress)).join("\n")}
 `;
 
 const compressContent = (content: string): string =>
@@ -482,7 +475,7 @@ if (require.main === module) {
       "**/__tests__",
       "**/*.test.ts"
     ],
-    compress: true
+    compress: false
   }).catch(console.error);
   generateDocumentation({
     pattern: /\.test.ts$/,
@@ -494,98 +487,15 @@ if (require.main === module) {
       "coverage",
       "**/__tests__/__mocks__"
     ],
-    compress: true
+    compress: false
   }).catch(console.error);
   generateDocumentation({
     pattern: /\.md$/,
     outputPath: "demo_md.md",
     ignoreHidden: true,
-    excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"]
+    excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"],
+    compress: false
   }).catch(console.error);
-}
-
-```
-#### File: MainCICommand.ts
-
-- **Path:** /root/git/codewrangler/src/cli/commands/MainCICommand.ts
-- **Extension:** ts
-- **Size:** 2568 bytes
-- **Depth:** 3
-- **Lines:** 74
-
-```ts
-import { BaseCommand } from "./Command";
-import { DocumentOrchestratorBuilder } from "../../orchestration/DocumentOrchestratorBuilder";
-import { DocumentTreeBuilder } from "../../services/builder/DocumentTreeBuilder";
-import { renderStrategyFactory } from "../../services/renderer/RenderStrategyFactory";
-import { OutputFormat } from "../../utils/config/schema";
-import { logger } from "../../utils/logger/Logger";
-
-export class MainCICommand extends BaseCommand {
-  protected override async beforeExecution(
-    args: string[],
-    options: Record<string, string>
-  ): Promise<void> {
-    await super.beforeExecution(args, options);
-    this.config.set("pattern", args[0]);
-    if (!this.updateOptions(options)) {
-      throw new Error("Invalid configuration value");
-    }
-  }
-
-  protected override async processExecution(): Promise<void> {
-    const builder = new DocumentTreeBuilder(this.config);
-    const root = await builder.build();
-
-    const orchestrator = new DocumentOrchestratorBuilder()
-      .setRoot(root)
-      .setConfig(this.config);
-
-    const outputFormat = this.config.get("outputFormat");
-    const strategies = await renderStrategyFactory.createStrategies(
-      this.config,
-      outputFormat
-    );
-
-    orchestrator.setStrategies(strategies);
-
-    const orchestrators = await orchestrator.buildAndExecute();
-
-    logger.info(`Generated ${orchestrators.length} documents`);
-  }
-
-  protected override logVerbose(): void {
-    super.logVerbose();
-    logger.debug(
-      `Searching for file matching pattern: ${this.config.get("pattern")}`
-    );
-    logger.debug(
-      `Excluding patterns: ${(this.config.get("excludePatterns") as string[]).join(", ")}`
-    );
-    logger.debug(
-      `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
-    );
-    logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
-  }
-
-  private updateOptions(options: Record<string, string>): boolean {
-    try {
-      this.config.set("dir", options["dir"]);
-      this.config.set("codeConfigFile", options["config"]);
-      this.config.set("logLevel", options["verbose"] ? "DEBUG" : "INFO");
-      this.config.set(
-        "outputFormat",
-        options["format"] as unknown as OutputFormat[]
-      );
-      this.config.set("outputFile", options["output"]);
-      this.config.set("ignoreHiddenFiles", options["ignoreHidden"]);
-      this.config.set("additionalIgnoreFiles", options["additionalIgnore"]);
-    } catch (error) {
-      logger.error(`Invalid configuration value: ${error}`);
-      return false;
-    }
-    return true;
-  }
 }
 
 ```
@@ -593,21 +503,13 @@ export class MainCICommand extends BaseCommand {
 
 - **Path:** /root/git/codewrangler/src/cli/commands/types.ts
 - **Extension:** ts
-- **Size:** 335 bytes
+- **Size:** 160 bytes
 - **Depth:** 3
-- **Lines:** 16
+- **Lines:** 8
 
 ```ts
 export interface ICommandOptions {
-  dir?: string;
-  output?: string;
-  config?: string;
-  verbose?: boolean;
-  format?: string[];
-  maxSize?: number;
-  exclude?: string[];
-  ignoreHidden?: boolean;
-  additionalIgnore?: string[];
+  verbose: boolean;
 }
 
 export interface ICommand {
@@ -647,25 +549,124 @@ main().catch(() => process.exit(1));
 ### Directory: program
 
 - **Path:** /root/git/codewrangler/src/cli/program
-- **Size:** 1920 bytes
-- **Files:** 1
-- **Total Files (including subdirectories):** 1
+- **Size:** 4933 bytes
+- **Files:** 0
+- **Total Files (including subdirectories):** 3
 - **Depth:** 2
 
 #### Contents:
 
+### Directory: mainCLI
+
+- **Path:** /root/git/codewrangler/src/cli/program/mainCLI
+- **Size:** 4933 bytes
+- **Files:** 3
+- **Total Files (including subdirectories):** 3
+- **Depth:** 3
+
+#### Contents:
+
+#### File: MainCLICommand.ts
+
+- **Path:** /root/git/codewrangler/src/cli/program/mainCLI/MainCLICommand.ts
+- **Extension:** ts
+- **Size:** 2743 bytes
+- **Depth:** 4
+- **Lines:** 79
+
+```ts
+import { IMainCLICommandOptions } from "./type";
+import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrchestratorBuilder";
+import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
+import { renderStrategyFactory } from "../../../services/renderer/RenderStrategyFactory";
+import { OutputFormat } from "../../../utils/config/schema";
+import { logger } from "../../../utils/logger/Logger";
+import { BaseCommand } from "../../commands/Command";
+
+export class MainCLICommand<
+  T extends IMainCLICommandOptions
+> extends BaseCommand<T> {
+  protected override async beforeExecution(
+    args: string[],
+    options: T
+  ): Promise<void> {
+    this.config.set("pattern", args[0]);
+    if (!this.updateOptions(options)) {
+      throw new Error("Invalid configuration value");
+    }
+    this.logVerbose();
+    await super.beforeExecution(args, options);
+  }
+
+  protected override async processExecution(): Promise<void> {
+    const builder = new DocumentTreeBuilder(this.config);
+    const root = await builder.build();
+
+    const orchestrator = new DocumentOrchestratorBuilder()
+      .setRoot(root)
+      .setConfig(this.config);
+
+    const outputFormat = this.config.get("outputFormat");
+    const strategies = await renderStrategyFactory.createStrategies(
+      this.config,
+      outputFormat
+    );
+
+    orchestrator.setStrategies(strategies);
+
+    const orchestrators = await orchestrator.buildAndExecute();
+
+    logger.info(`Generated ${orchestrators.length} documents`);
+  }
+
+  protected override logVerbose(): void {
+    super.logVerbose();
+    logger.debug(
+      `Searching for file matching pattern: ${this.config.get("pattern")}`
+    );
+    logger.debug(
+      `Excluding patterns: ${(this.config.get("excludePatterns") as string[]).join(", ")}`
+    );
+    logger.debug(
+      `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
+    );
+    logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
+  }
+
+  private updateOptions(options: IMainCLICommandOptions): boolean {
+    try {
+      this.config.set("dir", options["dir"]);
+      this.config.set("codeConfigFile", options["config"]);
+      this.config.set("logLevel", options["verbose"] ? "DEBUG" : "INFO");
+      this.config.set("verbose", options["verbose"]);
+      this.config.set(
+        "outputFormat",
+        options["format"] as unknown as OutputFormat[]
+      );
+      this.config.set("outputFile", options["output"]);
+      this.config.set("ignoreHiddenFiles", options["ignoreHidden"]);
+      this.config.set("additionalIgnoreFiles", options["additionalIgnore"]);
+    } catch (error) {
+      logger.error(`Invalid configuration value: ${error}`);
+      return false;
+    }
+    return true;
+  }
+}
+
+```
 #### File: ProgramBuilder.ts
 
-- **Path:** /root/git/codewrangler/src/cli/program/ProgramBuilder.ts
+- **Path:** /root/git/codewrangler/src/cli/program/mainCLI/ProgramBuilder.ts
 - **Extension:** ts
-- **Size:** 1920 bytes
-- **Depth:** 3
+- **Size:** 1924 bytes
+- **Depth:** 4
 - **Lines:** 76
 
 ```ts
 import { Command } from "commander";
 
-import { Config } from "../../utils/config/Config";
+import { Config } from "../../../utils/config/Config";
 
 export class ProgramBuilder {
   private program: Command;
@@ -734,9 +735,31 @@ export class ProgramBuilder {
         "-a, --additional-ignore <additional-ignore>",
         "Additional ignore patterns",
         this.config.get("additionalIgnoreFiles")
-      )
+      );
     return this;
   }
+}
+
+```
+#### File: type.ts
+
+- **Path:** /root/git/codewrangler/src/cli/program/mainCLI/type.ts
+- **Extension:** ts
+- **Size:** 266 bytes
+- **Depth:** 4
+- **Lines:** 12
+
+```ts
+import { ICommandOptions } from "../../commands/types";
+
+export interface IMainCLICommandOptions extends ICommandOptions {
+  dir: string;
+  config: string;
+  format: string;
+  output: string;
+  exclude: string;
+  ignoreHidden: boolean;
+  additionalIgnore: string;
 }
 
 ```
@@ -1202,7 +1225,7 @@ export { FileNotFoundError } from "./FileNotFoundError";
 ### Directory: infrastructure
 
 - **Path:** /root/git/codewrangler/src/infrastructure
-- **Size:** 19273 bytes
+- **Size:** 19243 bytes
 - **Files:** 0
 - **Total Files (including subdirectories):** 5
 - **Depth:** 1
@@ -1746,7 +1769,7 @@ export const jsonReader = async (path: string): Promise<object> => {
 ### Directory: templates
 
 - **Path:** /root/git/codewrangler/src/infrastructure/templates
-- **Size:** 5611 bytes
+- **Size:** 5581 bytes
 - **Files:** 2
 - **Total Files (including subdirectories):** 2
 - **Depth:** 2
@@ -1757,9 +1780,9 @@ export const jsonReader = async (path: string): Promise<object> => {
 
 - **Path:** /root/git/codewrangler/src/infrastructure/templates/TemplateEngine.ts
 - **Extension:** ts
-- **Size:** 4399 bytes
+- **Size:** 4369 bytes
 - **Depth:** 3
-- **Lines:** 158
+- **Lines:** 157
 
 ```ts
 import { ZodObject, z } from "zod";
@@ -1837,7 +1860,6 @@ export class Template<
       return this.replaceTokens(data);
     } catch (error) {
       if (error instanceof Error) {
-        console.error(error);
         throw new Error(`Template content validation failed for ${this.type}`);
       }
       throw error;
@@ -2995,7 +3017,7 @@ export interface IPropsFileNode extends IPropsNode {
 ### Directory: utils
 
 - **Path:** /root/git/codewrangler/src/utils
-- **Size:** 8927 bytes
+- **Size:** 9149 bytes
 - **Files:** 0
 - **Total Files (including subdirectories):** 6
 - **Depth:** 1
@@ -3005,7 +3027,7 @@ export interface IPropsFileNode extends IPropsNode {
 ### Directory: config
 
 - **Path:** /root/git/codewrangler/src/utils/config
-- **Size:** 5239 bytes
+- **Size:** 5564 bytes
 - **Files:** 3
 - **Total Files (including subdirectories):** 3
 - **Depth:** 2
@@ -3145,9 +3167,9 @@ export * from "./schema";
 
 - **Path:** /root/git/codewrangler/src/utils/config/schema.ts
 - **Extension:** ts
-- **Size:** 2538 bytes
+- **Size:** 2863 bytes
 - **Depth:** 3
-- **Lines:** 77
+- **Lines:** 97
 
 ```ts
 import { z } from "zod";
@@ -3208,23 +3230,43 @@ export type ConfigOptions = z.infer<typeof configSchema>;
 // get a type listing all the keys of the config
 export type ConfigKeys = keyof ConfigOptions;
 
-export const DEFAULT_CONFIG: ConfigOptions = {
-  dir: process.cwd(), // current working directory, where the command is run
-  rootDir: process.cwd(),
-  templatesDir: "public/templates",
-  pattern: ".*",
-  outputFile: "output",
-  logLevel: "INFO",
-  outputFormat: ["markdown"],
-  maxFileSize: 1048576,
-  maxDepth: 100,
-  codeConfigFile: "public/codewrangler.json",
-  projectName: undefined,
-  verbose: false,
-  followSymlinks: false,
+const DEFAULT_CONFIG_IGNORE = {
   ignoreHiddenFiles: true, // Default value
   additionalIgnoreFiles: [],
   excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"]
+};
+
+const DEFAULT_CONFIG_LOG = {
+  logLevel: "INFO",
+  verbose: false
+};
+
+const DEFAULT_CONFIG_LIMITS = {
+  maxFileSize: 1048576,
+  maxDepth: 100
+};
+
+const DEFAULT_CONFIG_PATHS = {
+  templatesDir: "public/templates",
+  codeConfigFile: "public/codewrangler.json"
+};
+
+const DEFAULT_CONFIG_OUTPUT = {
+  outputFormat: ["markdown"] as OutputFormat[],
+  outputFile: "output"
+};
+
+export const DEFAULT_CONFIG: ConfigOptions = {
+  dir: process.cwd(), // current working directory, where the command is run
+  rootDir: process.cwd(),
+  projectName: undefined,
+  pattern: ".*",
+  followSymlinks: false,
+  ...DEFAULT_CONFIG_PATHS,
+  ...DEFAULT_CONFIG_LIMITS,
+  ...DEFAULT_CONFIG_IGNORE,
+  ...DEFAULT_CONFIG_LOG,
+  ...DEFAULT_CONFIG_OUTPUT
 };
 
 ```
@@ -3327,7 +3369,7 @@ export async function progressBar(
 ### Directory: logger
 
 - **Path:** /root/git/codewrangler/src/utils/logger
-- **Size:** 2164 bytes
+- **Size:** 2061 bytes
 - **Files:** 2
 - **Total Files (including subdirectories):** 2
 - **Depth:** 2
@@ -3338,9 +3380,9 @@ export async function progressBar(
 
 - **Path:** /root/git/codewrangler/src/utils/logger/Logger.ts
 - **Extension:** ts
-- **Size:** 2138 bytes
+- **Size:** 2035 bytes
 - **Depth:** 3
-- **Lines:** 85
+- **Lines:** 83
 
 ```ts
 /* eslint-disable no-console */
@@ -3382,7 +3424,6 @@ export class Logger {
   }
 
   private get logLevel(): LogLevel {
-    console.log("getLogLevel", this.config?.get("logLevel"));
     const configLogLevel = this.config?.get("logLevel") as
       | LogLevelString
       | undefined;
@@ -3411,7 +3452,6 @@ export class Logger {
   }
 
   public debug(message: string): void {
-    console.log("debug", this.logLevel);
     if (this.logLevel >= LOG_LEVEL.DEBUG) {
       console.log(colors.gray(`[DEBUG] ${message}`));
     }

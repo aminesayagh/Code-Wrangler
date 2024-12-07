@@ -39,20 +39,18 @@ export class DocumentTreeBuilder {
   private async createDocumentStructure(
     node: INodeTree
   ): Promise<RenderableDirectory | RenderableFile> {
-    if (node.type === FILE_TYPE.Directory) {
-      const directory = new RenderableDirectory(node.name, node.path);
-
-      if (node.children) {
-        // Recursively create children
-        for (const child of node.children) {
-          const childDocument = await this.createDocumentStructure(child);
-          directory.addChild(childDocument);
-        }
-      }
-
-      return directory;
-    } else {
+    if (node.type !== FILE_TYPE.Directory)
       return new RenderableFile(node.name, node.path);
+    const directory = new RenderableDirectory(node.name, node.path);
+
+    if (node.children) {
+      // Recursively create children
+      for (const child of node.children) {
+        const childDocument = await this.createDocumentStructure(child);
+        directory.addChild(childDocument);
+      }
     }
+
+    return directory;
   }
 }

@@ -36,8 +36,7 @@ export class DocumentOrchestrator implements IDocumentOrchestrator {
       }
 
       const content = this.strategy.render(this.root as NodeDirectory);
-      const outputFormat = this.strategy.getName();
-      const outputPath = this.resolveOutputPath(outputFormat);
+      const outputPath = this.resolveOutputPath(this.strategy.getName());
       await this.ensureOutputDirectory(outputPath);
       await this.writeOutput(outputPath, content);
 
