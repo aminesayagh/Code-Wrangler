@@ -2,13 +2,13 @@ import { INodeTree, NodeTreeBuilder } from "./NodeTreeBuilder";
 import { RenderableDirectory } from "../../core/entities/NodeDirectory";
 import { RenderableFile } from "../../core/entities/NodeFile";
 import { FILE_TYPE } from "../../types/type";
-import { Config } from "../../utils/config";
+import { JobConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
 
 export class DocumentTreeBuilder {
   private root: RenderableDirectory | RenderableFile | undefined;
   private builder: NodeTreeBuilder;
-  public constructor(config: Config) {
+  public constructor(config: JobConfig) {
     this.builder = new NodeTreeBuilder(config);
   }
 

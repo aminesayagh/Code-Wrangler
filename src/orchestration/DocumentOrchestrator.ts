@@ -3,7 +3,7 @@ import { NodeDirectory } from "../core/entities/NodeDirectory";
 import { NodeFile } from "../core/entities/NodeFile";
 import { documentFactory } from "../infrastructure/filesystem/DocumentFactory";
 import { IRenderStrategy } from "../services/renderer/RenderStrategy";
-import { Config } from "../utils/config/Config";
+import { Config } from "../utils/config";
 import { OUTPUT_FORMATS, OutputFormat } from "../utils/config/schema";
 import { logger } from "../utils/logger/Logger";
 

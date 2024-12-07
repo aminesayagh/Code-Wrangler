@@ -1,23 +1,23 @@
-import { Config } from "../../../utils/config";
+import { IJobConfig, JobConfig } from "../../../utils/config";
 import FileHidden from "../FileHidden";
 
 jest.mock("../../../utils/config", () => ({
-  Config: {
+  JobConfig: {
     load: jest.fn()
   }
 }));
 
 describe("FileHidden", () => {
-  let mockConfig: jest.Mocked<Config>;
+  let mockConfig: jest.Mocked<JobConfig>;
   let fileHidden: FileHidden;
 
   beforeEach(() => {
     mockConfig = {
       get: jest.fn()
-    } as unknown as jest.Mocked<Config>;
+    } as unknown as jest.Mocked<JobConfig>;
 
     // Set default mock values
-    mockConfig.get.mockImplementation((key: string) => {
+    mockConfig.get.mockImplementation((key: keyof IJobConfig) => {
       switch (key) {
         case "ignoreHiddenFiles":
           return true;
@@ -26,7 +26,7 @@ describe("FileHidden", () => {
         case "additionalIgnoreFiles":
           return [];
         default:
-          return undefined;
+          return "";
       }
     });
 
@@ -111,7 +111,7 @@ describe("FileHidden", () => {
 
     describe("combined patterns handling", () => {
       beforeEach(() => {
-        mockConfig.get.mockImplementation((key: string) => {
+        mockConfig.get.mockImplementation((key: keyof IJobConfig) => {
           switch (key) {
             case "ignoreHiddenFiles":
               return true;
@@ -120,7 +120,7 @@ describe("FileHidden", () => {
             case "additionalIgnoreFiles":
               return ["*.log", "temp/**"];
             default:
-              return undefined;
+              return "";
           }
         });
         fileHidden = new FileHidden(mockConfig);
