@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import colors from "colors";
 
-import { Config } from "../config/Config";
+import { Config } from "../config/core/Config";
 
 export const LOG_LEVEL = {
   ERROR: 0,

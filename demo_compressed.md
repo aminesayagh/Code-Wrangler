@@ -1,7 +1,7 @@
 
 # Code Documentation
-Generated on: 2024-12-06T15:07:49.070Z
-Total files: 42
+Generated on: 2024-12-07T15:38:31.267Z
+Total files: 51
 
 ## Project Structure
 
@@ -67,11 +67,24 @@ codewrangler
     │   └── type.ts
     └── utils
         ├── config
-        │   ├── Config.ts
+        │   ├── builders
+        │   │   ├── ConfigBuilder.ts
+        │   │   └── index.ts
+        │   ├── core
+        │   │   ├── Config.ts
+        │   │   └── index.ts
         │   ├── index.ts
-        │   └── schema.ts
-        ├── helpers
-        │   └── ProgressBar.ts
+        │   ├── schema
+        │   │   ├── defaults.ts
+        │   │   ├── index.ts
+        │   │   ├── types.ts
+        │   │   └── validation.ts
+        │   └── sources
+        │       ├── CLIConfigSource.ts
+        │       ├── FileConfigSource.ts
+        │       ├── index.ts
+        │       └── interfaces
+        │           └── IConfigurationSource.ts
         └── logger
             ├── Logger.ts
             └── index.ts
@@ -130,63 +143,59 @@ codewrangler
 
 ## File: Command.ts
 - Path: `/root/git/codewrangler/src/cli/commands/Command.ts`
-- Size: 1.46 KB
+- Size: 1.29 KB
 - Extension: .ts
-- Lines of code: 41
+- Lines of code: 37
 - Content:
 
 ```ts
  1 | /* eslint-disable require-await */
  2 | import { ICommandOptions } from "./types";
  3 | import { Config } from "../../utils/config/Config";
- 4 | import { ProgressBar } from "../../utils/helpers/ProgressBar";
- 5 | import { logger } from "../../utils/logger/Logger";
- 6 | 
- 7 | export abstract class BaseCommand<T extends ICommandOptions> {
- 8 |   public constructor(protected config: Config) {}
- 9 | 
-10 |   public async execute(args: string[], options: T): Promise<void> {
-11 |     try {
-12 |       // Pre-execution phase
-13 |       await this.beforeExecution(args, options);
-14 | 
-15 |       // Progress tracking
-16 |       const progressBar = new ProgressBar(100);
-17 |       await progressBar.execute(async () => {
-18 |         await this.processExecution();
-19 |       });
-20 | 
-21 |       // Post-execution phase
-22 |       await this.afterExecution();
-23 |     } catch (error) {
-24 |       await this.handleError(error);
-25 |       throw error;
-26 |     }
-27 |   }
-28 | 
-29 |   // Template methods that can be overridden
-30 |   protected async beforeExecution(_: string[], options: T): Promise<void> {
-31 |     if (options.verbose) {
-32 |       this.logVerbose();
-33 |     }
-34 |   }
-35 | 
-36 |   protected abstract processExecution(): Promise<void>;
+ 4 | import { logger } from "../../utils/logger/Logger";
+ 5 | 
+ 6 | export abstract class BaseCommand<T extends ICommandOptions> {
+ 7 |   public constructor(protected config: Config) {}
+ 8 | 
+ 9 |   public async execute(args: string[], options: T): Promise<void> {
+10 |     try {
+11 |       // Pre-execution phase
+12 |       await this.beforeExecution(args, options);
+13 | 
+14 |       // Progress tracking
+15 |       await this.processExecution();
+16 | 
+17 |       // Post-execution phase
+18 |       await this.afterExecution();
+19 |     } catch (error) {
+20 |       await this.handleError(error);
+21 |       throw error;
+22 |     }
+23 |   }
+24 | 
+25 |   // Template methods that can be overridden
+26 |   protected async beforeExecution(_: string[], options: T): Promise<void> {
+27 |     if (options.verbose) {
+28 |       this.logVerbose();
+29 |     }
+30 |   }
+31 | 
+32 |   protected abstract processExecution(): Promise<void>;
+33 | 
+34 |   protected async afterExecution(): Promise<void> {
+35 |     // Default implementation - override if needed
+36 |   }
 37 | 
-38 |   protected async afterExecution(): Promise<void> {
-39 |     // Default implementation - override if needed
+38 |   protected async handleError(error: unknown): Promise<void> {
+39 |     logger.error("Command execution failed:", error as Error);
 40 |   }
 41 | 
-42 |   protected async handleError(error: unknown): Promise<void> {
-43 |     logger.error("Command execution failed:", error as Error);
-44 |   }
-45 | 
-46 |   protected logVerbose(): void {
-47 |     // Default verbose logging - override to add command-specific logs
-48 |     logger.debug("Executing command with verbose logging");
-49 |   }
-50 | }
-51 | 
+42 |   protected logVerbose(): void {
+43 |     // Default verbose logging - override to add command-specific logs
+44 |     logger.debug("Executing command with verbose logging");
+45 |   }
+46 | }
+47 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -194,355 +203,356 @@ codewrangler
 
 ## File: DemoCommand.ts
 - Path: `/root/git/codewrangler/src/cli/commands/DemoCommand.ts`
-- Size: 7.87 KB
+- Size: 7.91 KB
 - Extension: .ts
-- Lines of code: 297
+- Lines of code: 298
 - Content:
 
 ```ts
-  1 | /* eslint-disable max-lines-per-function */
-  2 | import { Stats } from "fs";
-  3 | import * as fs from "fs/promises";
-  4 | import * as path from "path";
-  5 | 
-  6 | interface IFileInfo {
-  7 |   name: string;
-  8 |   path: string;
-  9 |   content: string;
- 10 |   ext: string;
- 11 |   size: number;
- 12 |   lines: number;
- 13 | }
- 14 | 
- 15 | interface ITreeNode {
- 16 |   name: string;
- 17 |   path: string;
- 18 |   type: "file" | "directory";
- 19 |   children: ITreeNode[];
- 20 | }
- 21 | 
- 22 | interface IDocumentConfig {
- 23 |   pattern: RegExp;
- 24 |   rootDir: string;
- 25 |   outputPath: string;
- 26 |   excludePatterns: string[];
- 27 |   maxFileSize: number;
- 28 |   ignoreHidden: boolean;
- 29 |   compress: boolean;
- 30 | }
- 31 | 
- 32 | const DEFAULT_CONFIG: IDocumentConfig = {
- 33 |   pattern: /.*/,
- 34 |   rootDir: process.cwd(),
- 35 |   outputPath: "documentation.md",
- 36 |   excludePatterns: ["node_modules/**", "**/dist/**", "**/*.test.ts"],
- 37 |   maxFileSize: 1024 * 1024, // 1MB
- 38 |   ignoreHidden: true,
- 39 |   compress: false
- 40 | };
- 41 | 
- 42 | // Tree visualization functions
- 43 | const generateTreeSymbols = (depth: number, isLast: boolean[]): string => {
- 44 |   if (depth === 0) return "";
- 45 | 
- 46 |   return (
- 47 |     isLast
- 48 |       .slice(0, -1)
- 49 |       .map(last => (last ? "    " : "│   "))
- 50 |       .join("") + (isLast[isLast.length - 1] ? "└── " : "├── ")
- 51 |   );
- 52 | };
- 53 | 
- 54 | const createTreeNode = async (
- 55 |   nodePath: string,
- 56 |   config: IDocumentConfig,
- 57 |   relativePath = ""
- 58 | ): Promise<ITreeNode | null> => {
- 59 |   const stats = await fs.stat(nodePath);
- 60 |   const name = path.basename(nodePath);
- 61 | 
- 62 |   if (!shouldInclude(nodePath, config)) {
- 63 |     return null;
- 64 |   }
- 65 | 
- 66 |   if (stats.isDirectory()) {
- 67 |     const entries = await fs.readdir(nodePath, { withFileTypes: true });
- 68 |     const children: ITreeNode[] = [];
- 69 | 
- 70 |     for (const entry of entries) {
- 71 |       const childNode = await createTreeNode(
- 72 |         path.join(nodePath, entry.name),
- 73 |         config,
- 74 |         path.join(relativePath, name)
- 75 |       );
- 76 |       if (childNode) children.push(childNode);
- 77 |     }
- 78 | 
- 79 |     return {
- 80 |       name,
- 81 |       path: relativePath || name,
- 82 |       type: "directory",
- 83 |       children
- 84 |     };
- 85 |   } else if (isMatchingFile(nodePath, config)) {
- 86 |     return {
- 87 |       name,
- 88 |       path: relativePath || name,
- 89 |       type: "file",
- 90 |       children: []
- 91 |     };
- 92 |   }
- 93 | 
- 94 |   return null;
- 95 | };
- 96 | 
- 97 | const renderTreeNode = (
- 98 |   node: ITreeNode,
- 99 |   isLast: boolean[] = [],
-100 |   result: string[] = []
-101 | ): string[] => {
-102 |   const prefix = generateTreeSymbols(isLast.length, isLast);
-103 |   result.push(prefix + node.name);
-104 | 
-105 |   if (node.type === "directory") {
-106 |     node.children.forEach((child, index) => {
-107 |       renderTreeNode(
-108 |         child,
-109 |         [...isLast, index === node.children.length - 1],
-110 |         result
-111 |       );
-112 |     });
-113 |   }
-114 | 
-115 |   return result;
-116 | };
-117 | 
-118 | const isHidden = (filePath: string): boolean => {
-119 |   const baseName = path.basename(filePath);
-120 |   return baseName.startsWith(".");
-121 | };
-122 | 
-123 | const shouldInclude = (
-124 |   filePath: string,
-125 |   { excludePatterns, ignoreHidden }: IDocumentConfig
-126 | ): boolean => {
-127 |   // Check for hidden files if ignoreHidden is enabled
-128 |   if (ignoreHidden && isHidden(filePath)) {
-129 |     return false;
-130 |   }
-131 | 
-132 |   // Check against exclude patterns
-133 |   const isExcluded = excludePatterns.some(pattern =>
-134 |     new RegExp(pattern.replace(/\*/g, ".*")).test(filePath)
-135 |   );
-136 | 
-137 |   return !isExcluded;
-138 | };
-139 | 
-140 | // Pure functions for file operations
-141 | const isMatchingFile = (filePath: string, config: IDocumentConfig): boolean => {
-142 |   if (!config.pattern) {
-143 |     throw new Error("Pattern is not defined in the config");
-144 |   }
-145 | 
-146 |   if (!shouldInclude(filePath, config)) {
-147 |     return false;
-148 |   }
-149 | 
-150 |   return config.pattern.test(filePath);
-151 | };
-152 | 
-153 | const formatSize = (bytes: number): string => {
-154 |   const units = ["B", "KB", "MB", "GB"];
-155 |   let size = bytes;
-156 |   let unitIndex = 0;
-157 | 
-158 |   while (size >= 1024 && unitIndex < units.length - 1) {
-159 |     size /= 1024;
-160 |     unitIndex++;
-161 |   }
-162 | 
-163 |   return `${size.toFixed(2)} ${units[unitIndex]}`;
-164 | };
-165 | 
-166 | // Core file processing functions
-167 | 
-168 | async function* walkDirectory(dir: string): AsyncGenerator<string> {
-169 |   const entries = await fs.readdir(dir, { withFileTypes: true });
-170 | 
-171 |   for (const entry of entries) {
-172 |     const fullPath = path.join(dir, entry.name);
-173 | 
-174 |     if (entry.isDirectory()) {
-175 |       yield* walkDirectory(fullPath);
-176 |     } else {
-177 |       yield fullPath;
-178 |     }
-179 |   }
-180 | }
-181 | 
-182 | const formatContentWithLineNumbers = (content: string): string => {
-183 |   const lines = content.split("\n");
-184 |   const lineNumberWidth = lines.length.toString().length;
-185 | 
-186 |   return lines
-187 |     .map((line, index) => {
-188 |       const lineNumber = (index + 1).toString().padStart(lineNumberWidth, " ");
-189 |       return `${lineNumber} | ${line}`;
-190 |     })
-191 |     .join("\n");
-192 | };
-193 | 
-194 | // Markdown generation functions
-195 | const generateFileSection = (
-196 |   file: IFileInfo,
-197 |   compress: boolean = false
-198 | ): string =>
-199 |   !compress
-200 |     ? `
-201 | ## File: ${file.name}
-202 | - Path: \`${file.path}\`
-203 | - Size: ${formatSize(Number(file.size))}
-204 | - Extension: ${file.ext}
-205 | - Lines of code: ${file.lines}
-206 | - Content:
-207 | 
-208 | \`\`\`${file.ext.slice(1) || "plaintext"}
-209 | ${formatContentWithLineNumbers(file.content)}
-210 | \`\`\`
-211 | 
-212 | ---------------------------------------------------------------------------
-213 | `
-214 |     : `
-215 | ## File: ${file.name}, Path: \`${file.path}\`
-216 | \`\`\`${file.ext.slice(1) || "plaintext"}
-217 | ${formatContentWithLineNumbers(file.content)}
-218 | \`\`\``;
-219 | 
-220 | const generateMarkdownContent = (
-221 |   files: IFileInfo[],
-222 |   treeContent: string,
-223 |   compress: boolean
-224 | ): string =>
-225 |   !compress
-226 |     ? `
-227 | # Code Documentation
-228 | Generated on: ${new Date().toISOString()}
-229 | Total files: ${files.length}
-230 | 
-231 | ## Project Structure
-232 | 
-233 | \`\`\`
-234 | ${treeContent}
-235 | \`\`\`
-236 | 
-237 | ${files.map(file => generateFileSection(file, compress)).join("\n")}
-238 | `
-239 |     : `
-240 | # Code documentation
-241 | \`\`\`
-242 | ${treeContent}
-243 | \`\`\`
-244 | ${files.map(file => generateFileSection(file, compress)).join("\n")}
-245 | `;
-246 | 
-247 | const compressContent = (content: string): string =>
-248 |   content
-249 |     .split("\n")
-250 |     .map(line => line.trim())
-251 |     .filter(line => line !== "")
-252 |     .filter(line => !line.startsWith("//"))
-253 |     .join("\n");
-254 | 
-255 | async function generateFileInfo(
-256 |   filePath: string,
-257 |   stats: Stats,
-258 |   compress: boolean
-259 | ): Promise<IFileInfo> {
-260 |   const content = await fs.readFile(filePath, "utf-8");
-261 |   return {
-262 |     name: path.basename(filePath),
-263 |     path: filePath,
-264 |     content: compress ? compressContent(content) : content,
-265 |     ext: path.extname(filePath),
-266 |     size: stats.size,
-267 |     lines: content.split("\n").filter(line => line.trim() !== "").length
-268 |   };
-269 | }
-270 | 
-271 | // Main function
-272 | async function generateDocumentation(
-273 |   userConfig: Partial<IDocumentConfig> = {}
-274 | ): Promise<void> {
-275 |   try {
-276 |     const config: IDocumentConfig = { ...DEFAULT_CONFIG, ...userConfig };
-277 |     const files: IFileInfo[] = [];
-278 | 
-279 |     // Generate tree structure
-280 |     const rootNode = await createTreeNode(config.rootDir, config);
-281 |     const treeContent = rootNode
-282 |       ? renderTreeNode(rootNode).join("\n")
-283 |       : "No matching files found";
-284 | 
-285 |     for await (const filePath of walkDirectory(config.rootDir)) {
-286 |       if (!isMatchingFile(filePath, config)) {
-287 |         continue;
-288 |       }
-289 |       const stats = await fs.stat(filePath);
-290 |       if (stats.size > config.maxFileSize) {
-291 |         continue;
-292 |       }
-293 |       const fileInfo = await generateFileInfo(filePath, stats, config.compress);
-294 |       files.push(fileInfo);
-295 |     }
-296 | 
-297 |     const markdownContent = generateMarkdownContent(
-298 |       files,
-299 |       treeContent,
-300 |       config.compress
-301 |     );
-302 |     await fs.writeFile(config.outputPath, markdownContent, "utf-8");
-303 |   } catch (error) {
-304 |     console.error("Error generating documentation", error);
-305 |     throw error;
-306 |   }
-307 | }
-308 | 
-309 | if (require.main === module) {
-310 |   generateDocumentation({
-311 |     pattern: /\.ts$/,
-312 |     outputPath: "demo_compressed.md",
-313 |     ignoreHidden: true,
-314 |     excludePatterns: [
-315 |       "node_modules",
-316 |       "dist",
-317 |       "coverage",
-318 |       "**/__tests__",
-319 |       "**/*.test.ts"
-320 |     ],
-321 |     compress: false
-322 |   }).catch(console.error);
-323 |   generateDocumentation({
-324 |     pattern: /\.test.ts$/,
-325 |     outputPath: "demo_test.md",
-326 |     ignoreHidden: true,
-327 |     excludePatterns: [
-328 |       "node_modules",
-329 |       "dist",
-330 |       "coverage",
-331 |       "**/__tests__/__mocks__"
-332 |     ],
-333 |     compress: false
-334 |   }).catch(console.error);
-335 |   generateDocumentation({
-336 |     pattern: /\.md$/,
-337 |     outputPath: "demo_md.md",
-338 |     ignoreHidden: true,
-339 |     excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"],
-340 |     compress: false
-341 |   }).catch(console.error);
-342 | }
-343 | 
+  1 | /* eslint-disable no-magic-numbers */
+  2 | /* eslint-disable max-lines-per-function */
+  3 | import { Stats } from "fs";
+  4 | import * as fs from "fs/promises";
+  5 | import * as path from "path";
+  6 | 
+  7 | interface IFileInfo {
+  8 |   name: string;
+  9 |   path: string;
+ 10 |   content: string;
+ 11 |   ext: string;
+ 12 |   size: number;
+ 13 |   lines: number;
+ 14 | }
+ 15 | 
+ 16 | interface ITreeNode {
+ 17 |   name: string;
+ 18 |   path: string;
+ 19 |   type: "file" | "directory";
+ 20 |   children: ITreeNode[];
+ 21 | }
+ 22 | 
+ 23 | interface IDocumentConfig {
+ 24 |   pattern: RegExp;
+ 25 |   rootDir: string;
+ 26 |   outputPath: string;
+ 27 |   excludePatterns: string[];
+ 28 |   maxFileSize: number;
+ 29 |   ignoreHidden: boolean;
+ 30 |   compress: boolean;
+ 31 | }
+ 32 | 
+ 33 | const DEFAULT_CONFIG: IDocumentConfig = {
+ 34 |   pattern: /.*/,
+ 35 |   rootDir: process.cwd(),
+ 36 |   outputPath: "documentation.md",
+ 37 |   excludePatterns: ["node_modules/**", "**/dist/**", "**/*.test.ts"],
+ 38 |   maxFileSize: 1024 * 1024, // 1MB
+ 39 |   ignoreHidden: true,
+ 40 |   compress: false
+ 41 | };
+ 42 | 
+ 43 | // Tree visualization functions
+ 44 | const generateTreeSymbols = (depth: number, isLast: boolean[]): string => {
+ 45 |   if (depth === 0) return "";
+ 46 | 
+ 47 |   return (
+ 48 |     isLast
+ 49 |       .slice(0, -1)
+ 50 |       .map(last => (last ? "    " : "│   "))
+ 51 |       .join("") + (isLast[isLast.length - 1] ? "└── " : "├── ")
+ 52 |   );
+ 53 | };
+ 54 | 
+ 55 | const createTreeNode = async (
+ 56 |   nodePath: string,
+ 57 |   config: IDocumentConfig,
+ 58 |   relativePath = ""
+ 59 | ): Promise<ITreeNode | null> => {
+ 60 |   const stats = await fs.stat(nodePath);
+ 61 |   const name = path.basename(nodePath);
+ 62 | 
+ 63 |   if (!shouldInclude(nodePath, config)) {
+ 64 |     return null;
+ 65 |   }
+ 66 | 
+ 67 |   if (stats.isDirectory()) {
+ 68 |     const entries = await fs.readdir(nodePath, { withFileTypes: true });
+ 69 |     const children: ITreeNode[] = [];
+ 70 | 
+ 71 |     for (const entry of entries) {
+ 72 |       const childNode = await createTreeNode(
+ 73 |         path.join(nodePath, entry.name),
+ 74 |         config,
+ 75 |         path.join(relativePath, name)
+ 76 |       );
+ 77 |       if (childNode) children.push(childNode);
+ 78 |     }
+ 79 | 
+ 80 |     return {
+ 81 |       name,
+ 82 |       path: relativePath || name,
+ 83 |       type: "directory",
+ 84 |       children
+ 85 |     };
+ 86 |   } else if (isMatchingFile(nodePath, config)) {
+ 87 |     return {
+ 88 |       name,
+ 89 |       path: relativePath || name,
+ 90 |       type: "file",
+ 91 |       children: []
+ 92 |     };
+ 93 |   }
+ 94 | 
+ 95 |   return null;
+ 96 | };
+ 97 | 
+ 98 | const renderTreeNode = (
+ 99 |   node: ITreeNode,
+100 |   isLast: boolean[] = [],
+101 |   result: string[] = []
+102 | ): string[] => {
+103 |   const prefix = generateTreeSymbols(isLast.length, isLast);
+104 |   result.push(prefix + node.name);
+105 | 
+106 |   if (node.type === "directory") {
+107 |     node.children.forEach((child, index) => {
+108 |       renderTreeNode(
+109 |         child,
+110 |         [...isLast, index === node.children.length - 1],
+111 |         result
+112 |       );
+113 |     });
+114 |   }
+115 | 
+116 |   return result;
+117 | };
+118 | 
+119 | const isHidden = (filePath: string): boolean => {
+120 |   const baseName = path.basename(filePath);
+121 |   return baseName.startsWith(".");
+122 | };
+123 | 
+124 | const shouldInclude = (
+125 |   filePath: string,
+126 |   { excludePatterns, ignoreHidden }: IDocumentConfig
+127 | ): boolean => {
+128 |   // Check for hidden files if ignoreHidden is enabled
+129 |   if (ignoreHidden && isHidden(filePath)) {
+130 |     return false;
+131 |   }
+132 | 
+133 |   // Check against exclude patterns
+134 |   const isExcluded = excludePatterns.some(pattern =>
+135 |     new RegExp(pattern.replace(/\*/g, ".*")).test(filePath)
+136 |   );
+137 | 
+138 |   return !isExcluded;
+139 | };
+140 | 
+141 | // Pure functions for file operations
+142 | const isMatchingFile = (filePath: string, config: IDocumentConfig): boolean => {
+143 |   if (!config.pattern) {
+144 |     throw new Error("Pattern is not defined in the config");
+145 |   }
+146 | 
+147 |   if (!shouldInclude(filePath, config)) {
+148 |     return false;
+149 |   }
+150 | 
+151 |   return config.pattern.test(filePath);
+152 | };
+153 | 
+154 | const formatSize = (bytes: number): string => {
+155 |   const units = ["B", "KB", "MB", "GB"];
+156 |   let size = bytes;
+157 |   let unitIndex = 0;
+158 | 
+159 |   while (size >= 1024 && unitIndex < units.length - 1) {
+160 |     size /= 1024;
+161 |     unitIndex++;
+162 |   }
+163 | 
+164 |   return `${size.toFixed(2)} ${units[unitIndex]}`;
+165 | };
+166 | 
+167 | // Core file processing functions
+168 | 
+169 | async function* walkDirectory(dir: string): AsyncGenerator<string> {
+170 |   const entries = await fs.readdir(dir, { withFileTypes: true });
+171 | 
+172 |   for (const entry of entries) {
+173 |     const fullPath = path.join(dir, entry.name);
+174 | 
+175 |     if (entry.isDirectory()) {
+176 |       yield* walkDirectory(fullPath);
+177 |     } else {
+178 |       yield fullPath;
+179 |     }
+180 |   }
+181 | }
+182 | 
+183 | const formatContentWithLineNumbers = (content: string): string => {
+184 |   const lines = content.split("\n");
+185 |   const lineNumberWidth = lines.length.toString().length;
+186 | 
+187 |   return lines
+188 |     .map((line, index) => {
+189 |       const lineNumber = (index + 1).toString().padStart(lineNumberWidth, " ");
+190 |       return `${lineNumber} | ${line}`;
+191 |     })
+192 |     .join("\n");
+193 | };
+194 | 
+195 | // Markdown generation functions
+196 | const generateFileSection = (
+197 |   file: IFileInfo,
+198 |   compress: boolean = false
+199 | ): string =>
+200 |   !compress
+201 |     ? `
+202 | ## File: ${file.name}
+203 | - Path: \`${file.path}\`
+204 | - Size: ${formatSize(Number(file.size))}
+205 | - Extension: ${file.ext}
+206 | - Lines of code: ${file.lines}
+207 | - Content:
+208 | 
+209 | \`\`\`${file.ext.slice(1) || "plaintext"}
+210 | ${formatContentWithLineNumbers(file.content)}
+211 | \`\`\`
+212 | 
+213 | ---------------------------------------------------------------------------
+214 | `
+215 |     : `
+216 | ## File: ${file.name}, Path: \`${file.path}\`
+217 | \`\`\`${file.ext.slice(1) || "plaintext"}
+218 | ${formatContentWithLineNumbers(file.content)}
+219 | \`\`\``;
+220 | 
+221 | const generateMarkdownContent = (
+222 |   files: IFileInfo[],
+223 |   treeContent: string,
+224 |   compress: boolean
+225 | ): string =>
+226 |   !compress
+227 |     ? `
+228 | # Code Documentation
+229 | Generated on: ${new Date().toISOString()}
+230 | Total files: ${files.length}
+231 | 
+232 | ## Project Structure
+233 | 
+234 | \`\`\`
+235 | ${treeContent}
+236 | \`\`\`
+237 | 
+238 | ${files.map(file => generateFileSection(file, compress)).join("\n")}
+239 | `
+240 |     : `
+241 | # Code documentation
+242 | \`\`\`
+243 | ${treeContent}
+244 | \`\`\`
+245 | ${files.map(file => generateFileSection(file, compress)).join("\n")}
+246 | `;
+247 | 
+248 | const compressContent = (content: string): string =>
+249 |   content
+250 |     .split("\n")
+251 |     .map(line => line.trim())
+252 |     .filter(line => line !== "")
+253 |     .filter(line => !line.startsWith("//"))
+254 |     .join("\n");
+255 | 
+256 | async function generateFileInfo(
+257 |   filePath: string,
+258 |   stats: Stats,
+259 |   compress: boolean
+260 | ): Promise<IFileInfo> {
+261 |   const content = await fs.readFile(filePath, "utf-8");
+262 |   return {
+263 |     name: path.basename(filePath),
+264 |     path: filePath,
+265 |     content: compress ? compressContent(content) : content,
+266 |     ext: path.extname(filePath),
+267 |     size: stats.size,
+268 |     lines: content.split("\n").filter(line => line.trim() !== "").length
+269 |   };
+270 | }
+271 | 
+272 | // Main function
+273 | async function generateDocumentation(
+274 |   userConfig: Partial<IDocumentConfig> = {}
+275 | ): Promise<void> {
+276 |   try {
+277 |     const config: IDocumentConfig = { ...DEFAULT_CONFIG, ...userConfig };
+278 |     const files: IFileInfo[] = [];
+279 | 
+280 |     // Generate tree structure
+281 |     const rootNode = await createTreeNode(config.rootDir, config);
+282 |     const treeContent = rootNode
+283 |       ? renderTreeNode(rootNode).join("\n")
+284 |       : "No matching files found";
+285 | 
+286 |     for await (const filePath of walkDirectory(config.rootDir)) {
+287 |       if (!isMatchingFile(filePath, config)) {
+288 |         continue;
+289 |       }
+290 |       const stats = await fs.stat(filePath);
+291 |       if (stats.size > config.maxFileSize) {
+292 |         continue;
+293 |       }
+294 |       const fileInfo = await generateFileInfo(filePath, stats, config.compress);
+295 |       files.push(fileInfo);
+296 |     }
+297 | 
+298 |     const markdownContent = generateMarkdownContent(
+299 |       files,
+300 |       treeContent,
+301 |       config.compress
+302 |     );
+303 |     await fs.writeFile(config.outputPath, markdownContent, "utf-8");
+304 |   } catch (error) {
+305 |     console.error("Error generating documentation", error);
+306 |     throw error;
+307 |   }
+308 | }
+309 | 
+310 | if (require.main === module) {
+311 |   generateDocumentation({
+312 |     pattern: /\.ts$/,
+313 |     outputPath: "demo_compressed.md",
+314 |     ignoreHidden: true,
+315 |     excludePatterns: [
+316 |       "node_modules",
+317 |       "dist",
+318 |       "coverage",
+319 |       "**/__tests__",
+320 |       "**/*.test.ts"
+321 |     ],
+322 |     compress: false
+323 |   }).catch(console.error);
+324 |   generateDocumentation({
+325 |     pattern: /\.test.ts$/,
+326 |     outputPath: "demo_test.md",
+327 |     ignoreHidden: true,
+328 |     excludePatterns: [
+329 |       "node_modules",
+330 |       "dist",
+331 |       "coverage",
+332 |       "**/__tests__/__mocks__"
+333 |     ],
+334 |     compress: false
+335 |   }).catch(console.error);
+336 |   generateDocumentation({
+337 |     pattern: /\.md$/,
+338 |     outputPath: "demo_md.md",
+339 |     ignoreHidden: true,
+340 |     excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"],
+341 |     compress: false
+342 |   }).catch(console.error);
+343 | }
+344 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -571,9 +581,9 @@ codewrangler
 
 ## File: index.ts
 - Path: `/root/git/codewrangler/src/cli/index.ts`
-- Size: 416.00 B
+- Size: 480.00 B
 - Extension: .ts
-- Lines of code: 16
+- Lines of code: 19
 - Content:
 
 ```ts
@@ -581,21 +591,25 @@ codewrangler
  2 | import { CodeWrangler } from "./CodeWrangler";
  3 | import { logger } from "../utils/logger/Logger";
  4 | 
- 5 | async function main(): Promise<void> {
- 6 |   try {
- 7 |     await CodeWrangler.run();
- 8 |   } catch (error) {
- 9 |     if (error instanceof Error) {
-10 |       logger.error(error.message);
-11 |     } else {
-12 |       logger.error("An unknown error occurred");
-13 |     }
-14 |     process.exit(1);
-15 |   }
-16 | }
-17 | 
-18 | main().catch(() => process.exit(1));
-19 | 
+ 5 | function errorHandler(error: unknown): void {
+ 6 |   if (error instanceof Error) {
+ 7 |     logger.error(error.message);
+ 8 |   } else {
+ 9 |     logger.error("An unknown error occurred");
+10 |   }
+11 | }
+12 | 
+13 | async function main(): Promise<void> {
+14 |   try {
+15 |     await CodeWrangler.run();
+16 |   } catch (error) {
+17 |     errorHandler(error);
+18 |     process.exit(1);
+19 |   }
+20 | }
+21 | 
+22 | main().catch(() => process.exit(1));
+23 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -603,89 +617,98 @@ codewrangler
 
 ## File: MainCLICommand.ts
 - Path: `/root/git/codewrangler/src/cli/program/mainCLI/MainCLICommand.ts`
-- Size: 2.60 KB
+- Size: 2.84 KB
 - Extension: .ts
-- Lines of code: 67
+- Lines of code: 74
 - Content:
 
 ```ts
- 1 | import { IMainCLICommandOptions } from "./type";
- 2 | import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrchestratorBuilder";
- 3 | import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
- 4 | import { renderStrategyFactory } from "../../../services/renderer/RenderStrategyFactory";
- 5 | import { OutputFormat } from "../../../utils/config/schema";
- 6 | import { logger } from "../../../utils/logger/Logger";
- 7 | import { BaseCommand } from "../../commands/Command";
- 8 | 
- 9 | export class MainCLICommand<
-10 |   T extends IMainCLICommandOptions
-11 | > extends BaseCommand<T> {
-12 |   protected override async beforeExecution(
-13 |     args: string[],
-14 |     options: T
-15 |   ): Promise<void> {
-16 |     await super.beforeExecution(args, options);
+ 1 | import { z } from "zod";
+ 2 | 
+ 3 | import { IMainCLICommandOptions } from "./type";
+ 4 | import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrchestratorBuilder";
+ 5 | import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
+ 6 | import { renderStrategyFactory } from "../../../services/renderer/RenderStrategyFactory";
+ 7 | import { logger } from "../../../utils/logger/Logger";
+ 8 | import { BaseCommand } from "../../commands/Command";
+ 9 | 
+10 | export class MainCLICommand<
+11 |   T extends IMainCLICommandOptions
+12 | > extends BaseCommand<T> {
+13 |   protected override async beforeExecution(
+14 |     args: string[],
+15 |     options: T
+16 |   ): Promise<void> {
 17 |     this.config.set("pattern", args[0]);
 18 |     if (!this.updateOptions(options)) {
 19 |       throw new Error("Invalid configuration value");
 20 |     }
-21 |   }
-22 | 
-23 |   protected override async processExecution(): Promise<void> {
-24 |     const builder = new DocumentTreeBuilder(this.config);
-25 |     const root = await builder.build();
-26 | 
-27 |     const orchestrator = new DocumentOrchestratorBuilder()
-28 |       .setRoot(root)
-29 |       .setConfig(this.config);
-30 | 
-31 |     const outputFormat = this.config.get("outputFormat");
-32 |     const strategies = await renderStrategyFactory.createStrategies(
-33 |       this.config,
-34 |       outputFormat
-35 |     );
-36 | 
-37 |     orchestrator.setStrategies(strategies);
+21 |     this.logVerbose();
+22 |     await super.beforeExecution(args, options);
+23 |   }
+24 | 
+25 |   protected override async processExecution(): Promise<void> {
+26 |     const builder = new DocumentTreeBuilder(this.config);
+27 |     const root = await builder.build();
+28 | 
+29 |     const orchestrator = new DocumentOrchestratorBuilder()
+30 |       .setRoot(root)
+31 |       .setConfig(this.config);
+32 | 
+33 |     const outputFormat = this.config.get("outputFormat");
+34 |     const strategies = await renderStrategyFactory.createStrategies(
+35 |       this.config,
+36 |       outputFormat
+37 |     );
 38 | 
-39 |     const orchestrators = await orchestrator.buildAndExecute();
+39 |     orchestrator.setStrategies(strategies);
 40 | 
-41 |     logger.info(`Generated ${orchestrators.length} documents`);
-42 |   }
-43 | 
-44 |   protected override logVerbose(): void {
-45 |     super.logVerbose();
-46 |     logger.debug(
-47 |       `Searching for file matching pattern: ${this.config.get("pattern")}`
-48 |     );
-49 |     logger.debug(
-50 |       `Excluding patterns: ${(this.config.get("excludePatterns") as string[]).join(", ")}`
-51 |     );
-52 |     logger.debug(
-53 |       `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
-54 |     );
-55 |     logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
-56 |   }
-57 | 
-58 |   private updateOptions(options: IMainCLICommandOptions): boolean {
-59 |     try {
-60 |       this.config.set("dir", options["dir"]);
-61 |       this.config.set("codeConfigFile", options["config"]);
-62 |       this.config.set("logLevel", options["verbose"] ? "DEBUG" : "INFO");
-63 |       this.config.set(
-64 |         "outputFormat",
-65 |         options["format"] as unknown as OutputFormat[]
-66 |       );
+41 |     const orchestrators = await orchestrator.buildAndExecute();
+42 | 
+43 |     logger.info(`Generated ${orchestrators.length} documents`);
+44 |   }
+45 | 
+46 |   protected override logVerbose(): void {
+47 |     super.logVerbose();
+48 |     logger.debug(
+49 |       `Searching for file matching pattern: ${this.config.get("pattern")}`
+50 |     );
+51 |     logger.debug(
+52 |       `Excluding patterns: ${(this.config.get("excludePatterns") as string[]).join(", ")}`
+53 |     );
+54 |     logger.debug(
+55 |       `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
+56 |     );
+57 |     logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
+58 |   }
+59 | 
+60 |   private updateOptions(options: IMainCLICommandOptions): boolean {
+61 |     try {
+62 |       this.config.set("dir", options["dir"]);
+63 |       this.config.set("codeConfigFile", options["config"]);
+64 |       this.config.set("logLevel", options["verbose"] ? "DEBUG" : "INFO");
+65 |       this.config.set("verbose", options["verbose"]);
+66 |       this.config.set("outputFormat", options["format"]);
 67 |       this.config.set("outputFile", options["output"]);
 68 |       this.config.set("ignoreHiddenFiles", options["ignoreHidden"]);
 69 |       this.config.set("additionalIgnoreFiles", options["additionalIgnore"]);
 70 |     } catch (error) {
-71 |       logger.error(`Invalid configuration value: ${error}`);
-72 |       return false;
-73 |     }
-74 |     return true;
-75 |   }
-76 | }
-77 | 
+71 |       this.handleCLIError(error);
+72 |     }
+73 |     return true;
+74 |   }
+75 | 
+76 |   private handleCLIError(error: unknown): void {
+77 |     if (error instanceof z.ZodError) {
+78 |       const details = error.errors
+79 |         .map(err => `${err.path.join(".")}: ${err.message}`)
+80 |         .join(", ");
+81 |       throw new Error(`Configuration validation failed: ${details}`);
+82 |     }
+83 |     throw error;
+84 |   }
+85 | }
+86 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -945,9 +968,9 @@ codewrangler
 
 ## File: NodeDirectory.ts
 - Path: `/root/git/codewrangler/src/core/entities/NodeDirectory.ts`
-- Size: 3.07 KB
+- Size: 3.06 KB
 - Extension: .ts
-- Lines of code: 93
+- Lines of code: 94
 - Content:
 
 ```ts
@@ -1021,29 +1044,29 @@ codewrangler
  68 |     // bundle all children
  69 |     await Promise.all(this.children.map(child => child.bundle(deep + 1)));
  70 | 
- 71 |     // set the length of the directory
- 72 |     this.length = this.children.filter(child => child.type === "file").length;
- 73 |     this.numberOfFiles =
- 74 |       this.length +
- 75 |       this.children
- 76 |         .filter(child => child.type === "directory")
- 77 |         .reduce((acc, child) => acc + child.numberOfFiles, 0);
- 78 | 
- 79 |     // set the deep length of the directory
- 80 |     this.deepLength = this.children.reduce(
- 81 |       (acc, child) =>
- 82 |         acc + (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
- 83 |       0
- 84 |     );
- 85 | 
- 86 |     // set the size of the directory
- 87 |     this.size = this.children.reduce((acc, child) => acc + child.size, 0);
- 88 | 
- 89 |     // set stats
- 90 |     this.stats = await fileStatsService(this.path);
- 91 |   }
- 92 | 
- 93 |   public abstract override render(strategy: IRenderStrategy): INodeContent;
+ 71 |     this.bundleMetrics();
+ 72 |     this.stats = await fileStatsService(this.path);
+ 73 |   }
+ 74 | 
+ 75 |   public abstract override render(strategy: IRenderStrategy): INodeContent;
+ 76 | 
+ 77 |   private bundleMetrics(): void {
+ 78 |     // Calculate directory metrics in a single pass
+ 79 |     const metrics = this.children.reduce(
+ 80 |       (acc, child) => ({
+ 81 |         length: acc.length + (child.type === "file" ? 1 : 0),
+ 82 |         numberOfFiles:
+ 83 |           acc.numberOfFiles + (child.type === "file" ? 1 : child.numberOfFiles),
+ 84 |         deepLength:
+ 85 |           acc.deepLength +
+ 86 |           (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
+ 87 |         size: acc.size + child.size
+ 88 |       }),
+ 89 |       { length: 0, numberOfFiles: 0, deepLength: 0, size: 0 }
+ 90 |     );
+ 91 | 
+ 92 |     Object.assign(this, metrics);
+ 93 |   }
  94 | 
  95 |   private initDirectory(): void {
  96 |     this.children = [];
@@ -1237,9 +1260,9 @@ codewrangler
 
 ## File: DocumentFactory.ts
 - Path: `/root/git/codewrangler/src/infrastructure/filesystem/DocumentFactory.ts`
-- Size: 9.87 KB
+- Size: 9.98 KB
 - Extension: .ts
-- Lines of code: 323
+- Lines of code: 331
 - Content:
 
 ```ts
@@ -1303,30 +1326,30 @@ codewrangler
  58 |     return path.resolve(filePath);
  59 |   },
  60 | 
- 61 |   /**
- 62 |    * Checks various access flags for a path
- 63 |    * @private
- 64 |    * @param filePath - The path to check access for
- 65 |    * @returns An object containing readable, writable, and executable permission flags
- 66 |    */
- 67 |   async checkAccess(filePath: string): Promise<{
- 68 |     readable: boolean;
- 69 |     writable: boolean;
- 70 |     executable: boolean;
- 71 |   }> {
- 72 |     const check = async (mode: number): Promise<boolean> => {
- 73 |       try {
- 74 |         await fs.access(filePath, mode);
- 75 |         return true;
- 76 |       } catch {
- 77 |         return false;
- 78 |       }
- 79 |     };
- 80 | 
+ 61 |   async check(filePath: string, mode: number): Promise<boolean> {
+ 62 |     try {
+ 63 |       await fs.access(filePath, mode);
+ 64 |       return true;
+ 65 |     } catch {
+ 66 |       return false;
+ 67 |     }
+ 68 |   },
+ 69 | 
+ 70 |   /**
+ 71 |    * Checks various access flags for a path
+ 72 |    * @private
+ 73 |    * @param filePath - The path to check access for
+ 74 |    * @returns An object containing readable, writable, and executable permission flags
+ 75 |    */
+ 76 |   async checkAccess(filePath: string): Promise<{
+ 77 |     readable: boolean;
+ 78 |     writable: boolean;
+ 79 |     executable: boolean;
+ 80 |   }> {
  81 |     return {
- 82 |       readable: await check(fs.constants.R_OK),
- 83 |       writable: await check(fs.constants.W_OK),
- 84 |       executable: await check(fs.constants.X_OK)
+ 82 |       readable: await this.check(filePath, fs.constants.R_OK),
+ 83 |       writable: await this.check(filePath, fs.constants.W_OK),
+ 84 |       executable: await this.check(filePath, fs.constants.X_OK)
  85 |     };
  86 |   },
  87 | 
@@ -1362,237 +1385,245 @@ codewrangler
 117 |         flag: options.flag
 118 |       });
 119 |     } catch (error) {
-120 |       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-121 |         throw new FileNotFoundError(filePath);
-122 |       }
-123 |       throw new DocumentError(String(error), filePath);
-124 |     }
-125 |   },
-126 | 
-127 |   /**
-128 |    * Writes data to a file, replacing the file if it already exists
-129 |    * @param filePath - The path to the file
-130 |    * @param data - The data to write
-131 |    * @param options - The options for the write operation
-132 |    * @throws {DocumentError} For file system errors
-133 |    */
-134 |   async writeFile(
-135 |     filePath: string,
-136 |     data: string | Buffer,
-137 |     options: IWriteOptions = {}
-138 |   ): Promise<void> {
-139 |     try {
-140 |       // Ensure parent directory exists
-141 |       const parentDir = path.dirname(filePath);
-142 |       await fs.mkdir(parentDir, { recursive: true });
-143 | 
-144 |       // Write the file
-145 |       await fs.writeFile(filePath, data, {
-146 |         encoding: options.encoding ?? "utf-8",
-147 |         mode: options.mode,
-148 |         flag: options.flag
-149 |       });
-150 |     } catch (error) {
-151 |       if (error instanceof DocumentError) {
-152 |         throw error;
-153 |       }
-154 |       throw new DocumentError(String(error), filePath);
-155 |     }
-156 |   },
-157 | 
-158 |   /**
-159 |    * Appends data to a file
-160 |    * @param filePath - The path to the file
-161 |    * @param content - The content to append
-162 |    * @param options - The options for the write operation
-163 |    * @throws {DocumentError} For file system errors
-164 |    */
-165 |   async appendFile(
-166 |     filePath: string,
-167 |     content: string,
-168 |     options: IWriteOptions = {}
-169 |   ): Promise<void> {
-170 |     try {
-171 |       await fs.appendFile(filePath, content, {
-172 |         encoding: options.encoding ?? "utf-8",
-173 |         mode: options.mode,
-174 |         flag: options.flag
-175 |       });
-176 |     } catch (error) {
-177 |       throw new DocumentError(String(error), filePath);
-178 |     }
-179 |   },
-180 | 
-181 |   /**
-182 |    * Reads the contents of a directory
-183 |    * @param dirPath - The path to the directory
-184 |    * @param options - The options for the read operation
-185 |    * @returns An array of file and directory names in the directory
-186 |    * @throws {Error} If the directory cannot be read
-187 |    */
-188 |   async readDir(
-189 |     dirPath: string,
-190 |     options?: { withFileTypes?: boolean }
-191 |   ): Promise<string[]> {
-192 |     return await fs.readdir(dirPath, options as ObjectEncodingOptions);
-193 |   },
-194 | 
-195 |   /**
-196 |    * Creates a directory if it doesn't exist
-197 |    * @param dirPath - The path where to create the directory
-198 |    * @param recursive - Whether to create parent directories if they don't exist
-199 |    * @throws {DocumentError} For file system errors
+120 |       this.handleError(error, filePath);
+121 |       throw null;
+122 |     }
+123 |   },
+124 | 
+125 |   /**
+126 |    * Writes data to a file, replacing the file if it already exists
+127 |    * @param filePath - The path to the file
+128 |    * @param data - The data to write
+129 |    * @param options - The options for the write operation
+130 |    * @throws {DocumentError} For file system errors
+131 |    */
+132 |   async writeFile(
+133 |     filePath: string,
+134 |     data: string | Buffer,
+135 |     options: IWriteOptions = {}
+136 |   ): Promise<void> {
+137 |     try {
+138 |       // Write the file
+139 |       await fs.writeFile(filePath, data, {
+140 |         encoding: options.encoding ?? "utf-8",
+141 |         mode: options.mode,
+142 |         flag: options.flag
+143 |       });
+144 |     } catch (error) {
+145 |       this.handleError(error, filePath);
+146 |     }
+147 |   },
+148 | 
+149 |   /**
+150 |    * Appends data to a file
+151 |    * @param filePath - The path to the file
+152 |    * @param content - The content to append
+153 |    * @param options - The options for the write operation
+154 |    * @throws {DocumentError} For file system errors
+155 |    */
+156 |   async appendFile(
+157 |     filePath: string,
+158 |     content: string,
+159 |     options: IWriteOptions = {}
+160 |   ): Promise<void> {
+161 |     try {
+162 |       await fs.appendFile(filePath, content, {
+163 |         encoding: options.encoding ?? "utf-8",
+164 |         mode: options.mode,
+165 |         flag: options.flag
+166 |       });
+167 |     } catch (error) {
+168 |       this.handleError(error, filePath);
+169 |     }
+170 |   },
+171 | 
+172 |   /**
+173 |    * Reads the contents of a directory
+174 |    * @param dirPath - The path to the directory
+175 |    * @param options - The options for the read operation
+176 |    * @returns An array of file and directory names in the directory
+177 |    * @throws {Error} If the directory cannot be read
+178 |    */
+179 |   async readDir(
+180 |     dirPath: string,
+181 |     options?: { withFileTypes?: boolean }
+182 |   ): Promise<string[]> {
+183 |     return await fs.readdir(dirPath, options as ObjectEncodingOptions);
+184 |   },
+185 | 
+186 |   /**
+187 |    * Creates a directory if it doesn't exist
+188 |    * @param dirPath - The path where to create the directory
+189 |    * @param recursive - Whether to create parent directories if they don't exist
+190 |    * @throws {DocumentError} For file system errors
+191 |    */
+192 |   async createDir(dirPath: string, recursive = true): Promise<void> {
+193 |     await fs.mkdir(dirPath, { recursive });
+194 |   },
+195 | 
+196 |   /**
+197 |    * Gets the base name of a file
+198 |    * @param filePath - The path to the file
+199 |    * @returns The base name of the file (last portion of the path)
 200 |    */
-201 |   async createDir(dirPath: string, recursive = true): Promise<void> {
-202 |     await fs.mkdir(dirPath, { recursive });
+201 |   baseName(filePath: string): string {
+202 |     return path.basename(filePath);
 203 |   },
 204 | 
 205 |   /**
-206 |    * Gets the base name of a file
+206 |    * Gets the extension of a file
 207 |    * @param filePath - The path to the file
-208 |    * @returns The base name of the file (last portion of the path)
+208 |    * @returns The extension of the file including the dot (e.g., '.txt')
 209 |    */
-210 |   baseName(filePath: string): string {
-211 |     return path.basename(filePath);
+210 |   extension(filePath: string): string {
+211 |     return path.extname(filePath);
 212 |   },
 213 | 
 214 |   /**
-215 |    * Gets the extension of a file
-216 |    * @param filePath - The path to the file
-217 |    * @returns The extension of the file including the dot (e.g., '.txt')
+215 |    * Checks if a file or directory exists
+216 |    * @param filePath - The path to check
+217 |    * @returns True if the file or directory exists, false otherwise
 218 |    */
-219 |   extension(filePath: string): string {
-220 |     return path.extname(filePath);
-221 |   },
-222 | 
-223 |   /**
-224 |    * Checks if a file or directory exists
-225 |    * @param filePath - The path to check
-226 |    * @returns True if the file or directory exists, false otherwise
-227 |    */
-228 |   exists(filePath: string): boolean {
-229 |     try {
-230 |       fsSync.accessSync(filePath);
-231 |       return true;
-232 |     } catch {
-233 |       return false;
-234 |     }
+219 |   exists(filePath: string): boolean {
+220 |     try {
+221 |       fsSync.accessSync(filePath);
+222 |       return true;
+223 |     } catch {
+224 |       return false;
+225 |     }
+226 |   },
+227 | 
+228 |   /**
+229 |    * Checks if a path is absolute
+230 |    * @param filePath - The path to check
+231 |    * @returns True if the path is absolute, false otherwise
+232 |    */
+233 |   isAbsolute(filePath: string): boolean {
+234 |     return path.isAbsolute(filePath);
 235 |   },
 236 | 
 237 |   /**
-238 |    * Checks if a path is absolute
-239 |    * @param filePath - The path to check
-240 |    * @returns True if the path is absolute, false otherwise
-241 |    */
-242 |   isAbsolute(filePath: string): boolean {
-243 |     return path.isAbsolute(filePath);
-244 |   },
-245 | 
-246 |   /**
-247 |    * Gets directory contents with type information
-248 |    * @param dirPath - The path to the directory
-249 |    * @returns An array of objects containing name and type information for each entry
-250 |    * @throws {DocumentError} If path is not a directory or other errors occur
-251 |    */
-252 |   async readDirectory(
-253 |     dirPath: string
-254 |   ): Promise<Array<{ name: string; type: FileType }>> {
-255 |     try {
-256 |       const entries = await fs.readdir(dirPath, { withFileTypes: true });
-257 |       return entries.map(entry => ({
-258 |         name: entry.name,
-259 |         type: entry.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File
-260 |       }));
-261 |     } catch (error) {
-262 |       throw new DocumentError(String(error), dirPath);
-263 |     }
-264 |   },
-265 | 
-266 |   /**
-267 |    * Creates a directory if it doesn't exist
-268 |    * @param dirPath - The path where to create the directory
-269 |    * @param options - Options for directory creation including recursive and mode
-270 |    * @throws {DocumentError} For file system errors
-271 |    */
-272 |   async ensureDirectory(
-273 |     dirPath: string,
-274 |     options: IDirectoryOptions = {}
-275 |   ): Promise<void> {
-276 |     try {
-277 |       if (!this.exists(dirPath)) {
-278 |         await fs.mkdir(dirPath, {
-279 |           recursive: options.recursive ?? true,
-280 |           mode: options.mode
-281 |         });
-282 |       }
-283 |     } catch (error) {
-284 |       throw new DocumentError(String(error), dirPath);
-285 |     }
-286 |   },
-287 | 
-288 |   /**
-289 |    * Removes a file or directory
-290 |    * @param filePath - The path to remove
-291 |    * @throws {DocumentError} For file system errors
-292 |    */
-293 |   async remove(filePath: string): Promise<void> {
-294 |     const stats = await fs.stat(filePath);
-295 |     if (stats.isDirectory()) {
-296 |       await fs.rm(filePath, { recursive: true, force: true });
-297 |     } else {
-298 |       await fs.unlink(filePath);
-299 |     }
-300 |   },
-301 | 
-302 |   /**
-303 |    * Copies a file or directory
-304 |    * @param src - The source path
-305 |    * @param dest - The destination path
-306 |    * @throws {DocumentError} For file system errors
-307 |    */
-308 |   async copy(src: string, dest: string): Promise<void> {
-309 |     const stats = await fs.stat(src);
-310 | 
-311 |     if (stats.isDirectory()) {
-312 |       await this.copyDir(src, dest);
-313 |     } else {
-314 |       await fs.copyFile(src, dest);
-315 |     }
-316 |   },
-317 | 
-318 |   /**
-319 |    * Copies a directory recursively
-320 |    * @private
-321 |    * @param src - The source directory path
-322 |    * @param dest - The destination directory path
-323 |    * @throws {DocumentError} For file system errors
-324 |    */
-325 |   async copyDir(src: string, dest: string): Promise<void> {
-326 |     await this.ensureDirectory(dest);
-327 |     const entries = await fs.readdir(src, { withFileTypes: true });
-328 | 
-329 |     for (const entry of entries) {
-330 |       const srcPath = path.join(src, entry.name);
-331 |       const destPath = path.join(dest, entry.name);
+238 |    * Gets directory contents with type information
+239 |    * @param dirPath - The path to the directory
+240 |    * @returns An array of objects containing name and type information for each entry
+241 |    * @throws {DocumentError} If path is not a directory or other errors occur
+242 |    */
+243 |   async readDirectory(
+244 |     dirPath: string
+245 |   ): Promise<Array<{ name: string; type: FileType }>> {
+246 |     try {
+247 |       const entries = await fs.readdir(dirPath, { withFileTypes: true });
+248 |       return entries.map(entry => ({
+249 |         name: entry.name,
+250 |         type: entry.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File
+251 |       }));
+252 |     } catch (error) {
+253 |       this.handleError(error, dirPath);
+254 |       return [];
+255 |     }
+256 |   },
+257 | 
+258 |   /**
+259 |    * Creates a directory if it doesn't exist
+260 |    * @param dirPath - The path where to create the directory
+261 |    * @param options - Options for directory creation including recursive and mode
+262 |    * @throws {DocumentError} For file system errors
+263 |    */
+264 |   async ensureDirectory(
+265 |     dirPath: string,
+266 |     options: IDirectoryOptions = {}
+267 |   ): Promise<void> {
+268 |     try {
+269 |       if (!this.exists(dirPath)) {
+270 |         await fs.mkdir(dirPath, {
+271 |           recursive: options.recursive ?? true,
+272 |           mode: options.mode
+273 |         });
+274 |       }
+275 |     } catch (error) {
+276 |       this.handleError(error, dirPath);
+277 |     }
+278 |   },
+279 | 
+280 |   /**
+281 |    * Removes a file or directory
+282 |    * @param filePath - The path to remove
+283 |    * @throws {DocumentError} For file system errors
+284 |    */
+285 |   async remove(filePath: string): Promise<void> {
+286 |     const stats = await fs.stat(filePath);
+287 |     if (stats.isDirectory()) {
+288 |       await fs.rm(filePath, { recursive: true, force: true });
+289 |     } else {
+290 |       await fs.unlink(filePath);
+291 |     }
+292 |   },
+293 | 
+294 |   /**
+295 |    * Copies a file or directory
+296 |    * @param src - The source path
+297 |    * @param dest - The destination path
+298 |    * @throws {DocumentError} For file system errors
+299 |    */
+300 |   async copy(src: string, dest: string): Promise<void> {
+301 |     const stats = await fs.stat(src);
+302 | 
+303 |     if (stats.isDirectory()) {
+304 |       await this.copyDir(src, dest);
+305 |     } else {
+306 |       await fs.copyFile(src, dest);
+307 |     }
+308 |   },
+309 | 
+310 |   /**
+311 |    * Copies a directory recursively
+312 |    * @private
+313 |    * @param src - The source directory path
+314 |    * @param dest - The destination directory path
+315 |    * @throws {DocumentError} For file system errors
+316 |    */
+317 |   async copyDir(src: string, dest: string): Promise<void> {
+318 |     await this.ensureDirectory(dest);
+319 |     const entries = await fs.readdir(src, { withFileTypes: true });
+320 | 
+321 |     for (const entry of entries) {
+322 |       const srcPath = path.join(src, entry.name);
+323 |       const destPath = path.join(dest, entry.name);
+324 | 
+325 |       if (entry.isDirectory()) {
+326 |         await this.copyDir(srcPath, destPath);
+327 |       } else {
+328 |         await fs.copyFile(srcPath, destPath);
+329 |       }
+330 |     }
+331 |   },
 332 | 
-333 |       if (entry.isDirectory()) {
-334 |         await this.copyDir(srcPath, destPath);
-335 |       } else {
-336 |         await fs.copyFile(srcPath, destPath);
-337 |       }
-338 |     }
-339 |   },
-340 | 
-341 |   /**
-342 |    * Joins an array of paths into a single path
-343 |    * @param paths - The paths to join
-344 |    * @returns The joined path
-345 |    */
-346 |   join(...paths: string[]): string {
-347 |     return path.join(...paths);
-348 |   }
-349 | };
-350 | 
+333 |   /**
+334 |    * Joins an array of paths into a single path
+335 |    * @param paths - The paths to join
+336 |    * @returns The joined path
+337 |    */
+338 |   join(...paths: string[]): string {
+339 |     return path.join(...paths);
+340 |   },
+341 | 
+342 |   /**
+343 |    * Handles errors
+344 |    * @param error - The error to handle
+345 |    * @param filePath - The path to the file
+346 |    * @throws {DocumentError} If the error is not an instance of DocumentError
+347 |    */
+348 |   handleError(error: unknown, filePath: string): void {
+349 |     if (error instanceof DocumentError) {
+350 |       throw error;
+351 |     }
+352 |     if (error instanceof FileNotFoundError) {
+353 |       throw error;
+354 |     }
+355 |     throw new DocumentError(String(error), filePath);
+356 |   }
+357 | };
+358 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -1975,9 +2006,9 @@ codewrangler
 
 ## File: DocumentOrchestrator.ts
 - Path: `/root/git/codewrangler/src/orchestration/DocumentOrchestrator.ts`
-- Size: 2.76 KB
+- Size: 2.72 KB
 - Extension: .ts
-- Lines of code: 79
+- Lines of code: 78
 - Content:
 
 ```ts
@@ -2019,62 +2050,61 @@ codewrangler
 36 |       }
 37 | 
 38 |       const content = this.strategy.render(this.root as NodeDirectory);
-39 |       const outputFormat = this.strategy.getName();
-40 |       const outputPath = this.resolveOutputPath(outputFormat);
-41 |       await this.ensureOutputDirectory(outputPath);
-42 |       await this.writeOutput(outputPath, content);
-43 | 
-44 |       logger.success(`Document built successfully at ${outputPath}`);
-45 |     } catch (error) {
-46 |       logger.error("Failed to build document", error as Error);
-47 |       throw error;
-48 |     }
-49 |   }
-50 | 
-51 |   public getStrategyName(): string {
-52 |     return this.strategy?.getName() ?? "Unknown";
-53 |   }
-54 | 
-55 |   public dispose(): void {
-56 |     this.strategy?.dispose();
-57 |   }
-58 | 
-59 |   private initialize(): void {
-60 |     this.validateStructure();
-61 |   }
-62 | 
-63 |   private validateStructure(): void {
-64 |     if (!(this.root.type == "directory") && !(this.root.type == "file")) {
-65 |       throw new Error("Invalid root node type");
-66 |     }
-67 |   }
-68 | 
-69 |   private resolveOutputPath(outputFormat: OutputFormat): string {
-70 |     const outputFile = this.config.get("outputFile");
-71 |     return documentFactory.resolve(
-72 |       `${outputFile}.${OUTPUT_FORMATS[outputFormat]}`
-73 |     );
-74 |   }
-75 | 
-76 |   private async ensureOutputDirectory(outputPath: string): Promise<void> {
-77 |     const directory = documentFactory.baseName(outputPath);
-78 |     if (
-79 |       outputPath.endsWith(`.${OUTPUT_FORMATS.html}`) ||
-80 |       outputPath.endsWith(`.${OUTPUT_FORMATS.markdown}`)
-81 |     ) {
-82 |       return;
-83 |     }
-84 |     await documentFactory.ensureDirectory(directory);
-85 |   }
-86 | 
-87 |   private async writeOutput(
-88 |     outputPath: string,
-89 |     content: string
-90 |   ): Promise<void> {
-91 |     await documentFactory.writeFile(outputPath, content);
-92 |   }
-93 | }
-94 | 
+39 |       const outputPath = this.resolveOutputPath(this.strategy.getName());
+40 |       await this.ensureOutputDirectory(outputPath);
+41 |       await this.writeOutput(outputPath, content);
+42 | 
+43 |       logger.success(`Document built successfully at ${outputPath}`);
+44 |     } catch (error) {
+45 |       logger.error("Failed to build document", error as Error);
+46 |       throw error;
+47 |     }
+48 |   }
+49 | 
+50 |   public getStrategyName(): string {
+51 |     return this.strategy?.getName() ?? "Unknown";
+52 |   }
+53 | 
+54 |   public dispose(): void {
+55 |     this.strategy?.dispose();
+56 |   }
+57 | 
+58 |   private initialize(): void {
+59 |     this.validateStructure();
+60 |   }
+61 | 
+62 |   private validateStructure(): void {
+63 |     if (!(this.root.type == "directory") && !(this.root.type == "file")) {
+64 |       throw new Error("Invalid root node type");
+65 |     }
+66 |   }
+67 | 
+68 |   private resolveOutputPath(outputFormat: OutputFormat): string {
+69 |     const outputFile = this.config.get("outputFile");
+70 |     return documentFactory.resolve(
+71 |       `${outputFile}.${OUTPUT_FORMATS[outputFormat]}`
+72 |     );
+73 |   }
+74 | 
+75 |   private async ensureOutputDirectory(outputPath: string): Promise<void> {
+76 |     const directory = documentFactory.baseName(outputPath);
+77 |     if (
+78 |       outputPath.endsWith(`.${OUTPUT_FORMATS.html}`) ||
+79 |       outputPath.endsWith(`.${OUTPUT_FORMATS.markdown}`)
+80 |     ) {
+81 |       return;
+82 |     }
+83 |     await documentFactory.ensureDirectory(directory);
+84 |   }
+85 | 
+86 |   private async writeOutput(
+87 |     outputPath: string,
+88 |     content: string
+89 |   ): Promise<void> {
+90 |     await documentFactory.writeFile(outputPath, content);
+91 |   }
+92 | }
+93 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2082,9 +2112,9 @@ codewrangler
 
 ## File: DocumentOrchestratorBuilder.ts
 - Path: `/root/git/codewrangler/src/orchestration/DocumentOrchestratorBuilder.ts`
-- Size: 1.97 KB
+- Size: 2.03 KB
 - Extension: .ts
-- Lines of code: 59
+- Lines of code: 62
 - Content:
 
 ```ts
@@ -2120,46 +2150,49 @@ codewrangler
 30 |     return this;
 31 |   }
 32 | 
-33 |   public async build(): Promise<DocumentOrchestrator[]> {
-34 |     if (!this.root || !this.config) {
-35 |       throw new Error("Missing required components for DocumentOrchestrator");
-36 |     }
-37 | 
-38 |     if (this.strategies.length === 0) {
-39 |       throw new Error("At least one render strategy is required");
-40 |     }
-41 | 
-42 |     const orchestrators: DocumentOrchestrator[] = [];
-43 | 
-44 |     for (const strategy of this.strategies) {
-45 |       const orchestrator = await DocumentOrchestrator.create(
-46 |         this.root,
-47 |         this.config
-48 |       );
-49 |       orchestrator.setStrategy(strategy);
-50 |       orchestrators.push(orchestrator);
-51 |     }
-52 | 
-53 |     return orchestrators;
-54 |   }
-55 |   public async buildAndExecute(): Promise<DocumentOrchestrator[]> {
-56 |     const orchestrators = await this.build();
-57 | 
-58 |     for (const orchestrator of orchestrators) {
-59 |       try {
-60 |         await orchestrator.build();
-61 |       } catch (error) {
-62 |         logger.error(
-63 |           `Failed to build documentation with strategy ${orchestrator.getStrategyName()}`,
-64 |           error as Error
-65 |         );
-66 |       }
-67 |     }
-68 | 
-69 |     return orchestrators;
-70 |   }
-71 | }
-72 | 
+33 |   public build(): DocumentOrchestrator[] {
+34 |     this.validate();
+35 |     const orchestrators: DocumentOrchestrator[] = [];
+36 | 
+37 |     for (const strategy of this.strategies) {
+38 |       const orchestrator = DocumentOrchestrator.create(
+39 |         this.root as NodeDirectory | NodeFile,
+40 |         this.config as Config
+41 |       );
+42 |       orchestrator.setStrategy(strategy);
+43 |       orchestrators.push(orchestrator);
+44 |     }
+45 | 
+46 |     return orchestrators;
+47 |   }
+48 |   public async buildAndExecute(): Promise<DocumentOrchestrator[]> {
+49 |     const orchestrators = this.build();
+50 | 
+51 |     for (const orchestrator of orchestrators) {
+52 |       try {
+53 |         await orchestrator.build();
+54 |       } catch (error) {
+55 |         logger.error(
+56 |           `Failed to build documentation with strategy ${orchestrator.getStrategyName()}`,
+57 |           error as Error
+58 |         );
+59 |       }
+60 |     }
+61 | 
+62 |     return orchestrators;
+63 |   }
+64 | 
+65 |   private validate(): void {
+66 |     if (!this.root || !this.config) {
+67 |       throw new Error("Missing required components for DocumentOrchestrator");
+68 |     }
+69 | 
+70 |     if (this.strategies.length === 0) {
+71 |       throw new Error("At least one render strategy is required");
+72 |     }
+73 |   }
+74 | }
+75 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2238,9 +2271,9 @@ codewrangler
 
 ## File: DocumentTreeBuilder.ts
 - Path: `/root/git/codewrangler/src/services/builder/DocumentTreeBuilder.ts`
-- Size: 1.77 KB
+- Size: 1.73 KB
 - Extension: .ts
-- Lines of code: 48
+- Lines of code: 46
 - Content:
 
 ```ts
@@ -2285,24 +2318,22 @@ codewrangler
 39 |   private async createDocumentStructure(
 40 |     node: INodeTree
 41 |   ): Promise<RenderableDirectory | RenderableFile> {
-42 |     if (node.type === FILE_TYPE.Directory) {
-43 |       const directory = new RenderableDirectory(node.name, node.path);
-44 | 
-45 |       if (node.children) {
-46 |         // Recursively create children
-47 |         for (const child of node.children) {
-48 |           const childDocument = await this.createDocumentStructure(child);
-49 |           directory.addChild(childDocument);
-50 |         }
+42 |     if (node.type !== FILE_TYPE.Directory)
+43 |       return new RenderableFile(node.name, node.path);
+44 |     const directory = new RenderableDirectory(node.name, node.path);
+45 | 
+46 |     if (node.children) {
+47 |       // Recursively create children
+48 |       for (const child of node.children) {
+49 |         const childDocument = await this.createDocumentStructure(child);
+50 |         directory.addChild(childDocument);
 51 |       }
-52 | 
-53 |       return directory;
-54 |     } else {
-55 |       return new RenderableFile(node.name, node.path);
-56 |     }
-57 |   }
-58 | }
-59 | 
+52 |     }
+53 | 
+54 |     return directory;
+55 |   }
+56 | }
+57 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2940,109 +2971,211 @@ codewrangler
 ---------------------------------------------------------------------------
 
 
-## File: Config.ts
-- Path: `/root/git/codewrangler/src/utils/config/Config.ts`
-- Size: 2.56 KB
+## File: ConfigBuilder.ts
+- Path: `/root/git/codewrangler/src/utils/config/builders/ConfigBuilder.ts`
+- Size: 1.13 KB
 - Extension: .ts
-- Lines of code: 86
+- Lines of code: 33
 - Content:
 
 ```ts
- 1 | import { z } from "zod";
- 2 | 
- 3 | import {
- 4 |   ConfigKeys,
- 5 |   ConfigOptions,
- 6 |   DEFAULT_CONFIG,
- 7 |   configSchema
- 8 | } from "./schema";
- 9 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-10 | import { JsonReader } from "../../infrastructure/filesystem/JsonReader";
-11 | import { logger } from "../logger/Logger";
-12 | 
-13 | export class Config {
-14 |   private static instance: Config | undefined;
-15 |   private config: ConfigOptions;
-16 |   private jsonReader: JsonReader;
-17 | 
-18 |   private constructor() {
-19 |     this.jsonReader = new JsonReader();
-20 |     this.config = configSchema.parse(DEFAULT_CONFIG);
-21 |   }
-22 | 
-23 |   public static async load(): Promise<Config> {
-24 |     if (!Config.instance) {
-25 |       Config.instance = new Config();
-26 |       await Config.instance.loadUserConfig();
-27 |     }
-28 |     return Config.instance;
-29 |   }
-30 | 
-31 |   public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
-32 |     return this.config[key] as ConfigOptions[T];
-33 |   }
-34 | 
-35 |   public set(
-36 |     key: keyof ConfigOptions,
-37 |     value: ConfigOptions[keyof ConfigOptions] | undefined
-38 |   ): void {
-39 |     if (value === undefined) {
-40 |       return;
-41 |     }
-42 |     const updatedConfig = { ...this.config, [key]: value };
-43 |     try {
-44 |       configSchema.parse(updatedConfig);
-45 |       this.config = updatedConfig;
-46 |     } catch (error) {
-47 |       if (error instanceof z.ZodError) {
-48 |         logger.error(`Invalid configuration value: ${error.errors}`);
-49 |       }
-50 |       throw error;
-51 |     }
-52 |   }
-53 |   public getAll(): ConfigOptions {
-54 |     return this.config;
-55 |   }
-56 |   public reset(): void {
-57 |     this.config = DEFAULT_CONFIG;
-58 |   }
-59 |   public static destroy(): void {
-60 |     Config.instance = undefined;
-61 |   }
-62 |   public override(config: Partial<ConfigOptions>): void {
-63 |     const newOverrideConfig = { ...this.config, ...config };
-64 |     try {
-65 |       configSchema.parse(newOverrideConfig);
-66 |       this.config = newOverrideConfig;
-67 |     } catch (error) {
-68 |       if (error instanceof z.ZodError) {
-69 |         logger.error(`Invalid configuration value: ${error.errors}`);
-70 |       }
-71 |       throw error;
-72 |     }
-73 |   }
-74 | 
-75 |   private async loadUserConfig(): Promise<void> {
-76 |     try {
-77 |       const configPath = documentFactory.resolve(this.config.codeConfigFile);
-78 |       const userConfig = await this.jsonReader.readJsonSync(configPath);
-79 |       this.config = configSchema.parse({ ...this.config, ...userConfig });
-80 |     } catch (error) {
-81 |       this.handleConfigError(error);
-82 |     }
-83 |   }
-84 | 
-85 |   private handleConfigError(error: unknown): void {
-86 |     if (error instanceof z.ZodError) {
-87 |       const details = error.errors
-88 |         .map(err => `${err.path.join(".")}: ${err.message}`)
-89 |         .join(", ");
-90 |       throw new Error(`Configuration validation failed: ${details}`);
-91 |     }
-92 |     throw error;
-93 |   }
-94 | }
-95 | 
+ 1 | import { Config } from "../core";
+ 2 | import { ConfigOptions } from "../schema";
+ 3 | import { CLIConfigSource } from "../sources/CLIConfigSource";
+ 4 | import { FileConfigSource } from "../sources/FileConfigSource";
+ 5 | 
+ 6 | export class ConfigBuilder {
+ 7 |     private static instance: ConfigBuilder;
+ 8 |     private config: Config;
+ 9 |   
+10 |     private constructor(config: Config) {
+11 |       this.config = config;
+12 |     }
+13 |   
+14 |     public static async create(): Promise<ConfigBuilder> {
+15 |       if (!ConfigBuilder.instance) {
+16 |         await Config.load();
+17 |         ConfigBuilder.instance = new ConfigBuilder(Config.getInstance());
+18 |       }
+19 |       return ConfigBuilder.instance;
+20 |     }
+21 |   
+22 |     public withFileConfig(filePath: string): ConfigBuilder {
+23 |       this.config.addSource(new FileConfigSource(filePath));
+24 |       return this;
+25 |     }
+26 |   
+27 |     public withCLIConfig(cliConfig: CLIConfigSource<Record<string, unknown>>): ConfigBuilder {
+28 |       this.config.addSource(cliConfig);
+29 |       return this;
+30 |     }
+31 |   
+32 |     public withOverride(override: Partial<ConfigOptions>): ConfigBuilder {
+33 |       this.config.override(override);
+34 |       return this;
+35 |     }
+36 |   
+37 |     public build(): Config {
+38 |       return this.config;
+39 |     }
+40 |   }
+41 |   
+```
+
+---------------------------------------------------------------------------
+
+
+## File: index.ts
+- Path: `/root/git/codewrangler/src/utils/config/builders/index.ts`
+- Size: 32.00 B
+- Extension: .ts
+- Lines of code: 1
+- Content:
+
+```ts
+1 | export * from "./ConfigBuilder";
+```
+
+---------------------------------------------------------------------------
+
+
+## File: Config.ts
+- Path: `/root/git/codewrangler/src/utils/config/core/Config.ts`
+- Size: 3.17 KB
+- Extension: .ts
+- Lines of code: 104
+- Content:
+
+```ts
+  1 | import { z } from "zod";
+  2 | 
+  3 | import {
+  4 |   ConfigKeys,
+  5 |   ConfigOptions,
+  6 |   DEFAULT_CONFIG,
+  7 |   configSchema
+  8 | } from "../schema";
+  9 | import { logger } from "../../logger";
+ 10 | import { IConfigurationSource } from "../sources/interfaces/IConfigurationSource";
+ 11 | 
+ 12 | export class Config {
+ 13 |   private static instance: Config | undefined;
+ 14 |   private config: ConfigOptions;
+ 15 |   private sources: IConfigurationSource<Partial<ConfigOptions>>[] = [];
+ 16 | 
+ 17 | 
+ 18 |   private constructor() {
+ 19 |     this.config = configSchema.parse(DEFAULT_CONFIG);
+ 20 |     logger.setConfig(Config.getInstance());
+ 21 |   }
+ 22 | 
+ 23 |   public static async load(): Promise<Config> {
+ 24 |     if (!Config.instance) {
+ 25 |       Config.instance = new Config();
+ 26 |       await Config.instance.loadSources();
+ 27 |     }
+ 28 |     return Config.instance;
+ 29 |   }
+ 30 | 
+ 31 |   public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
+ 32 |     return this.config[key] as ConfigOptions[T];
+ 33 |   }
+ 34 | 
+ 35 |   public set(
+ 36 |     key: keyof ConfigOptions,
+ 37 |     value: ConfigOptions[keyof ConfigOptions] | undefined
+ 38 |   ): void {
+ 39 |     if (value === undefined) {
+ 40 |       return;
+ 41 |     }
+ 42 |     const updatedConfig = { ...this.config, [key]: value };
+ 43 |     try {
+ 44 |       configSchema.parse(updatedConfig);
+ 45 |       this.config = updatedConfig;
+ 46 |     } catch (error) {
+ 47 |       this.handleConfigError(error);
+ 48 |     }
+ 49 |   }
+ 50 |   public getAll(): ConfigOptions {
+ 51 |     return this.config;
+ 52 |   }
+ 53 |   public reset(): void {
+ 54 |     logger.info("Resetting config to default");
+ 55 |     this.config = DEFAULT_CONFIG;
+ 56 |   }
+ 57 | 
+ 58 |   public addSource(source: IConfigurationSource<Partial<ConfigOptions>>): void {
+ 59 |     this.sources.push(source);
+ 60 |     this.sources.sort((a, b) => a.priority - b.priority);
+ 61 |     this.loadSources().catch(error => {
+ 62 |       logger.error("Failed to reload configuration sources", error);
+ 63 |     });
+ 64 |   }
+ 65 |   public static destroy(): void {
+ 66 |     Config.instance = undefined;
+ 67 |   }
+ 68 |   public static getInstance(): Config {
+ 69 |     if (!Config.instance) {
+ 70 |       throw new Error("Config must be initialized before use");
+ 71 |     }
+ 72 |     return Config.instance;
+ 73 |   }
+ 74 |   public override(config: Partial<ConfigOptions>): void {
+ 75 |     const newOverrideConfig = { ...this.config, ...config };
+ 76 |     try {
+ 77 |       configSchema.parse(newOverrideConfig);
+ 78 |       this.config = newOverrideConfig;
+ 79 |     } catch (error) {
+ 80 |       if (error instanceof z.ZodError) {
+ 81 |         logger.error(`Invalid configuration value: ${error.errors}`);
+ 82 |       }
+ 83 |       throw error;
+ 84 |     }
+ 85 |   }
+ 86 |   private async loadSources(): Promise<void> {
+ 87 |     let mergedConfig = { ...DEFAULT_CONFIG };
+ 88 | 
+ 89 |     for (const source of this.sources) {
+ 90 |       try {
+ 91 |         const sourceConfig = await source.load();
+ 92 |         mergedConfig = { ...mergedConfig, ...sourceConfig };
+ 93 |       } catch (error) {
+ 94 |         logger.error(`Failed to load configuration from source: ${error instanceof Error ? error.message : String(error)}`);
+ 95 |       }
+ 96 |     }
+ 97 | 
+ 98 |     try {
+ 99 |       this.config = configSchema.parse(mergedConfig);
+100 |     } catch (error) {
+101 |       this.handleConfigError(error);
+102 |     }
+103 |   }
+104 |   private handleConfigError(error: unknown): void {
+105 |     if (error instanceof z.ZodError) {
+106 |       const details = error.errors
+107 |         .map(err => `${err.path.join(".")}: ${err.message}`)
+108 |         .join(", ");
+109 |       logger.error(`Configuration validation failed: ${details}`);
+110 |       throw new Error("Configuration validation failed");
+111 |     }
+112 |     throw error;
+113 |   }
+114 | }
+115 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: index.ts
+- Path: `/root/git/codewrangler/src/utils/config/core/index.ts`
+- Size: 25.00 B
+- Extension: .ts
+- Lines of code: 1
+- Content:
+
+```ts
+1 | export * from "./Config";
 ```
 
 ---------------------------------------------------------------------------
@@ -3050,204 +3183,312 @@ codewrangler
 
 ## File: index.ts
 - Path: `/root/git/codewrangler/src/utils/config/index.ts`
-- Size: 52.00 B
+- Size: 105.00 B
 - Extension: .ts
-- Lines of code: 2
+- Lines of code: 4
 - Content:
 
 ```ts
-1 | export * from "./Config";
-2 | export * from "./schema";
-3 | 
+1 | export * from "./schema";
+2 | export * from "./core";
+3 | export * from "./sources";
+4 | export * from "./builders";
+5 | 
 ```
 
 ---------------------------------------------------------------------------
 
 
-## File: schema.ts
-- Path: `/root/git/codewrangler/src/utils/config/schema.ts`
-- Size: 2.80 KB
+## File: defaults.ts
+- Path: `/root/git/codewrangler/src/utils/config/schema/defaults.ts`
+- Size: 1021.00 B
 - Extension: .ts
-- Lines of code: 81
+- Lines of code: 35
+- Content:
+
+```ts
+ 1 | import { IConfig, OutputFormat } from "./types";
+ 2 | import { LogLevelString } from "../../logger/Logger";
+ 3 | 
+ 4 | const DEFAULT_CONFIG_IGNORE = {
+ 5 |   ignoreHiddenFiles: true, // Default value
+ 6 |   additionalIgnoreFiles: [],
+ 7 |   excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"]
+ 8 | };
+ 9 | 
+10 | const DEFAULT_CONFIG_LOG = {
+11 |   logLevel: "INFO" as LogLevelString,
+12 |   verbose: false
+13 | };
+14 | 
+15 | const DEFAULT_CONFIG_LIMITS = {
+16 |   maxFileSize: 1048576,
+17 |   maxDepth: 100
+18 | };
+19 | 
+20 | const DEFAULT_CONFIG_PATHS = {
+21 |   templatesDir: "public/templates",
+22 |   codeConfigFile: "public/codewrangler.json"
+23 | };
+24 | 
+25 | const DEFAULT_CONFIG_OUTPUT = {
+26 |   outputFormat: ["markdown"] as OutputFormat[],
+27 |   outputFile: "output"
+28 | };
+29 | 
+30 | export const DEFAULT_CONFIG: IConfig = {
+31 |   dir: process.cwd(), // current working directory, where the command is run
+32 |   rootDir: process.cwd(),
+33 |   projectName: "CodeWrangler",
+34 |   pattern: ".*",
+35 |   followSymlinks: false,
+36 |   ...DEFAULT_CONFIG_PATHS,
+37 |   ...DEFAULT_CONFIG_LIMITS,
+38 |   ...DEFAULT_CONFIG_IGNORE,
+39 |   ...DEFAULT_CONFIG_LOG,
+40 |   ...DEFAULT_CONFIG_OUTPUT
+41 | };
+42 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: index.ts
+- Path: `/root/git/codewrangler/src/utils/config/schema/index.ts`
+- Size: 82.00 B
+- Extension: .ts
+- Lines of code: 3
+- Content:
+
+```ts
+1 | export * from "./validation";
+2 | export * from "./defaults";
+3 | export * from "./types";
+```
+
+---------------------------------------------------------------------------
+
+
+## File: types.ts
+- Path: `/root/git/codewrangler/src/utils/config/schema/types.ts`
+- Size: 1.10 KB
+- Extension: .ts
+- Lines of code: 40
+- Content:
+
+```ts
+ 1 | import { LogLevelString } from "../../logger/Logger";
+ 2 | 
+ 3 | 
+ 4 | export const OUTPUT_FORMATS = {
+ 5 |     markdown: "md",
+ 6 |     html: "html"
+ 7 |   } as const;
+ 8 | 
+ 9 | export type OutputFormats = typeof OUTPUT_FORMATS;
+10 | export type OutputFormat = keyof typeof OUTPUT_FORMATS;
+11 | export type OutputFormatName = keyof OutputFormats;
+12 | export type OutputFormatExtension = OutputFormats[OutputFormatName];
+13 | export type ConfigKeys = keyof IConfig;
+14 | 
+15 | 
+16 | 
+17 | 
+18 | interface IConfigIgnore {
+19 |   ignoreHiddenFiles: boolean;
+20 |   additionalIgnoreFiles: string[];
+21 |   excludePatterns: string[];
+22 | }
+23 | 
+24 | interface IConfigLimits {
+25 |   maxFileSize: number;
+26 |   maxDepth: number;
+27 | }
+28 | 
+29 | interface IConfigPaths {
+30 |   dir: string;
+31 |   rootDir: string;
+32 |   templatesDir: string;
+33 |   outputFile: string;
+34 | }
+35 | 
+36 | interface IConfigOutput {
+37 |   outputFormat: OutputFormatName[];
+38 |   outputFile: string;
+39 | }
+40 | 
+41 | interface IConfigLog {
+42 |   logLevel: LogLevelString;
+43 |   verbose: boolean;
+44 | }
+45 | 
+46 | export interface IConfig extends IConfigIgnore, IConfigLimits, IConfigPaths, IConfigOutput, IConfigLog {
+47 |   pattern: string;
+48 |   projectName: string;
+49 |   followSymlinks: boolean;
+50 |   codeConfigFile: string;
+51 | }
+52 | 
+53 | 
+54 | export type ConfigOptions = Partial<IConfig>;
+```
+
+---------------------------------------------------------------------------
+
+
+## File: validation.ts
+- Path: `/root/git/codewrangler/src/utils/config/schema/validation.ts`
+- Size: 1.15 KB
+- Extension: .ts
+- Lines of code: 31
 - Content:
 
 ```ts
  1 | import { z } from "zod";
  2 | 
- 3 | import { LOG_VALUES } from "../logger/Logger";
+ 3 | import { LOG_VALUES, LogLevelString } from "../../logger/Logger";
  4 | 
- 5 | export const OUTPUT_FORMATS = {
- 6 |   markdown: "md",
- 7 |   html: "html"
- 8 | } as const;
- 9 | 
-10 | export type OutputFormats = typeof OUTPUT_FORMATS;
-11 | export type OutputFormatName = keyof OutputFormats;
-12 | export type OutputFormatExtension = OutputFormats[OutputFormatName];
-13 | 
-14 | export const outputFormatSchema = z.enum(["markdown", "html"] as const);
-15 | 
-16 | export const fileExtensionSchema = z.enum(["md", "html"] as const);
-17 | 
-18 | export type OutputFormat = z.infer<typeof outputFormatSchema>;
-19 | export type FileExtension = z.infer<typeof fileExtensionSchema>;
-20 | 
-21 | export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
-22 |   markdown: "md",
-23 |   html: "html"
-24 | };
-25 | 
-26 | export const configSchema = z
-27 |   .object({
-28 |     dir: z.string().default(process.cwd()),
-29 |     rootDir: z.string().default(process.cwd()),
-30 |     templatesDir: z.string().default("public/templates"),
-31 |     pattern: z
-32 |       .string()
-33 |       .regex(/^.*$/, "Pattern must be a valid regex")
-34 |       .default(".*"),
-35 |     outputFile: z.string().default("output"),
-36 |     logLevel: z.enum(LOG_VALUES as [string, ...string[]]).default("INFO"),
-37 |     outputFormat: z.array(outputFormatSchema).default(["markdown"]),
-38 |     maxFileSize: z.number().positive().default(1048576),
-39 |     maxDepth: z.number().default(100),
-40 |     excludePatterns: z
-41 |       .array(z.string())
-42 |       .default(["node_modules/**", "**/*.test.ts", "dist/**"]),
-43 |     ignoreHiddenFiles: z.boolean().default(true),
-44 |     additionalIgnoreFiles: z.array(z.string()).optional().default([]),
-45 |     projectName: z.string().optional(),
-46 |     verbose: z.boolean().default(false),
-47 |     followSymlinks: z.boolean().default(false),
-48 |     codeConfigFile: z
-49 |       .string()
-50 |       .regex(/\.json$/, "Config file must end with .json")
-51 |       .default("public/codewrangler.json")
-52 |   })
-53 |   .strict();
-54 | 
-55 | export type ConfigOptions = z.infer<typeof configSchema>;
-56 | // get a type listing all the keys of the config
-57 | export type ConfigKeys = keyof ConfigOptions;
-58 | 
-59 | const DEFAULT_CONFIG_IGNORE = {
-60 |   ignoreHiddenFiles: true, // Default value
-61 |   additionalIgnoreFiles: [],
-62 |   excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"]
-63 | };
-64 | 
-65 | const DEFAULT_CONFIG_LOG = {
-66 |   logLevel: "INFO",
-67 |   verbose: false
-68 | };
-69 | 
-70 | const DEFAULT_CONFIG_LIMITS = {
-71 |   maxFileSize: 1048576,
-72 |   maxDepth: 100
-73 | };
-74 | 
-75 | const DEFAULT_CONFIG_PATHS = {
-76 |   templatesDir: "public/templates",
-77 |   codeConfigFile: "public/codewrangler.json"
-78 | };
-79 | 
-80 | const DEFAULT_CONFIG_OUTPUT = {
-81 |   outputFormat: ["markdown"] as OutputFormat[],
-82 |   outputFile: "output"
-83 | };
-84 | 
-85 | export const DEFAULT_CONFIG: ConfigOptions = {
-86 |   dir: process.cwd(), // current working directory, where the command is run
-87 |   rootDir: process.cwd(),
-88 |   projectName: undefined,
-89 |   pattern: ".*",
-90 |   followSymlinks: false,
-91 |   ...DEFAULT_CONFIG_PATHS,
-92 |   ...DEFAULT_CONFIG_LIMITS,
-93 |   ...DEFAULT_CONFIG_IGNORE,
-94 |   ...DEFAULT_CONFIG_LOG,
-95 |   ...DEFAULT_CONFIG_OUTPUT
-96 | };
-97 | 
+ 5 | export const outputFormatSchema = z.enum(["markdown", "html"] as const);
+ 6 | 
+ 7 | export const fileExtensionSchema = z.enum(["md", "html"] as const);
+ 8 | 
+ 9 | export const logLevelSchema = z.enum(
+10 |   LOG_VALUES as [LogLevelString, ...LogLevelString[]]
+11 | );
+12 | 
+13 | export const configSchema = z
+14 |   .object({
+15 |     dir: z.string(),
+16 |     rootDir: z.string(),
+17 |     templatesDir: z.string(),
+18 |     pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
+19 |     outputFile: z.string(),
+20 |     logLevel: logLevelSchema,
+21 |     outputFormat: z.array(outputFormatSchema),
+22 |     maxFileSize: z.number().positive(),
+23 |     maxDepth: z.number(),
+24 |     excludePatterns: z.array(z.string()),
+25 |     ignoreHiddenFiles: z.boolean(),
+26 |     additionalIgnoreFiles: z.array(z.string()),
+27 |     projectName: z.string(),
+28 |     verbose: z.boolean(),
+29 |     followSymlinks: z.boolean(),
+30 |     codeConfigFile: z
+31 |       .string()
+32 |       .regex(/\.json$/, "Config file must end with .json")
+33 |   })
+34 |   .strict();
+35 | 
+36 | // Propose me a new zod parser based on the configSchema, but with all the fields optional.
+37 | 
+38 | export const optionalConfigSchema = configSchema.partial();
+39 | 
 ```
 
 ---------------------------------------------------------------------------
 
 
-## File: ProgressBar.ts
-- Path: `/root/git/codewrangler/src/utils/helpers/ProgressBar.ts`
-- Size: 1.49 KB
+## File: CLIConfigSource.ts
+- Path: `/root/git/codewrangler/src/utils/config/sources/CLIConfigSource.ts`
+- Size: 362.00 B
 - Extension: .ts
-- Lines of code: 57
+- Lines of code: 12
 - Content:
 
 ```ts
- 1 | import cliProgress from "cli-progress";
+ 1 | import { IConfigurationSource } from "./interfaces/IConfigurationSource";
  2 | 
- 3 | export class ProgressBar {
- 4 |   private bar: cliProgress.SingleBar;
- 5 |   private intervalId: NodeJS.Timeout | null = null;
- 6 |   private currentValue: number = 0;
+ 3 | export abstract class CLIConfigSource<T extends Record<string, unknown>>
+ 4 |   implements IConfigurationSource<T>
+ 5 | {
+ 6 |   public readonly priority = 2;
  7 | 
- 8 |   public constructor(private total: number = 100) {
- 9 |     this.bar = new cliProgress.SingleBar(
-10 |       {},
-11 |       cliProgress.Presets.shades_classic
-12 |     );
-13 |   }
-14 | 
-15 |   public start(): ProgressBar {
-16 |     this.bar.start(this.total, 0);
-17 |     this.intervalId = setInterval(() => this.simulateProgress(), 200);
-18 |     return this;
-19 |   }
-20 | 
-21 |   public update(value: number): ProgressBar {
-22 |     this.currentValue = value;
-23 |     this.bar.update(value);
-24 |     return this;
+ 8 |   public constructor(
+ 9 |     private readonly args: string[],
+10 |     private readonly options: T
+11 |   ) {
+12 |   }
+13 | 
+14 |   public abstract load(): Promise<T>;
+15 | }
+16 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: FileConfigSource.ts
+- Path: `/root/git/codewrangler/src/utils/config/sources/FileConfigSource.ts`
+- Size: 970.00 B
+- Extension: .ts
+- Lines of code: 22
+- Content:
+
+```ts
+ 1 | 
+ 2 | import { IConfigurationSource } from "./interfaces/IConfigurationSource";
+ 3 | import { JsonReader } from "../../../infrastructure/filesystem/JsonReader";
+ 4 | import { logger } from "../../logger";
+ 5 | import { ConfigOptions } from "../schema";
+ 6 | import { DEFAULT_CONFIG } from "../schema/defaults";
+ 7 | import { optionalConfigSchema } from "../schema/validation";
+ 8 | 
+ 9 | export class FileConfigSource implements IConfigurationSource<ConfigOptions> {
+10 |   public readonly priority = 1;
+11 |   private jsonReader: JsonReader;
+12 | 
+13 |   public constructor(private readonly filePath: string) {
+14 |     this.jsonReader = new JsonReader();
+15 |   }
+16 | 
+17 |   public async load(): Promise<ConfigOptions> {
+18 |     try {
+19 |       const config = await this.jsonReader.readJsonSync(this.filePath);
+20 |       return optionalConfigSchema.parse(config);
+21 |     } catch (error) {
+22 |       logger.warn(`Failed to load configuration from ${this.filePath}: ${error instanceof Error ? error.message : String(error)}`);
+23 |       return DEFAULT_CONFIG;
+24 |     }
 25 |   }
-26 | 
-27 |   public stop(): ProgressBar {
-28 |     if (this.intervalId) {
-29 |       clearInterval(this.intervalId);
-30 |       this.intervalId = null;
-31 |     }
-32 |     this.bar.update(this.total);
-33 |     this.bar.stop();
-34 |     return this;
-35 |   }
-36 | 
-37 |   public async execute<T>(fn: () => Promise<T>): Promise<T> {
-38 |     this.start();
-39 |     try {
-40 |       return await fn();
-41 |     } finally {
-42 |       this.stop();
-43 |     }
-44 |   }
-45 | 
-46 |   private simulateProgress(): void {
-47 |     const remainingProgress = this.total - this.currentValue;
-48 |     const increment = Math.random() * remainingProgress * 0.1;
-49 |     this.currentValue = Math.min(
-50 |       this.currentValue + increment,
-51 |       this.total * 0.95
-52 |     );
-53 |     this.bar.update(this.currentValue);
-54 |   }
-55 | }
-56 | 
-57 | export async function progressBar(
-58 |   total: number,
-59 |   callback: () => Promise<void>
-60 | ): Promise<void> {
-61 |   const bar = new ProgressBar(total);
-62 |   await bar.execute(async () => {
-63 |     await callback();
-64 |   });
-65 | }
-66 | 
+26 | }
+```
+
+---------------------------------------------------------------------------
+
+
+## File: index.ts
+- Path: `/root/git/codewrangler/src/utils/config/sources/index.ts`
+- Size: 161.00 B
+- Extension: .ts
+- Lines of code: 4
+- Content:
+
+```ts
+1 | export * from "./FileConfigSource";
+2 | export * from "./CLIConfigSource";
+3 | export * from "./DefaultConfigSource";
+4 | export * from "./interfaces/IConfigurationSource";
+5 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: IConfigurationSource.ts
+- Path: `/root/git/codewrangler/src/utils/config/sources/interfaces/IConfigurationSource.ts`
+- Size: 177.00 B
+- Extension: .ts
+- Lines of code: 5
+- Content:
+
+```ts
+1 | import { ConfigOptions } from "../../schema";
+2 | 
+3 | export interface IConfigurationSource<T extends Partial<ConfigOptions>> {
+4 |   readonly priority: number;
+5 |   load: () => Promise<T>;
+6 | }
 ```
 
 ---------------------------------------------------------------------------
@@ -3264,7 +3505,7 @@ codewrangler
  1 | /* eslint-disable no-console */
  2 | import colors from "colors";
  3 | 
- 4 | import { Config } from "../config/Config";
+ 4 | import { Config } from "../config/core/Config";
  5 | 
  6 | export const LOG_LEVEL = {
  7 |   ERROR: 0,

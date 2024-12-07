@@ -1,7 +1,7 @@
 
 # Code Documentation
-Generated on: 2024-12-06T15:07:49.058Z
-Total files: 17
+Generated on: 2024-12-07T15:38:31.226Z
+Total files: 16
 
 ## Project Structure
 
@@ -52,10 +52,12 @@ codewrangler
     ├── types
     └── utils
         ├── config
-        │   └── __tests__
-        │       └── Config.test.ts
-        ├── helpers
-        │   └── __tests__
+        │   ├── __tests__
+        │   ├── builders
+        │   ├── core
+        │   ├── schema
+        │   └── sources
+        │       └── interfaces
         └── logger
             └── __tests__
                 └── Logger.test.ts
@@ -598,7 +600,7 @@ codewrangler
 
 ## File: DocumentFactory.test.ts
 - Path: `/root/git/codewrangler/src/infrastructure/filesystem/__tests__/DocumentFactory.test.ts`
-- Size: 20.10 KB
+- Size: 20.17 KB
 - Extension: .ts
 - Lines of code: 502
 - Content:
@@ -703,7 +705,7 @@ codewrangler
  97 | 
  98 |     it("should throw an error if the path doesn't exist on readFile method", async () => {
  99 |       await expect(documentFactory.readFile("nonexistent")).rejects.toThrow(
-100 |         DOCUMENT_ERROR_MESSAGE
+100 |         "Document error at nonexistent: Error: ENOENT: no such file or directory, open 'nonexistent'"
 101 |       );
 102 |     });
 103 | 
@@ -2771,192 +2773,9 @@ codewrangler
 ---------------------------------------------------------------------------
 
 
-## File: Config.test.ts
-- Path: `/root/git/codewrangler/src/utils/config/__tests__/Config.test.ts`
-- Size: 5.01 KB
-- Extension: .ts
-- Lines of code: 148
-- Content:
-
-```ts
-  1 | import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
-  2 | import { JsonReader } from "../../../infrastructure/filesystem/JsonReader";
-  3 | import { logger } from "../../logger/Logger";
-  4 | import { Config } from "../Config";
-  5 | import { DEFAULT_CONFIG } from "../schema";
-  6 | 
-  7 | jest.mock("../../../infrastructure/filesystem/DocumentFactory");
-  8 | jest.mock("../../logger/Logger", () => ({
-  9 |   logger: { error: jest.fn() },
- 10 |   LOG_VALUES: ["ERROR", "WARN", "INFO", "DEBUG"],
- 11 |   setConfig: jest.fn()
- 12 | }));
- 13 | jest.mock("../../../infrastructure/filesystem/JsonReader");
- 14 | 
- 15 | describe("Config", () => {
- 16 |   let config: Config;
- 17 |   const TEST_OUTPUT_FILE = "new-output";
- 18 | 
- 19 |   beforeEach(async () => {
- 20 |     // Reset all mocks
- 21 |     jest.clearAllMocks();
- 22 |     jest.mocked(JsonReader).mockImplementation(
- 23 |       () =>
- 24 |         ({
- 25 |           readJsonSync: jest.fn().mockResolvedValue({}),
- 26 |           readFileContent: jest.fn(),
- 27 |           parseJsonContent: jest.fn(),
- 28 |           validatePath: jest.fn()
- 29 |         }) as unknown as JsonReader
- 30 |     );
- 31 |     (documentFactory.resolve as jest.Mock).mockReturnValue(
- 32 |       "/test/codewrangler.json"
- 33 |     );
- 34 | 
- 35 |     // Destroy singleton instance before each test
- 36 |     Config.destroy();
- 37 |     config = await Config.load();
- 38 |   });
- 39 | 
- 40 |   describe("Singleton", () => {
- 41 |     it("maintains single instance", async () => {
- 42 |       const instance1 = await Config.load();
- 43 |       const instance2 = await Config.load();
- 44 |       expect(instance1).toBe(instance2);
- 45 |     });
- 46 | 
- 47 |     it("creates new instance after destroy", async () => {
- 48 |       const instance1 = await Config.load();
- 49 |       Config.destroy();
- 50 |       const instance2 = await Config.load();
- 51 |       expect(instance1).not.toBe(instance2);
- 52 |     });
- 53 |   });
- 54 | 
- 55 |   describe("Configuration Loading", () => {
- 56 |     it("loads default config when no user config exists", async () => {
- 57 |       jest.mocked(JsonReader).mockImplementation(
- 58 |         () =>
- 59 |           ({
- 60 |             readJsonSync: jest.fn(),
- 61 |             resolve: jest.fn(),
- 62 |             validatePath: jest.fn(),
- 63 |             readFileContent: jest.fn(),
- 64 |             parseJsonContent: jest.fn()
- 65 |           }) as unknown as JsonReader
- 66 |       );
- 67 | 
- 68 |       Config.destroy();
- 69 |       const newConfig = await Config.load();
- 70 |       expect(newConfig.getAll()).toEqual(DEFAULT_CONFIG);
- 71 |     });
- 72 | 
- 73 |     it("loads and merges user config with defaults", async () => {
- 74 |       const userConfig = {
- 75 |         outputFile: TEST_OUTPUT_FILE,
- 76 |         logLevel: "DEBUG" as const
- 77 |       };
- 78 | 
- 79 |       jest.mocked(JsonReader).mockImplementation(
- 80 |         () =>
- 81 |           ({
- 82 |             readJsonSync: jest.fn().mockResolvedValue(userConfig),
- 83 |             resolve: jest.fn(),
- 84 |             validatePath: jest.fn(),
- 85 |             readFileContent: jest.fn(),
- 86 |             parseJsonContent: jest.fn()
- 87 |           }) as unknown as JsonReader
- 88 |       );
- 89 | 
- 90 |       Config.destroy();
- 91 |       const newConfig = await Config.load();
- 92 |       expect(newConfig.get("outputFile")).toBe(TEST_OUTPUT_FILE);
- 93 |       expect(newConfig.get("logLevel")).toBe("DEBUG");
- 94 |     });
- 95 | 
- 96 |     it("handles invalid JSON config", async () => {
- 97 |       jest.mocked(JsonReader).mockImplementation(
- 98 |         () =>
- 99 |           ({
-100 |             readJsonSync: jest
-101 |               .fn()
-102 |               .mockRejectedValue(new Error("Invalid JSON")),
-103 |             resolve: jest.fn(),
-104 |             validatePath: jest.fn(),
-105 |             readFileContent: jest.fn(),
-106 |             parseJsonContent: jest.fn()
-107 |           }) as unknown as JsonReader
-108 |       );
-109 | 
-110 |       Config.destroy();
-111 |       await expect(Config.load()).rejects.toThrow();
-112 |     });
-113 | 
-114 |     it("validates merged configuration", async () => {
-115 |       const invalidConfig = {
-116 |         maxFileSize: -1
-117 |       };
-118 | 
-119 |       jest.mocked(JsonReader).mockImplementation(
-120 |         () =>
-121 |           ({
-122 |             readJsonSync: jest.fn().mockResolvedValue(invalidConfig),
-123 |             resolve: jest.fn(),
-124 |             validatePath: jest.fn(),
-125 |             readFileContent: jest.fn(),
-126 |             parseJsonContent: jest.fn()
-127 |           }) as unknown as JsonReader
-128 |       );
-129 | 
-130 |       Config.destroy();
-131 |       await expect(Config.load()).rejects.toThrow(
-132 |         "Configuration validation failed"
-133 |       );
-134 |     });
-135 |   });
-136 | 
-137 |   describe("Configuration Operations", () => {
-138 |     it("gets configuration values", () => {
-139 |       expect(config.get("dir")).toBe(DEFAULT_CONFIG.dir);
-140 |       expect(config.get("pattern")).toBe(DEFAULT_CONFIG.pattern);
-141 |     });
-142 | 
-143 |     it("sets configuration values", () => {
-144 |       config.set("outputFile", TEST_OUTPUT_FILE);
-145 |       expect(config.get("outputFile")).toBe(TEST_OUTPUT_FILE);
-146 |     });
-147 | 
-148 |     it("validates on set", () => {
-149 |       expect(() => config.set("maxFileSize", -1)).toThrow();
-150 |       expect(logger.error).toHaveBeenCalled();
-151 |     });
-152 | 
-153 |     it("overrides multiple values", () => {
-154 |       const overrides = {
-155 |         outputFile: TEST_OUTPUT_FILE,
-156 |         logLevel: "DEBUG" as const
-157 |       };
-158 |       config.override(overrides);
-159 |       expect(config.get("outputFile")).toBe(TEST_OUTPUT_FILE);
-160 |       expect(config.get("logLevel")).toBe("DEBUG");
-161 |     });
-162 | 
-163 |     it("resets to defaults", () => {
-164 |       config.set("outputFile", TEST_OUTPUT_FILE);
-165 |       config.reset();
-166 |       expect(config.getAll()).toEqual(DEFAULT_CONFIG);
-167 |     });
-168 |   });
-169 | });
-170 | 
-```
-
----------------------------------------------------------------------------
-
-
 ## File: Logger.test.ts
 - Path: `/root/git/codewrangler/src/utils/logger/__tests__/Logger.test.ts`
-- Size: 5.34 KB
+- Size: 5.32 KB
 - Extension: .ts
 - Lines of code: 148
 - Content:
@@ -2965,10 +2784,10 @@ codewrangler
   1 | /* eslint-disable no-console */
   2 | import colors from "colors";
   3 | 
-  4 | import { Config } from "../../config/Config";
+  4 | import { Config } from "../../config";
   5 | import { LOG_LEVEL, LOG_VALUES, Logger } from "../Logger";
   6 | 
-  7 | jest.mock("../../config/Config");
+  7 | jest.mock("../../config");
   8 | jest.spyOn(console, "log").mockImplementation(() => {});
   9 | 
  10 | describe("Logger", () => {

@@ -1,7 +1,7 @@
 
 # Code Documentation
-Generated on: 2024-12-06T15:07:49.024Z
-Total files: 12
+Generated on: 2024-12-07T15:38:31.204Z
+Total files: 13
 
 ## Project Structure
 
@@ -11,6 +11,7 @@ codewrangler
 ├── README.md
 ├── documentation
 │   ├── CLI_DOCUMENTATION.md
+│   ├── CONFIG.md
 │   ├── CONFIGURATION_GUIDE.md
 │   ├── CONTRIBUTING.md
 │   ├── DETAILED_CLASS_DIAGRAMS_AND_COMPONENT_LIFECYCLE.md
@@ -618,6 +619,20 @@ codewrangler
 
 ## File: CLI_DOCUMENTATION.md
 - Path: `/root/git/codewrangler/documentation/CLI_DOCUMENTATION.md`
+- Size: 0.00 B
+- Extension: .md
+- Lines of code: 0
+- Content:
+
+```md
+1 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: CONFIG.md
+- Path: `/root/git/codewrangler/documentation/CONFIG.md`
 - Size: 0.00 B
 - Extension: .md
 - Lines of code: 0
@@ -1288,9 +1303,9 @@ codewrangler
 
 ## File: typescript_files.md
 - Path: `/root/git/codewrangler/typescript_files.md`
-- Size: 86.83 KB
+- Size: 86.74 KB
 - Extension: .md
-- Lines of code: 2928
+- Lines of code: 2925
 - Content:
 
 ```md
@@ -1298,20 +1313,20 @@ codewrangler
    2 | 
    3 | ## Overview
    4 | 
-   5 | This documentation was automatically generated on 2024-12-06T15:05:56.340Z.
+   5 | This documentation was automatically generated on 2024-12-06T15:26:23.790Z.
    6 | 
    7 | ## Summary
    8 | 
    9 | - Total Files: 0
   10 | - Total Directories: 73
-  11 | - Total Size: 74575
+  11 | - Total Size: 74481
   12 | 
   13 | ## Content of Files
   14 | 
   15 | ### Directory: src
   16 | 
   17 | - **Path:** /root/git/codewrangler/src
-  18 | - **Size:** 74575 bytes
+  18 | - **Size:** 74481 bytes
   19 | - **Files:** 0
   20 | - **Total Files (including subdirectories):** 42
   21 | - **Depth:** 0
@@ -1321,7 +1336,7 @@ codewrangler
   25 | ### Directory: cli
   26 | 
   27 | - **Path:** /root/git/codewrangler/src/cli
-  28 | - **Size:** 16160 bytes
+  28 | - **Size:** 16068 bytes
   29 | - **Files:** 2
   30 | - **Total Files (including subdirectories):** 8
   31 | - **Depth:** 1
@@ -1378,7 +1393,7 @@ codewrangler
   82 | ### Directory: commands
   83 | 
   84 | - **Path:** /root/git/codewrangler/src/cli/commands
-  85 | - **Size:** 9714 bytes
+  85 | - **Size:** 9545 bytes
   86 | - **Files:** 3
   87 | - **Total Files (including subdirectories):** 3
   88 | - **Depth:** 2
@@ -1389,3409 +1404,3406 @@ codewrangler
   93 | 
   94 | - **Path:** /root/git/codewrangler/src/cli/commands/Command.ts
   95 | - **Extension:** ts
-  96 | - **Size:** 1492 bytes
+  96 | - **Size:** 1323 bytes
   97 | - **Depth:** 3
-  98 | - **Lines:** 51
+  98 | - **Lines:** 47
   99 | 
  100 | ```ts
  101 | /* eslint-disable require-await */
  102 | import { ICommandOptions } from "./types";
  103 | import { Config } from "../../utils/config/Config";
- 104 | import { ProgressBar } from "../../utils/helpers/ProgressBar";
- 105 | import { logger } from "../../utils/logger/Logger";
- 106 | 
- 107 | export abstract class BaseCommand<T extends ICommandOptions> {
- 108 |   public constructor(protected config: Config) {}
- 109 | 
- 110 |   public async execute(args: string[], options: T): Promise<void> {
- 111 |     try {
- 112 |       // Pre-execution phase
- 113 |       await this.beforeExecution(args, options);
- 114 | 
- 115 |       // Progress tracking
- 116 |       const progressBar = new ProgressBar(100);
- 117 |       await progressBar.execute(async () => {
- 118 |         await this.processExecution();
- 119 |       });
- 120 | 
- 121 |       // Post-execution phase
- 122 |       await this.afterExecution();
- 123 |     } catch (error) {
- 124 |       await this.handleError(error);
- 125 |       throw error;
- 126 |     }
- 127 |   }
- 128 | 
- 129 |   // Template methods that can be overridden
- 130 |   protected async beforeExecution(_: string[], options: T): Promise<void> {
- 131 |     if (options.verbose) {
- 132 |       this.logVerbose();
- 133 |     }
- 134 |   }
- 135 | 
- 136 |   protected abstract processExecution(): Promise<void>;
+ 104 | import { logger } from "../../utils/logger/Logger";
+ 105 | 
+ 106 | export abstract class BaseCommand<T extends ICommandOptions> {
+ 107 |   public constructor(protected config: Config) {}
+ 108 | 
+ 109 |   public async execute(args: string[], options: T): Promise<void> {
+ 110 |     try {
+ 111 |       // Pre-execution phase
+ 112 |       await this.beforeExecution(args, options);
+ 113 | 
+ 114 |       // Progress tracking
+ 115 |       await this.processExecution();
+ 116 | 
+ 117 |       // Post-execution phase
+ 118 |       await this.afterExecution();
+ 119 |     } catch (error) {
+ 120 |       await this.handleError(error);
+ 121 |       throw error;
+ 122 |     }
+ 123 |   }
+ 124 | 
+ 125 |   // Template methods that can be overridden
+ 126 |   protected async beforeExecution(_: string[], options: T): Promise<void> {
+ 127 |     if (options.verbose) {
+ 128 |       this.logVerbose();
+ 129 |     }
+ 130 |   }
+ 131 | 
+ 132 |   protected abstract processExecution(): Promise<void>;
+ 133 | 
+ 134 |   protected async afterExecution(): Promise<void> {
+ 135 |     // Default implementation - override if needed
+ 136 |   }
  137 | 
- 138 |   protected async afterExecution(): Promise<void> {
- 139 |     // Default implementation - override if needed
+ 138 |   protected async handleError(error: unknown): Promise<void> {
+ 139 |     logger.error("Command execution failed:", error as Error);
  140 |   }
  141 | 
- 142 |   protected async handleError(error: unknown): Promise<void> {
- 143 |     logger.error("Command execution failed:", error as Error);
- 144 |   }
- 145 | 
- 146 |   protected logVerbose(): void {
- 147 |     // Default verbose logging - override to add command-specific logs
- 148 |     logger.debug("Executing command with verbose logging");
- 149 |   }
- 150 | }
- 151 | 
- 152 | ```
- 153 | #### File: DemoCommand.ts
- 154 | 
- 155 | - **Path:** /root/git/codewrangler/src/cli/commands/DemoCommand.ts
- 156 | - **Extension:** ts
- 157 | - **Size:** 8062 bytes
- 158 | - **Depth:** 3
- 159 | - **Lines:** 343
- 160 | 
- 161 | ```ts
- 162 | /* eslint-disable max-lines-per-function */
- 163 | import { Stats } from "fs";
- 164 | import * as fs from "fs/promises";
- 165 | import * as path from "path";
- 166 | 
- 167 | interface IFileInfo {
- 168 |   name: string;
- 169 |   path: string;
- 170 |   content: string;
- 171 |   ext: string;
- 172 |   size: number;
- 173 |   lines: number;
- 174 | }
- 175 | 
- 176 | interface ITreeNode {
- 177 |   name: string;
- 178 |   path: string;
- 179 |   type: "file" | "directory";
- 180 |   children: ITreeNode[];
- 181 | }
- 182 | 
- 183 | interface IDocumentConfig {
- 184 |   pattern: RegExp;
- 185 |   rootDir: string;
- 186 |   outputPath: string;
- 187 |   excludePatterns: string[];
- 188 |   maxFileSize: number;
- 189 |   ignoreHidden: boolean;
- 190 |   compress: boolean;
- 191 | }
- 192 | 
- 193 | const DEFAULT_CONFIG: IDocumentConfig = {
- 194 |   pattern: /.*/,
- 195 |   rootDir: process.cwd(),
- 196 |   outputPath: "documentation.md",
- 197 |   excludePatterns: ["node_modules/**", "**/dist/**", "**/*.test.ts"],
- 198 |   maxFileSize: 1024 * 1024, // 1MB
- 199 |   ignoreHidden: true,
- 200 |   compress: false
- 201 | };
+ 142 |   protected logVerbose(): void {
+ 143 |     // Default verbose logging - override to add command-specific logs
+ 144 |     logger.debug("Executing command with verbose logging");
+ 145 |   }
+ 146 | }
+ 147 | 
+ 148 | ```
+ 149 | #### File: DemoCommand.ts
+ 150 | 
+ 151 | - **Path:** /root/git/codewrangler/src/cli/commands/DemoCommand.ts
+ 152 | - **Extension:** ts
+ 153 | - **Size:** 8062 bytes
+ 154 | - **Depth:** 3
+ 155 | - **Lines:** 343
+ 156 | 
+ 157 | ```ts
+ 158 | /* eslint-disable max-lines-per-function */
+ 159 | import { Stats } from "fs";
+ 160 | import * as fs from "fs/promises";
+ 161 | import * as path from "path";
+ 162 | 
+ 163 | interface IFileInfo {
+ 164 |   name: string;
+ 165 |   path: string;
+ 166 |   content: string;
+ 167 |   ext: string;
+ 168 |   size: number;
+ 169 |   lines: number;
+ 170 | }
+ 171 | 
+ 172 | interface ITreeNode {
+ 173 |   name: string;
+ 174 |   path: string;
+ 175 |   type: "file" | "directory";
+ 176 |   children: ITreeNode[];
+ 177 | }
+ 178 | 
+ 179 | interface IDocumentConfig {
+ 180 |   pattern: RegExp;
+ 181 |   rootDir: string;
+ 182 |   outputPath: string;
+ 183 |   excludePatterns: string[];
+ 184 |   maxFileSize: number;
+ 185 |   ignoreHidden: boolean;
+ 186 |   compress: boolean;
+ 187 | }
+ 188 | 
+ 189 | const DEFAULT_CONFIG: IDocumentConfig = {
+ 190 |   pattern: /.*/,
+ 191 |   rootDir: process.cwd(),
+ 192 |   outputPath: "documentation.md",
+ 193 |   excludePatterns: ["node_modules/**", "**/dist/**", "**/*.test.ts"],
+ 194 |   maxFileSize: 1024 * 1024, // 1MB
+ 195 |   ignoreHidden: true,
+ 196 |   compress: false
+ 197 | };
+ 198 | 
+ 199 | // Tree visualization functions
+ 200 | const generateTreeSymbols = (depth: number, isLast: boolean[]): string => {
+ 201 |   if (depth === 0) return "";
  202 | 
- 203 | // Tree visualization functions
- 204 | const generateTreeSymbols = (depth: number, isLast: boolean[]): string => {
- 205 |   if (depth === 0) return "";
- 206 | 
- 207 |   return (
- 208 |     isLast
- 209 |       .slice(0, -1)
- 210 |       .map(last => (last ? "    " : "│   "))
- 211 |       .join("") + (isLast[isLast.length - 1] ? "└── " : "├── ")
- 212 |   );
- 213 | };
- 214 | 
- 215 | const createTreeNode = async (
- 216 |   nodePath: string,
- 217 |   config: IDocumentConfig,
- 218 |   relativePath = ""
- 219 | ): Promise<ITreeNode | null> => {
- 220 |   const stats = await fs.stat(nodePath);
- 221 |   const name = path.basename(nodePath);
+ 203 |   return (
+ 204 |     isLast
+ 205 |       .slice(0, -1)
+ 206 |       .map(last => (last ? "    " : "│   "))
+ 207 |       .join("") + (isLast[isLast.length - 1] ? "└── " : "├── ")
+ 208 |   );
+ 209 | };
+ 210 | 
+ 211 | const createTreeNode = async (
+ 212 |   nodePath: string,
+ 213 |   config: IDocumentConfig,
+ 214 |   relativePath = ""
+ 215 | ): Promise<ITreeNode | null> => {
+ 216 |   const stats = await fs.stat(nodePath);
+ 217 |   const name = path.basename(nodePath);
+ 218 | 
+ 219 |   if (!shouldInclude(nodePath, config)) {
+ 220 |     return null;
+ 221 |   }
  222 | 
- 223 |   if (!shouldInclude(nodePath, config)) {
- 224 |     return null;
- 225 |   }
+ 223 |   if (stats.isDirectory()) {
+ 224 |     const entries = await fs.readdir(nodePath, { withFileTypes: true });
+ 225 |     const children: ITreeNode[] = [];
  226 | 
- 227 |   if (stats.isDirectory()) {
- 228 |     const entries = await fs.readdir(nodePath, { withFileTypes: true });
- 229 |     const children: ITreeNode[] = [];
- 230 | 
- 231 |     for (const entry of entries) {
- 232 |       const childNode = await createTreeNode(
- 233 |         path.join(nodePath, entry.name),
- 234 |         config,
- 235 |         path.join(relativePath, name)
- 236 |       );
- 237 |       if (childNode) children.push(childNode);
- 238 |     }
- 239 | 
- 240 |     return {
- 241 |       name,
- 242 |       path: relativePath || name,
- 243 |       type: "directory",
- 244 |       children
- 245 |     };
- 246 |   } else if (isMatchingFile(nodePath, config)) {
- 247 |     return {
- 248 |       name,
- 249 |       path: relativePath || name,
- 250 |       type: "file",
- 251 |       children: []
- 252 |     };
- 253 |   }
- 254 | 
- 255 |   return null;
- 256 | };
- 257 | 
- 258 | const renderTreeNode = (
- 259 |   node: ITreeNode,
- 260 |   isLast: boolean[] = [],
- 261 |   result: string[] = []
- 262 | ): string[] => {
- 263 |   const prefix = generateTreeSymbols(isLast.length, isLast);
- 264 |   result.push(prefix + node.name);
- 265 | 
- 266 |   if (node.type === "directory") {
- 267 |     node.children.forEach((child, index) => {
- 268 |       renderTreeNode(
- 269 |         child,
- 270 |         [...isLast, index === node.children.length - 1],
- 271 |         result
- 272 |       );
- 273 |     });
- 274 |   }
- 275 | 
- 276 |   return result;
- 277 | };
- 278 | 
- 279 | const isHidden = (filePath: string): boolean => {
- 280 |   const baseName = path.basename(filePath);
- 281 |   return baseName.startsWith(".");
- 282 | };
- 283 | 
- 284 | const shouldInclude = (
- 285 |   filePath: string,
- 286 |   { excludePatterns, ignoreHidden }: IDocumentConfig
- 287 | ): boolean => {
- 288 |   // Check for hidden files if ignoreHidden is enabled
- 289 |   if (ignoreHidden && isHidden(filePath)) {
- 290 |     return false;
- 291 |   }
- 292 | 
- 293 |   // Check against exclude patterns
- 294 |   const isExcluded = excludePatterns.some(pattern =>
- 295 |     new RegExp(pattern.replace(/\*/g, ".*")).test(filePath)
- 296 |   );
- 297 | 
- 298 |   return !isExcluded;
- 299 | };
- 300 | 
- 301 | // Pure functions for file operations
- 302 | const isMatchingFile = (filePath: string, config: IDocumentConfig): boolean => {
- 303 |   if (!config.pattern) {
- 304 |     throw new Error("Pattern is not defined in the config");
+ 227 |     for (const entry of entries) {
+ 228 |       const childNode = await createTreeNode(
+ 229 |         path.join(nodePath, entry.name),
+ 230 |         config,
+ 231 |         path.join(relativePath, name)
+ 232 |       );
+ 233 |       if (childNode) children.push(childNode);
+ 234 |     }
+ 235 | 
+ 236 |     return {
+ 237 |       name,
+ 238 |       path: relativePath || name,
+ 239 |       type: "directory",
+ 240 |       children
+ 241 |     };
+ 242 |   } else if (isMatchingFile(nodePath, config)) {
+ 243 |     return {
+ 244 |       name,
+ 245 |       path: relativePath || name,
+ 246 |       type: "file",
+ 247 |       children: []
+ 248 |     };
+ 249 |   }
+ 250 | 
+ 251 |   return null;
+ 252 | };
+ 253 | 
+ 254 | const renderTreeNode = (
+ 255 |   node: ITreeNode,
+ 256 |   isLast: boolean[] = [],
+ 257 |   result: string[] = []
+ 258 | ): string[] => {
+ 259 |   const prefix = generateTreeSymbols(isLast.length, isLast);
+ 260 |   result.push(prefix + node.name);
+ 261 | 
+ 262 |   if (node.type === "directory") {
+ 263 |     node.children.forEach((child, index) => {
+ 264 |       renderTreeNode(
+ 265 |         child,
+ 266 |         [...isLast, index === node.children.length - 1],
+ 267 |         result
+ 268 |       );
+ 269 |     });
+ 270 |   }
+ 271 | 
+ 272 |   return result;
+ 273 | };
+ 274 | 
+ 275 | const isHidden = (filePath: string): boolean => {
+ 276 |   const baseName = path.basename(filePath);
+ 277 |   return baseName.startsWith(".");
+ 278 | };
+ 279 | 
+ 280 | const shouldInclude = (
+ 281 |   filePath: string,
+ 282 |   { excludePatterns, ignoreHidden }: IDocumentConfig
+ 283 | ): boolean => {
+ 284 |   // Check for hidden files if ignoreHidden is enabled
+ 285 |   if (ignoreHidden && isHidden(filePath)) {
+ 286 |     return false;
+ 287 |   }
+ 288 | 
+ 289 |   // Check against exclude patterns
+ 290 |   const isExcluded = excludePatterns.some(pattern =>
+ 291 |     new RegExp(pattern.replace(/\*/g, ".*")).test(filePath)
+ 292 |   );
+ 293 | 
+ 294 |   return !isExcluded;
+ 295 | };
+ 296 | 
+ 297 | // Pure functions for file operations
+ 298 | const isMatchingFile = (filePath: string, config: IDocumentConfig): boolean => {
+ 299 |   if (!config.pattern) {
+ 300 |     throw new Error("Pattern is not defined in the config");
+ 301 |   }
+ 302 | 
+ 303 |   if (!shouldInclude(filePath, config)) {
+ 304 |     return false;
  305 |   }
  306 | 
- 307 |   if (!shouldInclude(filePath, config)) {
- 308 |     return false;
- 309 |   }
- 310 | 
- 311 |   return config.pattern.test(filePath);
- 312 | };
- 313 | 
- 314 | const formatSize = (bytes: number): string => {
- 315 |   const units = ["B", "KB", "MB", "GB"];
- 316 |   let size = bytes;
- 317 |   let unitIndex = 0;
- 318 | 
- 319 |   while (size >= 1024 && unitIndex < units.length - 1) {
- 320 |     size /= 1024;
- 321 |     unitIndex++;
- 322 |   }
- 323 | 
- 324 |   return `${size.toFixed(2)} ${units[unitIndex]}`;
- 325 | };
- 326 | 
- 327 | // Core file processing functions
- 328 | 
- 329 | async function* walkDirectory(dir: string): AsyncGenerator<string> {
- 330 |   const entries = await fs.readdir(dir, { withFileTypes: true });
- 331 | 
- 332 |   for (const entry of entries) {
- 333 |     const fullPath = path.join(dir, entry.name);
- 334 | 
- 335 |     if (entry.isDirectory()) {
- 336 |       yield* walkDirectory(fullPath);
- 337 |     } else {
- 338 |       yield fullPath;
- 339 |     }
- 340 |   }
- 341 | }
+ 307 |   return config.pattern.test(filePath);
+ 308 | };
+ 309 | 
+ 310 | const formatSize = (bytes: number): string => {
+ 311 |   const units = ["B", "KB", "MB", "GB"];
+ 312 |   let size = bytes;
+ 313 |   let unitIndex = 0;
+ 314 | 
+ 315 |   while (size >= 1024 && unitIndex < units.length - 1) {
+ 316 |     size /= 1024;
+ 317 |     unitIndex++;
+ 318 |   }
+ 319 | 
+ 320 |   return `${size.toFixed(2)} ${units[unitIndex]}`;
+ 321 | };
+ 322 | 
+ 323 | // Core file processing functions
+ 324 | 
+ 325 | async function* walkDirectory(dir: string): AsyncGenerator<string> {
+ 326 |   const entries = await fs.readdir(dir, { withFileTypes: true });
+ 327 | 
+ 328 |   for (const entry of entries) {
+ 329 |     const fullPath = path.join(dir, entry.name);
+ 330 | 
+ 331 |     if (entry.isDirectory()) {
+ 332 |       yield* walkDirectory(fullPath);
+ 333 |     } else {
+ 334 |       yield fullPath;
+ 335 |     }
+ 336 |   }
+ 337 | }
+ 338 | 
+ 339 | const formatContentWithLineNumbers = (content: string): string => {
+ 340 |   const lines = content.split("\n");
+ 341 |   const lineNumberWidth = lines.length.toString().length;
  342 | 
- 343 | const formatContentWithLineNumbers = (content: string): string => {
- 344 |   const lines = content.split("\n");
- 345 |   const lineNumberWidth = lines.length.toString().length;
- 346 | 
- 347 |   return lines
- 348 |     .map((line, index) => {
- 349 |       const lineNumber = (index + 1).toString().padStart(lineNumberWidth, " ");
- 350 |       return `${lineNumber} | ${line}`;
- 351 |     })
- 352 |     .join("\n");
- 353 | };
- 354 | 
- 355 | // Markdown generation functions
- 356 | const generateFileSection = (
- 357 |   file: IFileInfo,
- 358 |   compress: boolean = false
- 359 | ): string =>
- 360 |   !compress
- 361 |     ? `
- 362 | ## File: ${file.name}
- 363 | - Path: \`${file.path}\`
- 364 | - Size: ${formatSize(Number(file.size))}
- 365 | - Extension: ${file.ext}
- 366 | - Lines of code: ${file.lines}
- 367 | - Content:
+ 343 |   return lines
+ 344 |     .map((line, index) => {
+ 345 |       const lineNumber = (index + 1).toString().padStart(lineNumberWidth, " ");
+ 346 |       return `${lineNumber} | ${line}`;
+ 347 |     })
+ 348 |     .join("\n");
+ 349 | };
+ 350 | 
+ 351 | // Markdown generation functions
+ 352 | const generateFileSection = (
+ 353 |   file: IFileInfo,
+ 354 |   compress: boolean = false
+ 355 | ): string =>
+ 356 |   !compress
+ 357 |     ? `
+ 358 | ## File: ${file.name}
+ 359 | - Path: \`${file.path}\`
+ 360 | - Size: ${formatSize(Number(file.size))}
+ 361 | - Extension: ${file.ext}
+ 362 | - Lines of code: ${file.lines}
+ 363 | - Content:
+ 364 | 
+ 365 | \`\`\`${file.ext.slice(1) || "plaintext"}
+ 366 | ${formatContentWithLineNumbers(file.content)}
+ 367 | \`\`\`
  368 | 
- 369 | \`\`\`${file.ext.slice(1) || "plaintext"}
- 370 | ${formatContentWithLineNumbers(file.content)}
- 371 | \`\`\`
- 372 | 
- 373 | ---------------------------------------------------------------------------
- 374 | `
- 375 |     : `
- 376 | ## File: ${file.name}, Path: \`${file.path}\`
- 377 | \`\`\`${file.ext.slice(1) || "plaintext"}
- 378 | ${formatContentWithLineNumbers(file.content)}
- 379 | \`\`\``;
- 380 | 
- 381 | const generateMarkdownContent = (
- 382 |   files: IFileInfo[],
- 383 |   treeContent: string,
- 384 |   compress: boolean
- 385 | ): string =>
- 386 |   !compress
- 387 |     ? `
- 388 | # Code Documentation
- 389 | Generated on: ${new Date().toISOString()}
- 390 | Total files: ${files.length}
- 391 | 
- 392 | ## Project Structure
+ 369 | ---------------------------------------------------------------------------
+ 370 | `
+ 371 |     : `
+ 372 | ## File: ${file.name}, Path: \`${file.path}\`
+ 373 | \`\`\`${file.ext.slice(1) || "plaintext"}
+ 374 | ${formatContentWithLineNumbers(file.content)}
+ 375 | \`\`\``;
+ 376 | 
+ 377 | const generateMarkdownContent = (
+ 378 |   files: IFileInfo[],
+ 379 |   treeContent: string,
+ 380 |   compress: boolean
+ 381 | ): string =>
+ 382 |   !compress
+ 383 |     ? `
+ 384 | # Code Documentation
+ 385 | Generated on: ${new Date().toISOString()}
+ 386 | Total files: ${files.length}
+ 387 | 
+ 388 | ## Project Structure
+ 389 | 
+ 390 | \`\`\`
+ 391 | ${treeContent}
+ 392 | \`\`\`
  393 | 
- 394 | \`\`\`
- 395 | ${treeContent}
- 396 | \`\`\`
- 397 | 
- 398 | ${files.map(file => generateFileSection(file, compress)).join("\n")}
- 399 | `
- 400 |     : `
- 401 | # Code documentation
- 402 | \`\`\`
- 403 | ${treeContent}
- 404 | \`\`\`
- 405 | ${files.map(file => generateFileSection(file, compress)).join("\n")}
- 406 | `;
- 407 | 
- 408 | const compressContent = (content: string): string =>
- 409 |   content
- 410 |     .split("\n")
- 411 |     .map(line => line.trim())
- 412 |     .filter(line => line !== "")
- 413 |     .filter(line => !line.startsWith("//"))
- 414 |     .join("\n");
- 415 | 
- 416 | async function generateFileInfo(
- 417 |   filePath: string,
- 418 |   stats: Stats,
- 419 |   compress: boolean
- 420 | ): Promise<IFileInfo> {
- 421 |   const content = await fs.readFile(filePath, "utf-8");
- 422 |   return {
- 423 |     name: path.basename(filePath),
- 424 |     path: filePath,
- 425 |     content: compress ? compressContent(content) : content,
- 426 |     ext: path.extname(filePath),
- 427 |     size: stats.size,
- 428 |     lines: content.split("\n").filter(line => line.trim() !== "").length
- 429 |   };
- 430 | }
- 431 | 
- 432 | // Main function
- 433 | async function generateDocumentation(
- 434 |   userConfig: Partial<IDocumentConfig> = {}
- 435 | ): Promise<void> {
- 436 |   try {
- 437 |     const config: IDocumentConfig = { ...DEFAULT_CONFIG, ...userConfig };
- 438 |     const files: IFileInfo[] = [];
- 439 | 
- 440 |     // Generate tree structure
- 441 |     const rootNode = await createTreeNode(config.rootDir, config);
- 442 |     const treeContent = rootNode
- 443 |       ? renderTreeNode(rootNode).join("\n")
- 444 |       : "No matching files found";
- 445 | 
- 446 |     for await (const filePath of walkDirectory(config.rootDir)) {
- 447 |       if (!isMatchingFile(filePath, config)) {
+ 394 | ${files.map(file => generateFileSection(file, compress)).join("\n")}
+ 395 | `
+ 396 |     : `
+ 397 | # Code documentation
+ 398 | \`\`\`
+ 399 | ${treeContent}
+ 400 | \`\`\`
+ 401 | ${files.map(file => generateFileSection(file, compress)).join("\n")}
+ 402 | `;
+ 403 | 
+ 404 | const compressContent = (content: string): string =>
+ 405 |   content
+ 406 |     .split("\n")
+ 407 |     .map(line => line.trim())
+ 408 |     .filter(line => line !== "")
+ 409 |     .filter(line => !line.startsWith("//"))
+ 410 |     .join("\n");
+ 411 | 
+ 412 | async function generateFileInfo(
+ 413 |   filePath: string,
+ 414 |   stats: Stats,
+ 415 |   compress: boolean
+ 416 | ): Promise<IFileInfo> {
+ 417 |   const content = await fs.readFile(filePath, "utf-8");
+ 418 |   return {
+ 419 |     name: path.basename(filePath),
+ 420 |     path: filePath,
+ 421 |     content: compress ? compressContent(content) : content,
+ 422 |     ext: path.extname(filePath),
+ 423 |     size: stats.size,
+ 424 |     lines: content.split("\n").filter(line => line.trim() !== "").length
+ 425 |   };
+ 426 | }
+ 427 | 
+ 428 | // Main function
+ 429 | async function generateDocumentation(
+ 430 |   userConfig: Partial<IDocumentConfig> = {}
+ 431 | ): Promise<void> {
+ 432 |   try {
+ 433 |     const config: IDocumentConfig = { ...DEFAULT_CONFIG, ...userConfig };
+ 434 |     const files: IFileInfo[] = [];
+ 435 | 
+ 436 |     // Generate tree structure
+ 437 |     const rootNode = await createTreeNode(config.rootDir, config);
+ 438 |     const treeContent = rootNode
+ 439 |       ? renderTreeNode(rootNode).join("\n")
+ 440 |       : "No matching files found";
+ 441 | 
+ 442 |     for await (const filePath of walkDirectory(config.rootDir)) {
+ 443 |       if (!isMatchingFile(filePath, config)) {
+ 444 |         continue;
+ 445 |       }
+ 446 |       const stats = await fs.stat(filePath);
+ 447 |       if (stats.size > config.maxFileSize) {
  448 |         continue;
  449 |       }
- 450 |       const stats = await fs.stat(filePath);
- 451 |       if (stats.size > config.maxFileSize) {
- 452 |         continue;
- 453 |       }
- 454 |       const fileInfo = await generateFileInfo(filePath, stats, config.compress);
- 455 |       files.push(fileInfo);
- 456 |     }
- 457 | 
- 458 |     const markdownContent = generateMarkdownContent(
- 459 |       files,
- 460 |       treeContent,
- 461 |       config.compress
- 462 |     );
- 463 |     await fs.writeFile(config.outputPath, markdownContent, "utf-8");
- 464 |   } catch (error) {
- 465 |     console.error("Error generating documentation", error);
- 466 |     throw error;
- 467 |   }
- 468 | }
- 469 | 
- 470 | if (require.main === module) {
- 471 |   generateDocumentation({
- 472 |     pattern: /\.ts$/,
- 473 |     outputPath: "demo_compressed.md",
- 474 |     ignoreHidden: true,
- 475 |     excludePatterns: [
- 476 |       "node_modules",
- 477 |       "dist",
- 478 |       "coverage",
- 479 |       "**/__tests__",
- 480 |       "**/*.test.ts"
- 481 |     ],
- 482 |     compress: false
- 483 |   }).catch(console.error);
- 484 |   generateDocumentation({
- 485 |     pattern: /\.test.ts$/,
- 486 |     outputPath: "demo_test.md",
- 487 |     ignoreHidden: true,
- 488 |     excludePatterns: [
- 489 |       "node_modules",
- 490 |       "dist",
- 491 |       "coverage",
- 492 |       "**/__tests__/__mocks__"
- 493 |     ],
- 494 |     compress: false
- 495 |   }).catch(console.error);
- 496 |   generateDocumentation({
- 497 |     pattern: /\.md$/,
- 498 |     outputPath: "demo_md.md",
- 499 |     ignoreHidden: true,
- 500 |     excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"],
- 501 |     compress: false
- 502 |   }).catch(console.error);
- 503 | }
- 504 | 
- 505 | ```
- 506 | #### File: types.ts
- 507 | 
- 508 | - **Path:** /root/git/codewrangler/src/cli/commands/types.ts
- 509 | - **Extension:** ts
- 510 | - **Size:** 160 bytes
- 511 | - **Depth:** 3
- 512 | - **Lines:** 8
- 513 | 
- 514 | ```ts
- 515 | export interface ICommandOptions {
- 516 |   verbose: boolean;
+ 450 |       const fileInfo = await generateFileInfo(filePath, stats, config.compress);
+ 451 |       files.push(fileInfo);
+ 452 |     }
+ 453 | 
+ 454 |     const markdownContent = generateMarkdownContent(
+ 455 |       files,
+ 456 |       treeContent,
+ 457 |       config.compress
+ 458 |     );
+ 459 |     await fs.writeFile(config.outputPath, markdownContent, "utf-8");
+ 460 |   } catch (error) {
+ 461 |     console.error("Error generating documentation", error);
+ 462 |     throw error;
+ 463 |   }
+ 464 | }
+ 465 | 
+ 466 | if (require.main === module) {
+ 467 |   generateDocumentation({
+ 468 |     pattern: /\.ts$/,
+ 469 |     outputPath: "demo_compressed.md",
+ 470 |     ignoreHidden: true,
+ 471 |     excludePatterns: [
+ 472 |       "node_modules",
+ 473 |       "dist",
+ 474 |       "coverage",
+ 475 |       "**/__tests__",
+ 476 |       "**/*.test.ts"
+ 477 |     ],
+ 478 |     compress: false
+ 479 |   }).catch(console.error);
+ 480 |   generateDocumentation({
+ 481 |     pattern: /\.test.ts$/,
+ 482 |     outputPath: "demo_test.md",
+ 483 |     ignoreHidden: true,
+ 484 |     excludePatterns: [
+ 485 |       "node_modules",
+ 486 |       "dist",
+ 487 |       "coverage",
+ 488 |       "**/__tests__/__mocks__"
+ 489 |     ],
+ 490 |     compress: false
+ 491 |   }).catch(console.error);
+ 492 |   generateDocumentation({
+ 493 |     pattern: /\.md$/,
+ 494 |     outputPath: "demo_md.md",
+ 495 |     ignoreHidden: true,
+ 496 |     excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"],
+ 497 |     compress: false
+ 498 |   }).catch(console.error);
+ 499 | }
+ 500 | 
+ 501 | ```
+ 502 | #### File: types.ts
+ 503 | 
+ 504 | - **Path:** /root/git/codewrangler/src/cli/commands/types.ts
+ 505 | - **Extension:** ts
+ 506 | - **Size:** 160 bytes
+ 507 | - **Depth:** 3
+ 508 | - **Lines:** 8
+ 509 | 
+ 510 | ```ts
+ 511 | export interface ICommandOptions {
+ 512 |   verbose: boolean;
+ 513 | }
+ 514 | 
+ 515 | export interface ICommand {
+ 516 |   execute: (args: string[], options: ICommandOptions) => Promise<void>;
  517 | }
  518 | 
- 519 | export interface ICommand {
- 520 |   execute: (args: string[], options: ICommandOptions) => Promise<void>;
- 521 | }
- 522 | 
- 523 | ```
- 524 | #### File: index.ts
- 525 | 
- 526 | - **Path:** /root/git/codewrangler/src/cli/index.ts
- 527 | - **Extension:** ts
- 528 | - **Size:** 416 bytes
- 529 | - **Depth:** 2
- 530 | - **Lines:** 19
- 531 | 
- 532 | ```ts
- 533 | #!/usr/bin/env node
- 534 | import { CodeWrangler } from "./CodeWrangler";
- 535 | import { logger } from "../utils/logger/Logger";
- 536 | 
- 537 | async function main(): Promise<void> {
- 538 |   try {
- 539 |     await CodeWrangler.run();
- 540 |   } catch (error) {
- 541 |     if (error instanceof Error) {
- 542 |       logger.error(error.message);
- 543 |     } else {
- 544 |       logger.error("An unknown error occurred");
- 545 |     }
- 546 |     process.exit(1);
- 547 |   }
- 548 | }
- 549 | 
- 550 | main().catch(() => process.exit(1));
- 551 | 
- 552 | ```
- 553 | ### Directory: program
- 554 | 
- 555 | - **Path:** /root/git/codewrangler/src/cli/program
- 556 | - **Size:** 4856 bytes
- 557 | - **Files:** 0
- 558 | - **Total Files (including subdirectories):** 3
- 559 | - **Depth:** 2
+ 519 | ```
+ 520 | #### File: index.ts
+ 521 | 
+ 522 | - **Path:** /root/git/codewrangler/src/cli/index.ts
+ 523 | - **Extension:** ts
+ 524 | - **Size:** 416 bytes
+ 525 | - **Depth:** 2
+ 526 | - **Lines:** 19
+ 527 | 
+ 528 | ```ts
+ 529 | #!/usr/bin/env node
+ 530 | import { CodeWrangler } from "./CodeWrangler";
+ 531 | import { logger } from "../utils/logger/Logger";
+ 532 | 
+ 533 | async function main(): Promise<void> {
+ 534 |   try {
+ 535 |     await CodeWrangler.run();
+ 536 |   } catch (error) {
+ 537 |     if (error instanceof Error) {
+ 538 |       logger.error(error.message);
+ 539 |     } else {
+ 540 |       logger.error("An unknown error occurred");
+ 541 |     }
+ 542 |     process.exit(1);
+ 543 |   }
+ 544 | }
+ 545 | 
+ 546 | main().catch(() => process.exit(1));
+ 547 | 
+ 548 | ```
+ 549 | ### Directory: program
+ 550 | 
+ 551 | - **Path:** /root/git/codewrangler/src/cli/program
+ 552 | - **Size:** 4933 bytes
+ 553 | - **Files:** 0
+ 554 | - **Total Files (including subdirectories):** 3
+ 555 | - **Depth:** 2
+ 556 | 
+ 557 | #### Contents:
+ 558 | 
+ 559 | ### Directory: mainCLI
  560 | 
- 561 | #### Contents:
- 562 | 
- 563 | ### Directory: mainCLI
- 564 | 
- 565 | - **Path:** /root/git/codewrangler/src/cli/program/mainCLI
- 566 | - **Size:** 4856 bytes
- 567 | - **Files:** 3
- 568 | - **Total Files (including subdirectories):** 3
- 569 | - **Depth:** 3
+ 561 | - **Path:** /root/git/codewrangler/src/cli/program/mainCLI
+ 562 | - **Size:** 4933 bytes
+ 563 | - **Files:** 3
+ 564 | - **Total Files (including subdirectories):** 3
+ 565 | - **Depth:** 3
+ 566 | 
+ 567 | #### Contents:
+ 568 | 
+ 569 | #### File: MainCLICommand.ts
  570 | 
- 571 | #### Contents:
- 572 | 
- 573 | #### File: MainCLICommand.ts
- 574 | 
- 575 | - **Path:** /root/git/codewrangler/src/cli/program/mainCLI/MainCLICommand.ts
- 576 | - **Extension:** ts
- 577 | - **Size:** 2666 bytes
- 578 | - **Depth:** 4
- 579 | - **Lines:** 77
- 580 | 
- 581 | ```ts
- 582 | import { IMainCLICommandOptions } from "./type";
- 583 | import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrchestratorBuilder";
- 584 | import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
- 585 | import { renderStrategyFactory } from "../../../services/renderer/RenderStrategyFactory";
- 586 | import { OutputFormat } from "../../../utils/config/schema";
- 587 | import { logger } from "../../../utils/logger/Logger";
- 588 | import { BaseCommand } from "../../commands/Command";
- 589 | 
- 590 | export class MainCLICommand<
- 591 |   T extends IMainCLICommandOptions
- 592 | > extends BaseCommand<T> {
- 593 |   protected override async beforeExecution(
- 594 |     args: string[],
- 595 |     options: T
- 596 |   ): Promise<void> {
- 597 |     await super.beforeExecution(args, options);
- 598 |     this.config.set("pattern", args[0]);
- 599 |     if (!this.updateOptions(options)) {
- 600 |       throw new Error("Invalid configuration value");
- 601 |     }
- 602 |   }
- 603 | 
- 604 |   protected override async processExecution(): Promise<void> {
- 605 |     const builder = new DocumentTreeBuilder(this.config);
- 606 |     const root = await builder.build();
- 607 | 
- 608 |     const orchestrator = new DocumentOrchestratorBuilder()
- 609 |       .setRoot(root)
- 610 |       .setConfig(this.config);
- 611 | 
- 612 |     const outputFormat = this.config.get("outputFormat");
- 613 |     const strategies = await renderStrategyFactory.createStrategies(
- 614 |       this.config,
- 615 |       outputFormat
- 616 |     );
- 617 | 
- 618 |     orchestrator.setStrategies(strategies);
- 619 | 
- 620 |     const orchestrators = await orchestrator.buildAndExecute();
+ 571 | - **Path:** /root/git/codewrangler/src/cli/program/mainCLI/MainCLICommand.ts
+ 572 | - **Extension:** ts
+ 573 | - **Size:** 2743 bytes
+ 574 | - **Depth:** 4
+ 575 | - **Lines:** 79
+ 576 | 
+ 577 | ```ts
+ 578 | import { IMainCLICommandOptions } from "./type";
+ 579 | import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrchestratorBuilder";
+ 580 | import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
+ 581 | import { renderStrategyFactory } from "../../../services/renderer/RenderStrategyFactory";
+ 582 | import { OutputFormat } from "../../../utils/config/schema";
+ 583 | import { logger } from "../../../utils/logger/Logger";
+ 584 | import { BaseCommand } from "../../commands/Command";
+ 585 | 
+ 586 | export class MainCLICommand<
+ 587 |   T extends IMainCLICommandOptions
+ 588 | > extends BaseCommand<T> {
+ 589 |   protected override async beforeExecution(
+ 590 |     args: string[],
+ 591 |     options: T
+ 592 |   ): Promise<void> {
+ 593 |     this.config.set("pattern", args[0]);
+ 594 |     if (!this.updateOptions(options)) {
+ 595 |       throw new Error("Invalid configuration value");
+ 596 |     }
+ 597 |     this.logVerbose();
+ 598 |     await super.beforeExecution(args, options);
+ 599 |   }
+ 600 | 
+ 601 |   protected override async processExecution(): Promise<void> {
+ 602 |     const builder = new DocumentTreeBuilder(this.config);
+ 603 |     const root = await builder.build();
+ 604 | 
+ 605 |     const orchestrator = new DocumentOrchestratorBuilder()
+ 606 |       .setRoot(root)
+ 607 |       .setConfig(this.config);
+ 608 | 
+ 609 |     const outputFormat = this.config.get("outputFormat");
+ 610 |     const strategies = await renderStrategyFactory.createStrategies(
+ 611 |       this.config,
+ 612 |       outputFormat
+ 613 |     );
+ 614 | 
+ 615 |     orchestrator.setStrategies(strategies);
+ 616 | 
+ 617 |     const orchestrators = await orchestrator.buildAndExecute();
+ 618 | 
+ 619 |     logger.info(`Generated ${orchestrators.length} documents`);
+ 620 |   }
  621 | 
- 622 |     logger.info(`Generated ${orchestrators.length} documents`);
- 623 |   }
- 624 | 
- 625 |   protected override logVerbose(): void {
- 626 |     super.logVerbose();
+ 622 |   protected override logVerbose(): void {
+ 623 |     super.logVerbose();
+ 624 |     logger.debug(
+ 625 |       `Searching for file matching pattern: ${this.config.get("pattern")}`
+ 626 |     );
  627 |     logger.debug(
- 628 |       `Searching for file matching pattern: ${this.config.get("pattern")}`
+ 628 |       `Excluding patterns: ${(this.config.get("excludePatterns") as string[]).join(", ")}`
  629 |     );
  630 |     logger.debug(
- 631 |       `Excluding patterns: ${(this.config.get("excludePatterns") as string[]).join(", ")}`
+ 631 |       `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
  632 |     );
- 633 |     logger.debug(
- 634 |       `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
- 635 |     );
- 636 |     logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
- 637 |   }
- 638 | 
- 639 |   private updateOptions(options: IMainCLICommandOptions): boolean {
- 640 |     try {
- 641 |       this.config.set("dir", options["dir"]);
- 642 |       this.config.set("codeConfigFile", options["config"]);
- 643 |       this.config.set("logLevel", options["verbose"] ? "DEBUG" : "INFO");
- 644 |       this.config.set(
- 645 |         "outputFormat",
- 646 |         options["format"] as unknown as OutputFormat[]
- 647 |       );
- 648 |       this.config.set("outputFile", options["output"]);
- 649 |       this.config.set("ignoreHiddenFiles", options["ignoreHidden"]);
- 650 |       this.config.set("additionalIgnoreFiles", options["additionalIgnore"]);
- 651 |     } catch (error) {
- 652 |       logger.error(`Invalid configuration value: ${error}`);
- 653 |       return false;
- 654 |     }
- 655 |     return true;
- 656 |   }
- 657 | }
- 658 | 
- 659 | ```
- 660 | #### File: ProgramBuilder.ts
- 661 | 
- 662 | - **Path:** /root/git/codewrangler/src/cli/program/mainCLI/ProgramBuilder.ts
- 663 | - **Extension:** ts
- 664 | - **Size:** 1924 bytes
- 665 | - **Depth:** 4
- 666 | - **Lines:** 76
- 667 | 
- 668 | ```ts
- 669 | import { Command } from "commander";
+ 633 |     logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
+ 634 |   }
+ 635 | 
+ 636 |   private updateOptions(options: IMainCLICommandOptions): boolean {
+ 637 |     try {
+ 638 |       this.config.set("dir", options["dir"]);
+ 639 |       this.config.set("codeConfigFile", options["config"]);
+ 640 |       this.config.set("logLevel", options["verbose"] ? "DEBUG" : "INFO");
+ 641 |       this.config.set("verbose", options["verbose"]);
+ 642 |       this.config.set(
+ 643 |         "outputFormat",
+ 644 |         options["format"] as unknown as OutputFormat[]
+ 645 |       );
+ 646 |       this.config.set("outputFile", options["output"]);
+ 647 |       this.config.set("ignoreHiddenFiles", options["ignoreHidden"]);
+ 648 |       this.config.set("additionalIgnoreFiles", options["additionalIgnore"]);
+ 649 |     } catch (error) {
+ 650 |       logger.error(`Invalid configuration value: ${error}`);
+ 651 |       return false;
+ 652 |     }
+ 653 |     return true;
+ 654 |   }
+ 655 | }
+ 656 | 
+ 657 | ```
+ 658 | #### File: ProgramBuilder.ts
+ 659 | 
+ 660 | - **Path:** /root/git/codewrangler/src/cli/program/mainCLI/ProgramBuilder.ts
+ 661 | - **Extension:** ts
+ 662 | - **Size:** 1924 bytes
+ 663 | - **Depth:** 4
+ 664 | - **Lines:** 76
+ 665 | 
+ 666 | ```ts
+ 667 | import { Command } from "commander";
+ 668 | 
+ 669 | import { Config } from "../../../utils/config/Config";
  670 | 
- 671 | import { Config } from "../../../utils/config/Config";
- 672 | 
- 673 | export class ProgramBuilder {
- 674 |   private program: Command;
- 675 | 
- 676 |   public constructor(
- 677 |     private config: Config,
- 678 |     private version: string
- 679 |   ) {
- 680 |     this.program = new Command();
- 681 |   }
- 682 | 
- 683 |   public build(): Command {
- 684 |     this.buildVersion().buildDescription().buildArguments().buildOptions();
- 685 |     return this.program;
- 686 |   }
- 687 | 
- 688 |   private buildVersion(): ProgramBuilder {
- 689 |     this.program.version(this.version);
- 690 |     return this;
- 691 |   }
- 692 | 
- 693 |   private buildDescription(): ProgramBuilder {
- 694 |     this.program.description("CodeWrangler is a tool for generating code");
- 695 |     return this;
- 696 |   }
- 697 | 
- 698 |   private buildArguments(): ProgramBuilder {
- 699 |     this.program.argument(
- 700 |       "<pattern>",
- 701 |       'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
- 702 |     );
- 703 |     return this;
- 704 |   }
- 705 | 
- 706 |   // eslint-disable-next-line max-lines-per-function
- 707 |   private buildOptions(): ProgramBuilder {
- 708 |     this.program
- 709 |       .option("-d, --dir <dir>", "Directory to search", this.config.get("dir"))
- 710 |       .option(
- 711 |         "-c, --config <config>",
- 712 |         "Config file",
- 713 |         this.config.get("codeConfigFile")
- 714 |       )
- 715 |       .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
- 716 |       .option(
- 717 |         "-f, --format <format>",
- 718 |         "Output format",
- 719 |         this.config.get("outputFormat")
- 720 |       )
- 721 |       .option(
- 722 |         "-o, --output <output>",
- 723 |         "Output file",
- 724 |         this.config.get("outputFile")
- 725 |       )
- 726 |       .option(
- 727 |         "-e, --exclude <exclude>",
- 728 |         "Exclude patterns",
- 729 |         this.config.get("excludePatterns")
- 730 |       )
- 731 |       .option(
- 732 |         "-i, --ignore-hidden",
- 733 |         "Ignore hidden files",
- 734 |         this.config.get("ignoreHiddenFiles")
- 735 |       )
- 736 |       .option(
- 737 |         "-a, --additional-ignore <additional-ignore>",
- 738 |         "Additional ignore patterns",
- 739 |         this.config.get("additionalIgnoreFiles")
- 740 |       );
- 741 |     return this;
- 742 |   }
- 743 | }
- 744 | 
- 745 | ```
- 746 | #### File: type.ts
- 747 | 
- 748 | - **Path:** /root/git/codewrangler/src/cli/program/mainCLI/type.ts
- 749 | - **Extension:** ts
- 750 | - **Size:** 266 bytes
- 751 | - **Depth:** 4
- 752 | - **Lines:** 12
- 753 | 
- 754 | ```ts
- 755 | import { ICommandOptions } from "../../commands/types";
- 756 | 
- 757 | export interface IMainCLICommandOptions extends ICommandOptions {
- 758 |   dir: string;
- 759 |   config: string;
- 760 |   format: string;
- 761 |   output: string;
- 762 |   exclude: string;
- 763 |   ignoreHidden: boolean;
- 764 |   additionalIgnore: string;
- 765 | }
- 766 | 
- 767 | ```
- 768 | ### Directory: core
- 769 | 
- 770 | - **Path:** /root/git/codewrangler/src/core
- 771 | - **Size:** 8762 bytes
- 772 | - **Files:** 0
- 773 | - **Total Files (including subdirectories):** 7
- 774 | - **Depth:** 1
+ 671 | export class ProgramBuilder {
+ 672 |   private program: Command;
+ 673 | 
+ 674 |   public constructor(
+ 675 |     private config: Config,
+ 676 |     private version: string
+ 677 |   ) {
+ 678 |     this.program = new Command();
+ 679 |   }
+ 680 | 
+ 681 |   public build(): Command {
+ 682 |     this.buildVersion().buildDescription().buildArguments().buildOptions();
+ 683 |     return this.program;
+ 684 |   }
+ 685 | 
+ 686 |   private buildVersion(): ProgramBuilder {
+ 687 |     this.program.version(this.version);
+ 688 |     return this;
+ 689 |   }
+ 690 | 
+ 691 |   private buildDescription(): ProgramBuilder {
+ 692 |     this.program.description("CodeWrangler is a tool for generating code");
+ 693 |     return this;
+ 694 |   }
+ 695 | 
+ 696 |   private buildArguments(): ProgramBuilder {
+ 697 |     this.program.argument(
+ 698 |       "<pattern>",
+ 699 |       'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
+ 700 |     );
+ 701 |     return this;
+ 702 |   }
+ 703 | 
+ 704 |   // eslint-disable-next-line max-lines-per-function
+ 705 |   private buildOptions(): ProgramBuilder {
+ 706 |     this.program
+ 707 |       .option("-d, --dir <dir>", "Directory to search", this.config.get("dir"))
+ 708 |       .option(
+ 709 |         "-c, --config <config>",
+ 710 |         "Config file",
+ 711 |         this.config.get("codeConfigFile")
+ 712 |       )
+ 713 |       .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
+ 714 |       .option(
+ 715 |         "-f, --format <format>",
+ 716 |         "Output format",
+ 717 |         this.config.get("outputFormat")
+ 718 |       )
+ 719 |       .option(
+ 720 |         "-o, --output <output>",
+ 721 |         "Output file",
+ 722 |         this.config.get("outputFile")
+ 723 |       )
+ 724 |       .option(
+ 725 |         "-e, --exclude <exclude>",
+ 726 |         "Exclude patterns",
+ 727 |         this.config.get("excludePatterns")
+ 728 |       )
+ 729 |       .option(
+ 730 |         "-i, --ignore-hidden",
+ 731 |         "Ignore hidden files",
+ 732 |         this.config.get("ignoreHiddenFiles")
+ 733 |       )
+ 734 |       .option(
+ 735 |         "-a, --additional-ignore <additional-ignore>",
+ 736 |         "Additional ignore patterns",
+ 737 |         this.config.get("additionalIgnoreFiles")
+ 738 |       );
+ 739 |     return this;
+ 740 |   }
+ 741 | }
+ 742 | 
+ 743 | ```
+ 744 | #### File: type.ts
+ 745 | 
+ 746 | - **Path:** /root/git/codewrangler/src/cli/program/mainCLI/type.ts
+ 747 | - **Extension:** ts
+ 748 | - **Size:** 266 bytes
+ 749 | - **Depth:** 4
+ 750 | - **Lines:** 12
+ 751 | 
+ 752 | ```ts
+ 753 | import { ICommandOptions } from "../../commands/types";
+ 754 | 
+ 755 | export interface IMainCLICommandOptions extends ICommandOptions {
+ 756 |   dir: string;
+ 757 |   config: string;
+ 758 |   format: string;
+ 759 |   output: string;
+ 760 |   exclude: string;
+ 761 |   ignoreHidden: boolean;
+ 762 |   additionalIgnore: string;
+ 763 | }
+ 764 | 
+ 765 | ```
+ 766 | ### Directory: core
+ 767 | 
+ 768 | - **Path:** /root/git/codewrangler/src/core
+ 769 | - **Size:** 8762 bytes
+ 770 | - **Files:** 0
+ 771 | - **Total Files (including subdirectories):** 7
+ 772 | - **Depth:** 1
+ 773 | 
+ 774 | #### Contents:
  775 | 
- 776 | #### Contents:
+ 776 | ### Directory: entities
  777 | 
- 778 | ### Directory: entities
- 779 | 
- 780 | - **Path:** /root/git/codewrangler/src/core/entities
- 781 | - **Size:** 7918 bytes
- 782 | - **Files:** 3
- 783 | - **Total Files (including subdirectories):** 3
- 784 | - **Depth:** 2
+ 778 | - **Path:** /root/git/codewrangler/src/core/entities
+ 779 | - **Size:** 7918 bytes
+ 780 | - **Files:** 3
+ 781 | - **Total Files (including subdirectories):** 3
+ 782 | - **Depth:** 2
+ 783 | 
+ 784 | #### Contents:
  785 | 
- 786 | #### Contents:
+ 786 | #### File: NodeBase.ts
  787 | 
- 788 | #### File: NodeBase.ts
- 789 | 
- 790 | - **Path:** /root/git/codewrangler/src/core/entities/NodeBase.ts
- 791 | - **Extension:** ts
- 792 | - **Size:** 2775 bytes
- 793 | - **Depth:** 3
- 794 | - **Lines:** 125
- 795 | 
- 796 | ```ts
- 797 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
- 798 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
- 799 | import { IFileStats, IPropsNode } from "../../types/type";
- 800 | 
- 801 | const defaultProps: IPropsNode = {
- 802 |   name: "",
- 803 |   path: "",
- 804 |   deep: 0,
- 805 |   size: 0, // size of the node from the children nodes
- 806 |   stats: {
- 807 |     size: 0, // size of the node from the file system
- 808 |     created: new Date(),
- 809 |     modified: new Date(),
- 810 |     accessed: new Date(),
- 811 |     isDirectory: false,
- 812 |     isFile: false,
- 813 |     permissions: {
- 814 |       readable: false,
- 815 |       writable: false,
- 816 |       executable: false
- 817 |     }
- 818 |   }
- 819 | };
- 820 | 
- 821 | export interface INodeContent {
- 822 |   content: string;
- 823 | }
- 824 | 
- 825 | interface INodeLifeCycle {
- 826 |   validate: () => boolean;
- 827 |   bundle: (deep: number) => Promise<void>;
- 828 |   render: (strategy: IRenderStrategy) => INodeContent;
- 829 |   dispose: () => void;
- 830 |   clone: () => NodeBase;
- 831 | }
- 832 | 
- 833 | export abstract class NodeBase implements INodeLifeCycle {
- 834 |   protected _props: IPropsNode = { ...defaultProps };
- 835 | 
- 836 |   public constructor(
- 837 |     _name: string,
- 838 |     private originalPath: string
- 839 |   ) {
- 840 |     this.initNode(_name, originalPath);
- 841 |     this.validate();
- 842 |   }
- 843 | 
- 844 |   public validate(): boolean {
- 845 |     if (!documentFactory.exists(this.path)) {
- 846 |       throw new Error(`Path ${this.originalPath} does not exist`);
- 847 |     }
- 848 |     if (!documentFactory.isAbsolute(this.path)) {
- 849 |       throw new Error(`Path ${this.originalPath} is not absolute`);
- 850 |     }
- 851 |     return true;
- 852 |   }
- 853 | 
- 854 |   // abstract methods
- 855 |   public abstract bundle(deep: number): Promise<void>;
- 856 |   public abstract render(strategy: IRenderStrategy): INodeContent;
- 857 | 
- 858 |   // getters and setters
- 859 |   // deep
- 860 |   public get deep(): number {
- 861 |     return this._props.deep;
- 862 |   }
- 863 |   public set deep(deep: number) {
- 864 |     this._props.deep = deep;
- 865 |   }
- 866 | 
- 867 |   // size
- 868 |   public get size(): number {
- 869 |     return this._props.size;
- 870 |   }
- 871 |   public set size(size: number) {
- 872 |     this._props.size = size;
- 873 |   }
- 874 | 
- 875 |   // name
- 876 |   public get name(): string {
- 877 |     return this._props.name;
- 878 |   }
- 879 |   public set name(name: string) {
- 880 |     this._props.name = name;
- 881 |   }
- 882 | 
- 883 |   // path
- 884 |   public get path(): string {
- 885 |     return this._props.path;
- 886 |   }
- 887 |   public set path(path: string) {
- 888 |     this._props.path = path;
- 889 |   }
- 890 | 
- 891 |   // stats
- 892 |   public get stats(): IFileStats | undefined {
- 893 |     return this._props.stats;
- 894 |   }
- 895 |   public set stats(stats: IFileStats | undefined) {
- 896 |     this._props.stats = stats;
- 897 |   }
- 898 | 
- 899 |   // props
- 900 |   public get props(): IPropsNode {
- 901 |     return {
- 902 |       ...this._props
- 903 |     };
- 904 |   }
- 905 | 
- 906 |   public dispose(): void {
- 907 |     this._props = { ...defaultProps };
- 908 |   }
- 909 | 
- 910 |   public clone(): NodeBase {
- 911 |     return Object.assign(Object.create(this), this);
- 912 |   }
- 913 | 
- 914 |   private initNode(name: string, path: string): void {
- 915 |     this.deep = 0;
- 916 |     this.size = 0;
- 917 |     this.name = name;
- 918 |     this.path = documentFactory.resolve(path);
- 919 |   }
- 920 | }
- 921 | 
- 922 | ```
- 923 | #### File: NodeDirectory.ts
- 924 | 
- 925 | - **Path:** /root/git/codewrangler/src/core/entities/NodeDirectory.ts
- 926 | - **Extension:** ts
- 927 | - **Size:** 3142 bytes
- 928 | - **Depth:** 3
- 929 | - **Lines:** 108
- 930 | 
- 931 | ```ts
- 932 | import { INodeContent, NodeBase } from "./NodeBase";
- 933 | import { NodeFile } from "./NodeFile";
- 934 | import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
- 935 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
- 936 | import { IPropsDirectoryNode } from "../../types/type";
- 937 | 
- 938 | interface IPropsDirectory {
- 939 |   length: number;
- 940 |   deepLength: number;
- 941 |   numberOfFiles: number;
- 942 |   numberOfDirectories: number;
- 943 | }
- 944 | 
- 945 | const defaultPropsDirectory: IPropsDirectory = {
- 946 |   length: 0,
- 947 |   deepLength: 0,
- 948 |   numberOfFiles: 0,
- 949 |   numberOfDirectories: 0
- 950 | };
- 951 | 
- 952 | export abstract class NodeDirectory extends NodeBase {
- 953 |   public readonly type = "directory";
- 954 |   public children: (NodeFile | NodeDirectory)[] = [];
- 955 |   private _propsDirectory: IPropsDirectory = { ...defaultPropsDirectory };
- 956 | 
- 957 |   public constructor(name: string, pathName: string) {
- 958 |     super(name, pathName);
- 959 |     this.initDirectory();
- 960 |   }
- 961 |   // getters and setters
- 962 |   public get length(): number {
- 963 |     return this._propsDirectory.length;
- 964 |   }
- 965 |   public set length(length: number) {
- 966 |     this._propsDirectory.length = length;
- 967 |   }
- 968 |   public get deepLength(): number {
- 969 |     return this._propsDirectory.deepLength;
- 970 |   }
- 971 |   public set deepLength(deepLength: number) {
- 972 |     this._propsDirectory.deepLength = deepLength;
- 973 |   }
- 974 |   public get numberOfFiles(): number {
- 975 |     return this._propsDirectory.numberOfFiles;
- 976 |   }
- 977 |   public set numberOfFiles(numberOfFiles: number) {
- 978 |     this._propsDirectory.numberOfFiles = numberOfFiles;
- 979 |   }
- 980 |   public override get props(): IPropsDirectoryNode {
- 981 |     return {
- 982 |       ...super.props,
- 983 |       ...this._propsDirectory
- 984 |     };
- 985 |   }
- 986 | 
- 987 |   public addChild(child: NodeFile | NodeDirectory): NodeDirectory {
- 988 |     if (!(child instanceof NodeFile || child instanceof NodeDirectory)) {
- 989 |       throw new Error("Invalid child type");
- 990 |     }
- 991 |     this.children.push(child);
- 992 |     return this;
- 993 |   }
- 994 | 
- 995 |   public async bundle(deep: number = 0): Promise<void> {
- 996 |     // set the deep of the directory
- 997 |     this.deep = deep;
- 998 | 
- 999 |     // bundle all children
-1000 |     await Promise.all(this.children.map(child => child.bundle(deep + 1)));
-1001 | 
-1002 |     // set the length of the directory
-1003 |     this.length = this.children.filter(child => child.type === "file").length;
-1004 |     this.numberOfFiles =
-1005 |       this.length +
-1006 |       this.children
-1007 |         .filter(child => child.type === "directory")
-1008 |         .reduce((acc, child) => acc + child.numberOfFiles, 0);
-1009 | 
-1010 |     // set the deep length of the directory
-1011 |     this.deepLength = this.children.reduce(
-1012 |       (acc, child) =>
-1013 |         acc + (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
-1014 |       0
-1015 |     );
-1016 | 
-1017 |     // set the size of the directory
-1018 |     this.size = this.children.reduce((acc, child) => acc + child.size, 0);
-1019 | 
-1020 |     // set stats
-1021 |     this.stats = await fileStatsService(this.path);
-1022 |   }
+ 788 | - **Path:** /root/git/codewrangler/src/core/entities/NodeBase.ts
+ 789 | - **Extension:** ts
+ 790 | - **Size:** 2775 bytes
+ 791 | - **Depth:** 3
+ 792 | - **Lines:** 125
+ 793 | 
+ 794 | ```ts
+ 795 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+ 796 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
+ 797 | import { IFileStats, IPropsNode } from "../../types/type";
+ 798 | 
+ 799 | const defaultProps: IPropsNode = {
+ 800 |   name: "",
+ 801 |   path: "",
+ 802 |   deep: 0,
+ 803 |   size: 0, // size of the node from the children nodes
+ 804 |   stats: {
+ 805 |     size: 0, // size of the node from the file system
+ 806 |     created: new Date(),
+ 807 |     modified: new Date(),
+ 808 |     accessed: new Date(),
+ 809 |     isDirectory: false,
+ 810 |     isFile: false,
+ 811 |     permissions: {
+ 812 |       readable: false,
+ 813 |       writable: false,
+ 814 |       executable: false
+ 815 |     }
+ 816 |   }
+ 817 | };
+ 818 | 
+ 819 | export interface INodeContent {
+ 820 |   content: string;
+ 821 | }
+ 822 | 
+ 823 | interface INodeLifeCycle {
+ 824 |   validate: () => boolean;
+ 825 |   bundle: (deep: number) => Promise<void>;
+ 826 |   render: (strategy: IRenderStrategy) => INodeContent;
+ 827 |   dispose: () => void;
+ 828 |   clone: () => NodeBase;
+ 829 | }
+ 830 | 
+ 831 | export abstract class NodeBase implements INodeLifeCycle {
+ 832 |   protected _props: IPropsNode = { ...defaultProps };
+ 833 | 
+ 834 |   public constructor(
+ 835 |     _name: string,
+ 836 |     private originalPath: string
+ 837 |   ) {
+ 838 |     this.initNode(_name, originalPath);
+ 839 |     this.validate();
+ 840 |   }
+ 841 | 
+ 842 |   public validate(): boolean {
+ 843 |     if (!documentFactory.exists(this.path)) {
+ 844 |       throw new Error(`Path ${this.originalPath} does not exist`);
+ 845 |     }
+ 846 |     if (!documentFactory.isAbsolute(this.path)) {
+ 847 |       throw new Error(`Path ${this.originalPath} is not absolute`);
+ 848 |     }
+ 849 |     return true;
+ 850 |   }
+ 851 | 
+ 852 |   // abstract methods
+ 853 |   public abstract bundle(deep: number): Promise<void>;
+ 854 |   public abstract render(strategy: IRenderStrategy): INodeContent;
+ 855 | 
+ 856 |   // getters and setters
+ 857 |   // deep
+ 858 |   public get deep(): number {
+ 859 |     return this._props.deep;
+ 860 |   }
+ 861 |   public set deep(deep: number) {
+ 862 |     this._props.deep = deep;
+ 863 |   }
+ 864 | 
+ 865 |   // size
+ 866 |   public get size(): number {
+ 867 |     return this._props.size;
+ 868 |   }
+ 869 |   public set size(size: number) {
+ 870 |     this._props.size = size;
+ 871 |   }
+ 872 | 
+ 873 |   // name
+ 874 |   public get name(): string {
+ 875 |     return this._props.name;
+ 876 |   }
+ 877 |   public set name(name: string) {
+ 878 |     this._props.name = name;
+ 879 |   }
+ 880 | 
+ 881 |   // path
+ 882 |   public get path(): string {
+ 883 |     return this._props.path;
+ 884 |   }
+ 885 |   public set path(path: string) {
+ 886 |     this._props.path = path;
+ 887 |   }
+ 888 | 
+ 889 |   // stats
+ 890 |   public get stats(): IFileStats | undefined {
+ 891 |     return this._props.stats;
+ 892 |   }
+ 893 |   public set stats(stats: IFileStats | undefined) {
+ 894 |     this._props.stats = stats;
+ 895 |   }
+ 896 | 
+ 897 |   // props
+ 898 |   public get props(): IPropsNode {
+ 899 |     return {
+ 900 |       ...this._props
+ 901 |     };
+ 902 |   }
+ 903 | 
+ 904 |   public dispose(): void {
+ 905 |     this._props = { ...defaultProps };
+ 906 |   }
+ 907 | 
+ 908 |   public clone(): NodeBase {
+ 909 |     return Object.assign(Object.create(this), this);
+ 910 |   }
+ 911 | 
+ 912 |   private initNode(name: string, path: string): void {
+ 913 |     this.deep = 0;
+ 914 |     this.size = 0;
+ 915 |     this.name = name;
+ 916 |     this.path = documentFactory.resolve(path);
+ 917 |   }
+ 918 | }
+ 919 | 
+ 920 | ```
+ 921 | #### File: NodeDirectory.ts
+ 922 | 
+ 923 | - **Path:** /root/git/codewrangler/src/core/entities/NodeDirectory.ts
+ 924 | - **Extension:** ts
+ 925 | - **Size:** 3142 bytes
+ 926 | - **Depth:** 3
+ 927 | - **Lines:** 108
+ 928 | 
+ 929 | ```ts
+ 930 | import { INodeContent, NodeBase } from "./NodeBase";
+ 931 | import { NodeFile } from "./NodeFile";
+ 932 | import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
+ 933 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
+ 934 | import { IPropsDirectoryNode } from "../../types/type";
+ 935 | 
+ 936 | interface IPropsDirectory {
+ 937 |   length: number;
+ 938 |   deepLength: number;
+ 939 |   numberOfFiles: number;
+ 940 |   numberOfDirectories: number;
+ 941 | }
+ 942 | 
+ 943 | const defaultPropsDirectory: IPropsDirectory = {
+ 944 |   length: 0,
+ 945 |   deepLength: 0,
+ 946 |   numberOfFiles: 0,
+ 947 |   numberOfDirectories: 0
+ 948 | };
+ 949 | 
+ 950 | export abstract class NodeDirectory extends NodeBase {
+ 951 |   public readonly type = "directory";
+ 952 |   public children: (NodeFile | NodeDirectory)[] = [];
+ 953 |   private _propsDirectory: IPropsDirectory = { ...defaultPropsDirectory };
+ 954 | 
+ 955 |   public constructor(name: string, pathName: string) {
+ 956 |     super(name, pathName);
+ 957 |     this.initDirectory();
+ 958 |   }
+ 959 |   // getters and setters
+ 960 |   public get length(): number {
+ 961 |     return this._propsDirectory.length;
+ 962 |   }
+ 963 |   public set length(length: number) {
+ 964 |     this._propsDirectory.length = length;
+ 965 |   }
+ 966 |   public get deepLength(): number {
+ 967 |     return this._propsDirectory.deepLength;
+ 968 |   }
+ 969 |   public set deepLength(deepLength: number) {
+ 970 |     this._propsDirectory.deepLength = deepLength;
+ 971 |   }
+ 972 |   public get numberOfFiles(): number {
+ 973 |     return this._propsDirectory.numberOfFiles;
+ 974 |   }
+ 975 |   public set numberOfFiles(numberOfFiles: number) {
+ 976 |     this._propsDirectory.numberOfFiles = numberOfFiles;
+ 977 |   }
+ 978 |   public override get props(): IPropsDirectoryNode {
+ 979 |     return {
+ 980 |       ...super.props,
+ 981 |       ...this._propsDirectory
+ 982 |     };
+ 983 |   }
+ 984 | 
+ 985 |   public addChild(child: NodeFile | NodeDirectory): NodeDirectory {
+ 986 |     if (!(child instanceof NodeFile || child instanceof NodeDirectory)) {
+ 987 |       throw new Error("Invalid child type");
+ 988 |     }
+ 989 |     this.children.push(child);
+ 990 |     return this;
+ 991 |   }
+ 992 | 
+ 993 |   public async bundle(deep: number = 0): Promise<void> {
+ 994 |     // set the deep of the directory
+ 995 |     this.deep = deep;
+ 996 | 
+ 997 |     // bundle all children
+ 998 |     await Promise.all(this.children.map(child => child.bundle(deep + 1)));
+ 999 | 
+1000 |     // set the length of the directory
+1001 |     this.length = this.children.filter(child => child.type === "file").length;
+1002 |     this.numberOfFiles =
+1003 |       this.length +
+1004 |       this.children
+1005 |         .filter(child => child.type === "directory")
+1006 |         .reduce((acc, child) => acc + child.numberOfFiles, 0);
+1007 | 
+1008 |     // set the deep length of the directory
+1009 |     this.deepLength = this.children.reduce(
+1010 |       (acc, child) =>
+1011 |         acc + (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
+1012 |       0
+1013 |     );
+1014 | 
+1015 |     // set the size of the directory
+1016 |     this.size = this.children.reduce((acc, child) => acc + child.size, 0);
+1017 | 
+1018 |     // set stats
+1019 |     this.stats = await fileStatsService(this.path);
+1020 |   }
+1021 | 
+1022 |   public abstract override render(strategy: IRenderStrategy): INodeContent;
 1023 | 
-1024 |   public abstract override render(strategy: IRenderStrategy): INodeContent;
-1025 | 
-1026 |   private initDirectory(): void {
-1027 |     this.children = [];
-1028 |     this._propsDirectory = { ...defaultPropsDirectory };
-1029 |   }
-1030 | }
-1031 | 
-1032 | export class RenderableDirectory extends NodeDirectory {
-1033 |   public override render(strategy: IRenderStrategy): INodeContent {
-1034 |     return {
-1035 |       content: strategy.renderDirectory(this)
-1036 |     };
-1037 |   }
-1038 | }
-1039 | 
-1040 | ```
-1041 | #### File: NodeFile.ts
-1042 | 
-1043 | - **Path:** /root/git/codewrangler/src/core/entities/NodeFile.ts
-1044 | - **Extension:** ts
-1045 | - **Size:** 2001 bytes
-1046 | - **Depth:** 3
-1047 | - **Lines:** 74
-1048 | 
-1049 | ```ts
-1050 | import { INodeContent, NodeBase } from "./NodeBase";
-1051 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-1052 | import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
-1053 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
-1054 | import { IPropsFileNode } from "../../types/type";
-1055 | 
-1056 | export abstract class NodeFile extends NodeBase {
-1057 |   public readonly type = "file";
-1058 |   private _extension: string = "";
-1059 |   private _content: string | null = null;
-1060 | 
-1061 |   public constructor(name: string, pathName: string) {
-1062 |     super(name, pathName);
-1063 |     this.initFile(name);
-1064 |   }
-1065 | 
-1066 |   // getters and setters
-1067 |   // extension
-1068 |   public get extension(): string {
-1069 |     return this._extension;
-1070 |   }
-1071 |   protected set extension(extension: string) {
-1072 |     this._extension = extension;
-1073 |   }
-1074 |   // content
-1075 |   public get content(): string | null {
-1076 |     return this._content;
-1077 |   }
-1078 |   protected set content(content: string | null) {
-1079 |     this._content = content;
-1080 |   }
-1081 |   // secondary props
-1082 |   public override get props(): IPropsFileNode {
-1083 |     return {
-1084 |       ...super.props,
-1085 |       extension: this.extension
-1086 |     };
-1087 |   }
-1088 | 
-1089 |   // bundle
-1090 |   public async bundle(deep: number = 0): Promise<void> {
-1091 |     // set the deep of the file
-1092 |     this.deep = deep;
-1093 |     // set the size of the file
-1094 |     this.size = await documentFactory.size(this.path);
-1095 |     // set the content of the file
-1096 |     this.content = await documentFactory.readFile(this.path);
-1097 |     // set the stats of the file
-1098 |     this.stats = await fileStatsService(this.path);
-1099 |   }
-1100 | 
-1101 |   // render
-1102 |   public abstract override render(strategy: IRenderStrategy): INodeContent;
-1103 | 
-1104 |   private initFile(name: string): void {
-1105 |     this.extension = documentFactory.extension(name);
-1106 |     this._content = null;
-1107 |   }
-1108 | }
-1109 | 
-1110 | export class RenderableFile extends NodeFile {
-1111 |   // render
-1112 |   public override render(strategy: IRenderStrategy): INodeContent {
-1113 |     return {
-1114 |       content: strategy.renderFile(this)
-1115 |     };
-1116 |   }
-1117 | 
-1118 |   // dispose
-1119 |   public override dispose(): void {
-1120 |     super.dispose();
-1121 |   }
-1122 | }
-1123 | 
-1124 | ```
-1125 | ### Directory: __tests__
-1126 | 
-1127 | - **Path:** /root/git/codewrangler/src/core/entities/__tests__
-1128 | - **Size:** 0 bytes
-1129 | - **Files:** 0
-1130 | - **Total Files (including subdirectories):** 0
-1131 | - **Depth:** 3
+1024 |   private initDirectory(): void {
+1025 |     this.children = [];
+1026 |     this._propsDirectory = { ...defaultPropsDirectory };
+1027 |   }
+1028 | }
+1029 | 
+1030 | export class RenderableDirectory extends NodeDirectory {
+1031 |   public override render(strategy: IRenderStrategy): INodeContent {
+1032 |     return {
+1033 |       content: strategy.renderDirectory(this)
+1034 |     };
+1035 |   }
+1036 | }
+1037 | 
+1038 | ```
+1039 | #### File: NodeFile.ts
+1040 | 
+1041 | - **Path:** /root/git/codewrangler/src/core/entities/NodeFile.ts
+1042 | - **Extension:** ts
+1043 | - **Size:** 2001 bytes
+1044 | - **Depth:** 3
+1045 | - **Lines:** 74
+1046 | 
+1047 | ```ts
+1048 | import { INodeContent, NodeBase } from "./NodeBase";
+1049 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+1050 | import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
+1051 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
+1052 | import { IPropsFileNode } from "../../types/type";
+1053 | 
+1054 | export abstract class NodeFile extends NodeBase {
+1055 |   public readonly type = "file";
+1056 |   private _extension: string = "";
+1057 |   private _content: string | null = null;
+1058 | 
+1059 |   public constructor(name: string, pathName: string) {
+1060 |     super(name, pathName);
+1061 |     this.initFile(name);
+1062 |   }
+1063 | 
+1064 |   // getters and setters
+1065 |   // extension
+1066 |   public get extension(): string {
+1067 |     return this._extension;
+1068 |   }
+1069 |   protected set extension(extension: string) {
+1070 |     this._extension = extension;
+1071 |   }
+1072 |   // content
+1073 |   public get content(): string | null {
+1074 |     return this._content;
+1075 |   }
+1076 |   protected set content(content: string | null) {
+1077 |     this._content = content;
+1078 |   }
+1079 |   // secondary props
+1080 |   public override get props(): IPropsFileNode {
+1081 |     return {
+1082 |       ...super.props,
+1083 |       extension: this.extension
+1084 |     };
+1085 |   }
+1086 | 
+1087 |   // bundle
+1088 |   public async bundle(deep: number = 0): Promise<void> {
+1089 |     // set the deep of the file
+1090 |     this.deep = deep;
+1091 |     // set the size of the file
+1092 |     this.size = await documentFactory.size(this.path);
+1093 |     // set the content of the file
+1094 |     this.content = await documentFactory.readFile(this.path);
+1095 |     // set the stats of the file
+1096 |     this.stats = await fileStatsService(this.path);
+1097 |   }
+1098 | 
+1099 |   // render
+1100 |   public abstract override render(strategy: IRenderStrategy): INodeContent;
+1101 | 
+1102 |   private initFile(name: string): void {
+1103 |     this.extension = documentFactory.extension(name);
+1104 |     this._content = null;
+1105 |   }
+1106 | }
+1107 | 
+1108 | export class RenderableFile extends NodeFile {
+1109 |   // render
+1110 |   public override render(strategy: IRenderStrategy): INodeContent {
+1111 |     return {
+1112 |       content: strategy.renderFile(this)
+1113 |     };
+1114 |   }
+1115 | 
+1116 |   // dispose
+1117 |   public override dispose(): void {
+1118 |     super.dispose();
+1119 |   }
+1120 | }
+1121 | 
+1122 | ```
+1123 | ### Directory: __tests__
+1124 | 
+1125 | - **Path:** /root/git/codewrangler/src/core/entities/__tests__
+1126 | - **Size:** 0 bytes
+1127 | - **Files:** 0
+1128 | - **Total Files (including subdirectories):** 0
+1129 | - **Depth:** 3
+1130 | 
+1131 | #### Contents:
 1132 | 
-1133 | #### Contents:
+1133 | ### Directory: errors
 1134 | 
-1135 | ### Directory: errors
-1136 | 
-1137 | - **Path:** /root/git/codewrangler/src/core/errors
-1138 | - **Size:** 844 bytes
-1139 | - **Files:** 4
-1140 | - **Total Files (including subdirectories):** 4
-1141 | - **Depth:** 2
+1135 | - **Path:** /root/git/codewrangler/src/core/errors
+1136 | - **Size:** 844 bytes
+1137 | - **Files:** 4
+1138 | - **Total Files (including subdirectories):** 4
+1139 | - **Depth:** 2
+1140 | 
+1141 | #### Contents:
 1142 | 
-1143 | #### Contents:
+1143 | #### File: DirectoryNotFoundError.ts
 1144 | 
-1145 | #### File: DirectoryNotFoundError.ts
-1146 | 
-1147 | - **Path:** /root/git/codewrangler/src/core/errors/DirectoryNotFoundError.ts
-1148 | - **Extension:** ts
-1149 | - **Size:** 235 bytes
-1150 | - **Depth:** 3
-1151 | - **Lines:** 9
-1152 | 
-1153 | ```ts
-1154 | import { DocumentError } from "./DocumentError";
-1155 | 
-1156 | export class DirectoryNotFoundError extends DocumentError {
-1157 |   public constructor(path: string) {
-1158 |     super("Directory not found", path);
-1159 |     this.name = "DirectoryNotFoundError";
-1160 |   }
-1161 | }
-1162 | 
-1163 | ```
-1164 | #### File: DocumentError.ts
-1165 | 
-1166 | - **Path:** /root/git/codewrangler/src/core/errors/DocumentError.ts
-1167 | - **Extension:** ts
-1168 | - **Size:** 216 bytes
-1169 | - **Depth:** 3
-1170 | - **Lines:** 10
-1171 | 
-1172 | ```ts
-1173 | export class DocumentError extends Error {
-1174 |   public constructor(
-1175 |     message: string,
-1176 |     public readonly path: string
-1177 |   ) {
-1178 |     super(`Document error at ${path}: ${message}`);
-1179 |     this.name = "DocumentError";
-1180 |   }
-1181 | }
-1182 | 
-1183 | ```
-1184 | #### File: FileNotFoundError.ts
-1185 | 
-1186 | - **Path:** /root/git/codewrangler/src/core/errors/FileNotFoundError.ts
-1187 | - **Extension:** ts
-1188 | - **Size:** 220 bytes
-1189 | - **Depth:** 3
-1190 | - **Lines:** 9
-1191 | 
-1192 | ```ts
-1193 | import { DocumentError } from "./DocumentError";
-1194 | 
-1195 | export class FileNotFoundError extends DocumentError {
-1196 |   public constructor(path: string) {
-1197 |     super("File not found", path);
-1198 |     this.name = "FileNotFoundError";
-1199 |   }
-1200 | }
-1201 | 
-1202 | ```
-1203 | ### Directory: __tests__
-1204 | 
-1205 | - **Path:** /root/git/codewrangler/src/core/errors/__tests__
-1206 | - **Size:** 0 bytes
-1207 | - **Files:** 0
-1208 | - **Total Files (including subdirectories):** 0
-1209 | - **Depth:** 3
+1145 | - **Path:** /root/git/codewrangler/src/core/errors/DirectoryNotFoundError.ts
+1146 | - **Extension:** ts
+1147 | - **Size:** 235 bytes
+1148 | - **Depth:** 3
+1149 | - **Lines:** 9
+1150 | 
+1151 | ```ts
+1152 | import { DocumentError } from "./DocumentError";
+1153 | 
+1154 | export class DirectoryNotFoundError extends DocumentError {
+1155 |   public constructor(path: string) {
+1156 |     super("Directory not found", path);
+1157 |     this.name = "DirectoryNotFoundError";
+1158 |   }
+1159 | }
+1160 | 
+1161 | ```
+1162 | #### File: DocumentError.ts
+1163 | 
+1164 | - **Path:** /root/git/codewrangler/src/core/errors/DocumentError.ts
+1165 | - **Extension:** ts
+1166 | - **Size:** 216 bytes
+1167 | - **Depth:** 3
+1168 | - **Lines:** 10
+1169 | 
+1170 | ```ts
+1171 | export class DocumentError extends Error {
+1172 |   public constructor(
+1173 |     message: string,
+1174 |     public readonly path: string
+1175 |   ) {
+1176 |     super(`Document error at ${path}: ${message}`);
+1177 |     this.name = "DocumentError";
+1178 |   }
+1179 | }
+1180 | 
+1181 | ```
+1182 | #### File: FileNotFoundError.ts
+1183 | 
+1184 | - **Path:** /root/git/codewrangler/src/core/errors/FileNotFoundError.ts
+1185 | - **Extension:** ts
+1186 | - **Size:** 220 bytes
+1187 | - **Depth:** 3
+1188 | - **Lines:** 9
+1189 | 
+1190 | ```ts
+1191 | import { DocumentError } from "./DocumentError";
+1192 | 
+1193 | export class FileNotFoundError extends DocumentError {
+1194 |   public constructor(path: string) {
+1195 |     super("File not found", path);
+1196 |     this.name = "FileNotFoundError";
+1197 |   }
+1198 | }
+1199 | 
+1200 | ```
+1201 | ### Directory: __tests__
+1202 | 
+1203 | - **Path:** /root/git/codewrangler/src/core/errors/__tests__
+1204 | - **Size:** 0 bytes
+1205 | - **Files:** 0
+1206 | - **Total Files (including subdirectories):** 0
+1207 | - **Depth:** 3
+1208 | 
+1209 | #### Contents:
 1210 | 
-1211 | #### Contents:
+1211 | #### File: index.ts
 1212 | 
-1213 | #### File: index.ts
-1214 | 
-1215 | - **Path:** /root/git/codewrangler/src/core/errors/index.ts
-1216 | - **Extension:** ts
-1217 | - **Size:** 173 bytes
-1218 | - **Depth:** 3
-1219 | - **Lines:** 4
-1220 | 
-1221 | ```ts
-1222 | export { DocumentError } from "./DocumentError";
-1223 | export { DirectoryNotFoundError } from "./DirectoryNotFoundError";
-1224 | export { FileNotFoundError } from "./FileNotFoundError";
-1225 | 
-1226 | ```
-1227 | ### Directory: infrastructure
-1228 | 
-1229 | - **Path:** /root/git/codewrangler/src/infrastructure
-1230 | - **Size:** 19243 bytes
-1231 | - **Files:** 0
-1232 | - **Total Files (including subdirectories):** 5
-1233 | - **Depth:** 1
+1213 | - **Path:** /root/git/codewrangler/src/core/errors/index.ts
+1214 | - **Extension:** ts
+1215 | - **Size:** 173 bytes
+1216 | - **Depth:** 3
+1217 | - **Lines:** 4
+1218 | 
+1219 | ```ts
+1220 | export { DocumentError } from "./DocumentError";
+1221 | export { DirectoryNotFoundError } from "./DirectoryNotFoundError";
+1222 | export { FileNotFoundError } from "./FileNotFoundError";
+1223 | 
+1224 | ```
+1225 | ### Directory: infrastructure
+1226 | 
+1227 | - **Path:** /root/git/codewrangler/src/infrastructure
+1228 | - **Size:** 19243 bytes
+1229 | - **Files:** 0
+1230 | - **Total Files (including subdirectories):** 5
+1231 | - **Depth:** 1
+1232 | 
+1233 | #### Contents:
 1234 | 
-1235 | #### Contents:
+1235 | ### Directory: filesystem
 1236 | 
-1237 | ### Directory: filesystem
-1238 | 
-1239 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem
-1240 | - **Size:** 13662 bytes
-1241 | - **Files:** 3
-1242 | - **Total Files (including subdirectories):** 3
-1243 | - **Depth:** 2
+1237 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem
+1238 | - **Size:** 13662 bytes
+1239 | - **Files:** 3
+1240 | - **Total Files (including subdirectories):** 3
+1241 | - **Depth:** 2
+1242 | 
+1243 | #### Contents:
 1244 | 
-1245 | #### Contents:
+1245 | #### File: DocumentFactory.ts
 1246 | 
-1247 | #### File: DocumentFactory.ts
-1248 | 
-1249 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/DocumentFactory.ts
-1250 | - **Extension:** ts
-1251 | - **Size:** 10107 bytes
-1252 | - **Depth:** 3
-1253 | - **Lines:** 350
-1254 | 
-1255 | ```ts
-1256 | import { ObjectEncodingOptions } from "fs";
-1257 | import * as fsSync from "fs";
-1258 | import * as fs from "fs/promises";
-1259 | import * as path from "path";
-1260 | 
-1261 | import { fileStatsService } from "./FileStats";
-1262 | import { DocumentError, FileNotFoundError } from "../../core/errors";
-1263 | import {
-1264 |   FILE_TYPE,
-1265 |   FileType,
-1266 |   IDirectoryOptions,
-1267 |   IReadOptions,
-1268 |   IWriteOptions
-1269 | } from "../../types/type";
-1270 | 
-1271 | export const documentFactory = {
-1272 |   /**
-1273 |    * Gets the type of a file system entry
-1274 |    * @param filePath - The path to check
-1275 |    * @returns The type of the file system entry (File or Directory)
-1276 |    * @throws {FileNotFoundError} If the path doesn't exist
-1277 |    * @throws {DocumentError} For other file system errors
-1278 |    */
-1279 |   async type(filePath: string): Promise<FileType> {
-1280 |     try {
-1281 |       const stats = await fs.stat(filePath);
-1282 |       return stats.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File;
-1283 |     } catch (error) {
-1284 |       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-1285 |         throw new FileNotFoundError(filePath);
-1286 |       }
-1287 |       throw new DocumentError(String(error), filePath);
-1288 |     }
-1289 |   },
-1290 | 
-1291 |   /**
-1292 |    * Gets file size in bytes
-1293 |    * @param filePath - The path to the file
-1294 |    * @returns The size of the file in bytes
-1295 |    * @throws {FileNotFoundError} If the file doesn't exist
-1296 |    * @throws {DocumentError} For other file system errors or if path is a directory
-1297 |    */
-1298 |   async size(filePath: string): Promise<number> {
-1299 |     const isDirectory = (await this.type(filePath)) === FILE_TYPE.Directory;
-1300 |     if (isDirectory) {
-1301 |       throw new DocumentError("Path is a directory", filePath);
-1302 |     }
-1303 |     const stats = await fileStatsService(filePath);
-1304 |     return stats.size;
-1305 |   },
-1306 | 
-1307 |   /**
-1308 |    * Resolves a path to an absolute path
-1309 |    * @param filePath - The path to resolve
-1310 |    * @returns The absolute path
-1311 |    */
-1312 |   resolve(filePath: string): string {
-1313 |     return path.resolve(filePath);
-1314 |   },
-1315 | 
-1316 |   /**
-1317 |    * Checks various access flags for a path
-1318 |    * @private
-1319 |    * @param filePath - The path to check access for
-1320 |    * @returns An object containing readable, writable, and executable permission flags
-1321 |    */
-1322 |   async checkAccess(filePath: string): Promise<{
-1323 |     readable: boolean;
-1324 |     writable: boolean;
-1325 |     executable: boolean;
-1326 |   }> {
-1327 |     const check = async (mode: number): Promise<boolean> => {
-1328 |       try {
-1329 |         await fs.access(filePath, mode);
-1330 |         return true;
-1331 |       } catch {
-1332 |         return false;
-1333 |       }
-1334 |     };
-1335 | 
-1336 |     return {
-1337 |       readable: await check(fs.constants.R_OK),
-1338 |       writable: await check(fs.constants.W_OK),
-1339 |       executable: await check(fs.constants.X_OK)
-1340 |     };
-1341 |   },
-1342 | 
-1343 |   /**
-1344 |    * Reads the entire contents of a file synchronously
-1345 |    * @param filePath - The path to the file
-1346 |    * @param options - The options for the read operation
-1347 |    * @returns The contents of the file as a string
-1348 |    * @throws {Error} If the file cannot be read
-1349 |    */
-1350 |   readFileSync(filePath: string, options: IReadOptions = {}): string {
-1351 |     return fsSync.readFileSync(filePath, {
-1352 |       encoding: options.encoding ?? "utf-8",
-1353 |       flag: options.flag
-1354 |     });
-1355 |   },
-1356 | 
-1357 |   /**
-1358 |    * Reads the entire contents of a file
-1359 |    * @param filePath - The path to the file
-1360 |    * @param options - The options for the read operation
-1361 |    * @returns The contents of the file as a string
-1362 |    * @throws {FileNotFoundError} If the file doesn't exist
-1363 |    * @throws {DocumentError} For other file system errors
-1364 |    */
-1365 |   async readFile(
-1366 |     filePath: string,
-1367 |     options: IReadOptions = {}
-1368 |   ): Promise<string> {
-1369 |     try {
-1370 |       return await fs.readFile(filePath, {
-1371 |         encoding: options.encoding ?? "utf-8",
-1372 |         flag: options.flag
-1373 |       });
-1374 |     } catch (error) {
-1375 |       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-1376 |         throw new FileNotFoundError(filePath);
-1377 |       }
-1378 |       throw new DocumentError(String(error), filePath);
-1379 |     }
-1380 |   },
-1381 | 
-1382 |   /**
-1383 |    * Writes data to a file, replacing the file if it already exists
-1384 |    * @param filePath - The path to the file
-1385 |    * @param data - The data to write
-1386 |    * @param options - The options for the write operation
-1387 |    * @throws {DocumentError} For file system errors
-1388 |    */
-1389 |   async writeFile(
-1390 |     filePath: string,
-1391 |     data: string | Buffer,
-1392 |     options: IWriteOptions = {}
-1393 |   ): Promise<void> {
-1394 |     try {
-1395 |       // Ensure parent directory exists
-1396 |       const parentDir = path.dirname(filePath);
-1397 |       await fs.mkdir(parentDir, { recursive: true });
-1398 | 
-1399 |       // Write the file
-1400 |       await fs.writeFile(filePath, data, {
-1401 |         encoding: options.encoding ?? "utf-8",
-1402 |         mode: options.mode,
-1403 |         flag: options.flag
-1404 |       });
-1405 |     } catch (error) {
-1406 |       if (error instanceof DocumentError) {
-1407 |         throw error;
-1408 |       }
-1409 |       throw new DocumentError(String(error), filePath);
-1410 |     }
-1411 |   },
-1412 | 
-1413 |   /**
-1414 |    * Appends data to a file
-1415 |    * @param filePath - The path to the file
-1416 |    * @param content - The content to append
-1417 |    * @param options - The options for the write operation
-1418 |    * @throws {DocumentError} For file system errors
-1419 |    */
-1420 |   async appendFile(
-1421 |     filePath: string,
-1422 |     content: string,
-1423 |     options: IWriteOptions = {}
-1424 |   ): Promise<void> {
-1425 |     try {
-1426 |       await fs.appendFile(filePath, content, {
-1427 |         encoding: options.encoding ?? "utf-8",
-1428 |         mode: options.mode,
-1429 |         flag: options.flag
-1430 |       });
-1431 |     } catch (error) {
-1432 |       throw new DocumentError(String(error), filePath);
-1433 |     }
-1434 |   },
-1435 | 
-1436 |   /**
-1437 |    * Reads the contents of a directory
-1438 |    * @param dirPath - The path to the directory
-1439 |    * @param options - The options for the read operation
-1440 |    * @returns An array of file and directory names in the directory
-1441 |    * @throws {Error} If the directory cannot be read
-1442 |    */
-1443 |   async readDir(
-1444 |     dirPath: string,
-1445 |     options?: { withFileTypes?: boolean }
-1446 |   ): Promise<string[]> {
-1447 |     return await fs.readdir(dirPath, options as ObjectEncodingOptions);
-1448 |   },
-1449 | 
-1450 |   /**
-1451 |    * Creates a directory if it doesn't exist
-1452 |    * @param dirPath - The path where to create the directory
-1453 |    * @param recursive - Whether to create parent directories if they don't exist
-1454 |    * @throws {DocumentError} For file system errors
-1455 |    */
-1456 |   async createDir(dirPath: string, recursive = true): Promise<void> {
-1457 |     await fs.mkdir(dirPath, { recursive });
-1458 |   },
-1459 | 
-1460 |   /**
-1461 |    * Gets the base name of a file
-1462 |    * @param filePath - The path to the file
-1463 |    * @returns The base name of the file (last portion of the path)
-1464 |    */
-1465 |   baseName(filePath: string): string {
-1466 |     return path.basename(filePath);
-1467 |   },
-1468 | 
-1469 |   /**
-1470 |    * Gets the extension of a file
-1471 |    * @param filePath - The path to the file
-1472 |    * @returns The extension of the file including the dot (e.g., '.txt')
-1473 |    */
-1474 |   extension(filePath: string): string {
-1475 |     return path.extname(filePath);
-1476 |   },
-1477 | 
-1478 |   /**
-1479 |    * Checks if a file or directory exists
-1480 |    * @param filePath - The path to check
-1481 |    * @returns True if the file or directory exists, false otherwise
-1482 |    */
-1483 |   exists(filePath: string): boolean {
-1484 |     try {
-1485 |       fsSync.accessSync(filePath);
-1486 |       return true;
-1487 |     } catch {
-1488 |       return false;
-1489 |     }
-1490 |   },
-1491 | 
-1492 |   /**
-1493 |    * Checks if a path is absolute
-1494 |    * @param filePath - The path to check
-1495 |    * @returns True if the path is absolute, false otherwise
-1496 |    */
-1497 |   isAbsolute(filePath: string): boolean {
-1498 |     return path.isAbsolute(filePath);
-1499 |   },
-1500 | 
-1501 |   /**
-1502 |    * Gets directory contents with type information
-1503 |    * @param dirPath - The path to the directory
-1504 |    * @returns An array of objects containing name and type information for each entry
-1505 |    * @throws {DocumentError} If path is not a directory or other errors occur
-1506 |    */
-1507 |   async readDirectory(
-1508 |     dirPath: string
-1509 |   ): Promise<Array<{ name: string; type: FileType }>> {
-1510 |     try {
-1511 |       const entries = await fs.readdir(dirPath, { withFileTypes: true });
-1512 |       return entries.map(entry => ({
-1513 |         name: entry.name,
-1514 |         type: entry.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File
-1515 |       }));
-1516 |     } catch (error) {
-1517 |       throw new DocumentError(String(error), dirPath);
-1518 |     }
-1519 |   },
-1520 | 
-1521 |   /**
-1522 |    * Creates a directory if it doesn't exist
-1523 |    * @param dirPath - The path where to create the directory
-1524 |    * @param options - Options for directory creation including recursive and mode
-1525 |    * @throws {DocumentError} For file system errors
-1526 |    */
-1527 |   async ensureDirectory(
-1528 |     dirPath: string,
-1529 |     options: IDirectoryOptions = {}
-1530 |   ): Promise<void> {
-1531 |     try {
-1532 |       if (!this.exists(dirPath)) {
-1533 |         await fs.mkdir(dirPath, {
-1534 |           recursive: options.recursive ?? true,
-1535 |           mode: options.mode
-1536 |         });
-1537 |       }
-1538 |     } catch (error) {
-1539 |       throw new DocumentError(String(error), dirPath);
-1540 |     }
-1541 |   },
-1542 | 
-1543 |   /**
-1544 |    * Removes a file or directory
-1545 |    * @param filePath - The path to remove
-1546 |    * @throws {DocumentError} For file system errors
-1547 |    */
-1548 |   async remove(filePath: string): Promise<void> {
-1549 |     const stats = await fs.stat(filePath);
-1550 |     if (stats.isDirectory()) {
-1551 |       await fs.rm(filePath, { recursive: true, force: true });
-1552 |     } else {
-1553 |       await fs.unlink(filePath);
-1554 |     }
-1555 |   },
-1556 | 
-1557 |   /**
-1558 |    * Copies a file or directory
-1559 |    * @param src - The source path
-1560 |    * @param dest - The destination path
-1561 |    * @throws {DocumentError} For file system errors
-1562 |    */
-1563 |   async copy(src: string, dest: string): Promise<void> {
-1564 |     const stats = await fs.stat(src);
-1565 | 
-1566 |     if (stats.isDirectory()) {
-1567 |       await this.copyDir(src, dest);
-1568 |     } else {
-1569 |       await fs.copyFile(src, dest);
-1570 |     }
-1571 |   },
-1572 | 
-1573 |   /**
-1574 |    * Copies a directory recursively
-1575 |    * @private
-1576 |    * @param src - The source directory path
-1577 |    * @param dest - The destination directory path
-1578 |    * @throws {DocumentError} For file system errors
-1579 |    */
-1580 |   async copyDir(src: string, dest: string): Promise<void> {
-1581 |     await this.ensureDirectory(dest);
-1582 |     const entries = await fs.readdir(src, { withFileTypes: true });
-1583 | 
-1584 |     for (const entry of entries) {
-1585 |       const srcPath = path.join(src, entry.name);
-1586 |       const destPath = path.join(dest, entry.name);
-1587 | 
-1588 |       if (entry.isDirectory()) {
-1589 |         await this.copyDir(srcPath, destPath);
-1590 |       } else {
-1591 |         await fs.copyFile(srcPath, destPath);
-1592 |       }
-1593 |     }
-1594 |   },
-1595 | 
-1596 |   /**
-1597 |    * Joins an array of paths into a single path
-1598 |    * @param paths - The paths to join
-1599 |    * @returns The joined path
-1600 |    */
-1601 |   join(...paths: string[]): string {
-1602 |     return path.join(...paths);
-1603 |   }
-1604 | };
-1605 | 
-1606 | ```
-1607 | #### File: FileStats.ts
-1608 | 
-1609 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/FileStats.ts
-1610 | - **Extension:** ts
-1611 | - **Size:** 1987 bytes
-1612 | - **Depth:** 3
-1613 | - **Lines:** 72
-1614 | 
-1615 | ```ts
-1616 | import { Stats } from "fs";
-1617 | import fs from "fs/promises";
-1618 | 
-1619 | import { DocumentError } from "../../core/errors/DocumentError";
-1620 | import { FileNotFoundError } from "../../core/errors/FileNotFoundError";
-1621 | import { IAccessFlags, IFileStats } from "../../types/type";
-1622 | 
-1623 | class FileStatsService {
-1624 |   public async getStats(filePath: string): Promise<IFileStats> {
-1625 |     const stats = await this.getBasicStats(filePath);
-1626 |     const accessFlags = await this.checkAccess(filePath);
-1627 |     return this.mapStatsToFileInfo(stats, accessFlags);
-1628 |   }
-1629 |   private async getBasicStats(filePath: string): Promise<Stats> {
-1630 |     try {
-1631 |       return await fs.stat(filePath);
-1632 |     } catch (error) {
-1633 |       this.handleStatError(error as NodeJS.ErrnoException, filePath);
-1634 |       throw error; // TypeScript requires this
-1635 |     }
-1636 |   }
-1637 | 
-1638 |   private handleStatError(
-1639 |     error: NodeJS.ErrnoException,
-1640 |     filePath: string
-1641 |   ): never {
-1642 |     if (error.code === "ENOENT") {
-1643 |       throw new FileNotFoundError(filePath);
-1644 |     }
-1645 |     throw new DocumentError(String(error), filePath);
-1646 |   }
-1647 | 
-1648 |   private async checkAccess(filePath: string): Promise<IAccessFlags> {
-1649 |     const check = async (mode: number): Promise<boolean> => {
-1650 |       try {
-1651 |         await fs.access(filePath, mode);
-1652 |         return true;
-1653 |       } catch {
-1654 |         return false;
-1655 |       }
-1656 |     };
-1657 | 
-1658 |     return {
-1659 |       readable: await check(fs.constants.R_OK),
-1660 |       writable: await check(fs.constants.W_OK),
-1661 |       executable: await check(fs.constants.X_OK)
-1662 |     };
-1663 |   }
-1664 | 
-1665 |   private mapStatsToFileInfo(
-1666 |     stats: Stats,
-1667 |     accessFlags: IAccessFlags
-1668 |   ): IFileStats {
-1669 |     return {
-1670 |       size: stats.size,
-1671 |       created: stats.birthtime,
-1672 |       modified: stats.mtime,
-1673 |       accessed: stats.atime,
-1674 |       isDirectory: stats.isDirectory(),
-1675 |       isFile: stats.isFile(),
-1676 |       permissions: accessFlags
-1677 |     };
-1678 |   }
-1679 | }
-1680 | 
-1681 | export const fileStatsService = async (
-1682 |   filePath: string
-1683 | ): Promise<IFileStats> => {
-1684 |   const fileStatsService = new FileStatsService();
-1685 |   return await fileStatsService.getStats(filePath);
-1686 | };
-1687 | 
-1688 | ```
-1689 | #### File: JsonReader.ts
-1690 | 
-1691 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/JsonReader.ts
-1692 | - **Extension:** ts
-1693 | - **Size:** 1568 bytes
-1694 | - **Depth:** 3
-1695 | - **Lines:** 52
-1696 | 
-1697 | ```ts
-1698 | import fs from "fs/promises";
-1699 | 
-1700 | import { documentFactory } from "./DocumentFactory";
-1701 | import { DocumentError } from "../../core/errors/DocumentError";
-1702 | import { FileNotFoundError } from "../../core/errors/FileNotFoundError";
-1703 | 
-1704 | export class JsonReader {
-1705 |   public async readJsonSync(filePath: string): Promise<object> {
-1706 |     try {
-1707 |       const absolutePath = this.validatePath(filePath);
-1708 |       const content = await this.readFileContent(absolutePath, filePath);
-1709 |       return this.parseJsonContent(content, filePath);
-1710 |     } catch (error) {
-1711 |       if (error instanceof DocumentError) {
-1712 |         throw error;
-1713 |       }
-1714 |       throw new DocumentError(String(error), filePath);
-1715 |     }
-1716 |   }
-1717 |   private validatePath(filePath: string): string {
-1718 |     const absolutePath = documentFactory.resolve(filePath);
-1719 |     if (!documentFactory.exists(absolutePath)) {
-1720 |       throw new FileNotFoundError(filePath);
-1721 |     }
-1722 |     return absolutePath;
-1723 |   }
-1724 | 
-1725 |   private async readFileContent(
-1726 |     absolutePath: string,
-1727 |     filePath: string
-1728 |   ): Promise<string> {
-1729 |     const content = await fs.readFile(absolutePath, "utf-8");
-1730 |     if (!content) {
-1731 |       throw new DocumentError(`File is empty`, filePath);
-1732 |     }
-1733 |     return content;
-1734 |   }
-1735 | 
-1736 |   private parseJsonContent(content: string, filePath: string): object {
-1737 |     try {
-1738 |       return JSON.parse(content);
-1739 |     } catch (error) {
-1740 |       throw new DocumentError(`Invalid JSON: ${String(error)}`, filePath);
-1741 |     }
-1742 |   }
-1743 | }
-1744 | 
-1745 | export const jsonReader = async (path: string): Promise<object> => {
-1746 |   const jsonReader = new JsonReader();
-1747 |   return await jsonReader.readJsonSync(path);
-1748 | };
-1749 | 
-1750 | ```
-1751 | ### Directory: __tests__
-1752 | 
-1753 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/__tests__
-1754 | - **Size:** 0 bytes
-1755 | - **Files:** 0
-1756 | - **Total Files (including subdirectories):** 0
-1757 | - **Depth:** 3
+1247 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/DocumentFactory.ts
+1248 | - **Extension:** ts
+1249 | - **Size:** 10107 bytes
+1250 | - **Depth:** 3
+1251 | - **Lines:** 350
+1252 | 
+1253 | ```ts
+1254 | import { ObjectEncodingOptions } from "fs";
+1255 | import * as fsSync from "fs";
+1256 | import * as fs from "fs/promises";
+1257 | import * as path from "path";
+1258 | 
+1259 | import { fileStatsService } from "./FileStats";
+1260 | import { DocumentError, FileNotFoundError } from "../../core/errors";
+1261 | import {
+1262 |   FILE_TYPE,
+1263 |   FileType,
+1264 |   IDirectoryOptions,
+1265 |   IReadOptions,
+1266 |   IWriteOptions
+1267 | } from "../../types/type";
+1268 | 
+1269 | export const documentFactory = {
+1270 |   /**
+1271 |    * Gets the type of a file system entry
+1272 |    * @param filePath - The path to check
+1273 |    * @returns The type of the file system entry (File or Directory)
+1274 |    * @throws {FileNotFoundError} If the path doesn't exist
+1275 |    * @throws {DocumentError} For other file system errors
+1276 |    */
+1277 |   async type(filePath: string): Promise<FileType> {
+1278 |     try {
+1279 |       const stats = await fs.stat(filePath);
+1280 |       return stats.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File;
+1281 |     } catch (error) {
+1282 |       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+1283 |         throw new FileNotFoundError(filePath);
+1284 |       }
+1285 |       throw new DocumentError(String(error), filePath);
+1286 |     }
+1287 |   },
+1288 | 
+1289 |   /**
+1290 |    * Gets file size in bytes
+1291 |    * @param filePath - The path to the file
+1292 |    * @returns The size of the file in bytes
+1293 |    * @throws {FileNotFoundError} If the file doesn't exist
+1294 |    * @throws {DocumentError} For other file system errors or if path is a directory
+1295 |    */
+1296 |   async size(filePath: string): Promise<number> {
+1297 |     const isDirectory = (await this.type(filePath)) === FILE_TYPE.Directory;
+1298 |     if (isDirectory) {
+1299 |       throw new DocumentError("Path is a directory", filePath);
+1300 |     }
+1301 |     const stats = await fileStatsService(filePath);
+1302 |     return stats.size;
+1303 |   },
+1304 | 
+1305 |   /**
+1306 |    * Resolves a path to an absolute path
+1307 |    * @param filePath - The path to resolve
+1308 |    * @returns The absolute path
+1309 |    */
+1310 |   resolve(filePath: string): string {
+1311 |     return path.resolve(filePath);
+1312 |   },
+1313 | 
+1314 |   /**
+1315 |    * Checks various access flags for a path
+1316 |    * @private
+1317 |    * @param filePath - The path to check access for
+1318 |    * @returns An object containing readable, writable, and executable permission flags
+1319 |    */
+1320 |   async checkAccess(filePath: string): Promise<{
+1321 |     readable: boolean;
+1322 |     writable: boolean;
+1323 |     executable: boolean;
+1324 |   }> {
+1325 |     const check = async (mode: number): Promise<boolean> => {
+1326 |       try {
+1327 |         await fs.access(filePath, mode);
+1328 |         return true;
+1329 |       } catch {
+1330 |         return false;
+1331 |       }
+1332 |     };
+1333 | 
+1334 |     return {
+1335 |       readable: await check(fs.constants.R_OK),
+1336 |       writable: await check(fs.constants.W_OK),
+1337 |       executable: await check(fs.constants.X_OK)
+1338 |     };
+1339 |   },
+1340 | 
+1341 |   /**
+1342 |    * Reads the entire contents of a file synchronously
+1343 |    * @param filePath - The path to the file
+1344 |    * @param options - The options for the read operation
+1345 |    * @returns The contents of the file as a string
+1346 |    * @throws {Error} If the file cannot be read
+1347 |    */
+1348 |   readFileSync(filePath: string, options: IReadOptions = {}): string {
+1349 |     return fsSync.readFileSync(filePath, {
+1350 |       encoding: options.encoding ?? "utf-8",
+1351 |       flag: options.flag
+1352 |     });
+1353 |   },
+1354 | 
+1355 |   /**
+1356 |    * Reads the entire contents of a file
+1357 |    * @param filePath - The path to the file
+1358 |    * @param options - The options for the read operation
+1359 |    * @returns The contents of the file as a string
+1360 |    * @throws {FileNotFoundError} If the file doesn't exist
+1361 |    * @throws {DocumentError} For other file system errors
+1362 |    */
+1363 |   async readFile(
+1364 |     filePath: string,
+1365 |     options: IReadOptions = {}
+1366 |   ): Promise<string> {
+1367 |     try {
+1368 |       return await fs.readFile(filePath, {
+1369 |         encoding: options.encoding ?? "utf-8",
+1370 |         flag: options.flag
+1371 |       });
+1372 |     } catch (error) {
+1373 |       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+1374 |         throw new FileNotFoundError(filePath);
+1375 |       }
+1376 |       throw new DocumentError(String(error), filePath);
+1377 |     }
+1378 |   },
+1379 | 
+1380 |   /**
+1381 |    * Writes data to a file, replacing the file if it already exists
+1382 |    * @param filePath - The path to the file
+1383 |    * @param data - The data to write
+1384 |    * @param options - The options for the write operation
+1385 |    * @throws {DocumentError} For file system errors
+1386 |    */
+1387 |   async writeFile(
+1388 |     filePath: string,
+1389 |     data: string | Buffer,
+1390 |     options: IWriteOptions = {}
+1391 |   ): Promise<void> {
+1392 |     try {
+1393 |       // Ensure parent directory exists
+1394 |       const parentDir = path.dirname(filePath);
+1395 |       await fs.mkdir(parentDir, { recursive: true });
+1396 | 
+1397 |       // Write the file
+1398 |       await fs.writeFile(filePath, data, {
+1399 |         encoding: options.encoding ?? "utf-8",
+1400 |         mode: options.mode,
+1401 |         flag: options.flag
+1402 |       });
+1403 |     } catch (error) {
+1404 |       if (error instanceof DocumentError) {
+1405 |         throw error;
+1406 |       }
+1407 |       throw new DocumentError(String(error), filePath);
+1408 |     }
+1409 |   },
+1410 | 
+1411 |   /**
+1412 |    * Appends data to a file
+1413 |    * @param filePath - The path to the file
+1414 |    * @param content - The content to append
+1415 |    * @param options - The options for the write operation
+1416 |    * @throws {DocumentError} For file system errors
+1417 |    */
+1418 |   async appendFile(
+1419 |     filePath: string,
+1420 |     content: string,
+1421 |     options: IWriteOptions = {}
+1422 |   ): Promise<void> {
+1423 |     try {
+1424 |       await fs.appendFile(filePath, content, {
+1425 |         encoding: options.encoding ?? "utf-8",
+1426 |         mode: options.mode,
+1427 |         flag: options.flag
+1428 |       });
+1429 |     } catch (error) {
+1430 |       throw new DocumentError(String(error), filePath);
+1431 |     }
+1432 |   },
+1433 | 
+1434 |   /**
+1435 |    * Reads the contents of a directory
+1436 |    * @param dirPath - The path to the directory
+1437 |    * @param options - The options for the read operation
+1438 |    * @returns An array of file and directory names in the directory
+1439 |    * @throws {Error} If the directory cannot be read
+1440 |    */
+1441 |   async readDir(
+1442 |     dirPath: string,
+1443 |     options?: { withFileTypes?: boolean }
+1444 |   ): Promise<string[]> {
+1445 |     return await fs.readdir(dirPath, options as ObjectEncodingOptions);
+1446 |   },
+1447 | 
+1448 |   /**
+1449 |    * Creates a directory if it doesn't exist
+1450 |    * @param dirPath - The path where to create the directory
+1451 |    * @param recursive - Whether to create parent directories if they don't exist
+1452 |    * @throws {DocumentError} For file system errors
+1453 |    */
+1454 |   async createDir(dirPath: string, recursive = true): Promise<void> {
+1455 |     await fs.mkdir(dirPath, { recursive });
+1456 |   },
+1457 | 
+1458 |   /**
+1459 |    * Gets the base name of a file
+1460 |    * @param filePath - The path to the file
+1461 |    * @returns The base name of the file (last portion of the path)
+1462 |    */
+1463 |   baseName(filePath: string): string {
+1464 |     return path.basename(filePath);
+1465 |   },
+1466 | 
+1467 |   /**
+1468 |    * Gets the extension of a file
+1469 |    * @param filePath - The path to the file
+1470 |    * @returns The extension of the file including the dot (e.g., '.txt')
+1471 |    */
+1472 |   extension(filePath: string): string {
+1473 |     return path.extname(filePath);
+1474 |   },
+1475 | 
+1476 |   /**
+1477 |    * Checks if a file or directory exists
+1478 |    * @param filePath - The path to check
+1479 |    * @returns True if the file or directory exists, false otherwise
+1480 |    */
+1481 |   exists(filePath: string): boolean {
+1482 |     try {
+1483 |       fsSync.accessSync(filePath);
+1484 |       return true;
+1485 |     } catch {
+1486 |       return false;
+1487 |     }
+1488 |   },
+1489 | 
+1490 |   /**
+1491 |    * Checks if a path is absolute
+1492 |    * @param filePath - The path to check
+1493 |    * @returns True if the path is absolute, false otherwise
+1494 |    */
+1495 |   isAbsolute(filePath: string): boolean {
+1496 |     return path.isAbsolute(filePath);
+1497 |   },
+1498 | 
+1499 |   /**
+1500 |    * Gets directory contents with type information
+1501 |    * @param dirPath - The path to the directory
+1502 |    * @returns An array of objects containing name and type information for each entry
+1503 |    * @throws {DocumentError} If path is not a directory or other errors occur
+1504 |    */
+1505 |   async readDirectory(
+1506 |     dirPath: string
+1507 |   ): Promise<Array<{ name: string; type: FileType }>> {
+1508 |     try {
+1509 |       const entries = await fs.readdir(dirPath, { withFileTypes: true });
+1510 |       return entries.map(entry => ({
+1511 |         name: entry.name,
+1512 |         type: entry.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File
+1513 |       }));
+1514 |     } catch (error) {
+1515 |       throw new DocumentError(String(error), dirPath);
+1516 |     }
+1517 |   },
+1518 | 
+1519 |   /**
+1520 |    * Creates a directory if it doesn't exist
+1521 |    * @param dirPath - The path where to create the directory
+1522 |    * @param options - Options for directory creation including recursive and mode
+1523 |    * @throws {DocumentError} For file system errors
+1524 |    */
+1525 |   async ensureDirectory(
+1526 |     dirPath: string,
+1527 |     options: IDirectoryOptions = {}
+1528 |   ): Promise<void> {
+1529 |     try {
+1530 |       if (!this.exists(dirPath)) {
+1531 |         await fs.mkdir(dirPath, {
+1532 |           recursive: options.recursive ?? true,
+1533 |           mode: options.mode
+1534 |         });
+1535 |       }
+1536 |     } catch (error) {
+1537 |       throw new DocumentError(String(error), dirPath);
+1538 |     }
+1539 |   },
+1540 | 
+1541 |   /**
+1542 |    * Removes a file or directory
+1543 |    * @param filePath - The path to remove
+1544 |    * @throws {DocumentError} For file system errors
+1545 |    */
+1546 |   async remove(filePath: string): Promise<void> {
+1547 |     const stats = await fs.stat(filePath);
+1548 |     if (stats.isDirectory()) {
+1549 |       await fs.rm(filePath, { recursive: true, force: true });
+1550 |     } else {
+1551 |       await fs.unlink(filePath);
+1552 |     }
+1553 |   },
+1554 | 
+1555 |   /**
+1556 |    * Copies a file or directory
+1557 |    * @param src - The source path
+1558 |    * @param dest - The destination path
+1559 |    * @throws {DocumentError} For file system errors
+1560 |    */
+1561 |   async copy(src: string, dest: string): Promise<void> {
+1562 |     const stats = await fs.stat(src);
+1563 | 
+1564 |     if (stats.isDirectory()) {
+1565 |       await this.copyDir(src, dest);
+1566 |     } else {
+1567 |       await fs.copyFile(src, dest);
+1568 |     }
+1569 |   },
+1570 | 
+1571 |   /**
+1572 |    * Copies a directory recursively
+1573 |    * @private
+1574 |    * @param src - The source directory path
+1575 |    * @param dest - The destination directory path
+1576 |    * @throws {DocumentError} For file system errors
+1577 |    */
+1578 |   async copyDir(src: string, dest: string): Promise<void> {
+1579 |     await this.ensureDirectory(dest);
+1580 |     const entries = await fs.readdir(src, { withFileTypes: true });
+1581 | 
+1582 |     for (const entry of entries) {
+1583 |       const srcPath = path.join(src, entry.name);
+1584 |       const destPath = path.join(dest, entry.name);
+1585 | 
+1586 |       if (entry.isDirectory()) {
+1587 |         await this.copyDir(srcPath, destPath);
+1588 |       } else {
+1589 |         await fs.copyFile(srcPath, destPath);
+1590 |       }
+1591 |     }
+1592 |   },
+1593 | 
+1594 |   /**
+1595 |    * Joins an array of paths into a single path
+1596 |    * @param paths - The paths to join
+1597 |    * @returns The joined path
+1598 |    */
+1599 |   join(...paths: string[]): string {
+1600 |     return path.join(...paths);
+1601 |   }
+1602 | };
+1603 | 
+1604 | ```
+1605 | #### File: FileStats.ts
+1606 | 
+1607 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/FileStats.ts
+1608 | - **Extension:** ts
+1609 | - **Size:** 1987 bytes
+1610 | - **Depth:** 3
+1611 | - **Lines:** 72
+1612 | 
+1613 | ```ts
+1614 | import { Stats } from "fs";
+1615 | import fs from "fs/promises";
+1616 | 
+1617 | import { DocumentError } from "../../core/errors/DocumentError";
+1618 | import { FileNotFoundError } from "../../core/errors/FileNotFoundError";
+1619 | import { IAccessFlags, IFileStats } from "../../types/type";
+1620 | 
+1621 | class FileStatsService {
+1622 |   public async getStats(filePath: string): Promise<IFileStats> {
+1623 |     const stats = await this.getBasicStats(filePath);
+1624 |     const accessFlags = await this.checkAccess(filePath);
+1625 |     return this.mapStatsToFileInfo(stats, accessFlags);
+1626 |   }
+1627 |   private async getBasicStats(filePath: string): Promise<Stats> {
+1628 |     try {
+1629 |       return await fs.stat(filePath);
+1630 |     } catch (error) {
+1631 |       this.handleStatError(error as NodeJS.ErrnoException, filePath);
+1632 |       throw error; // TypeScript requires this
+1633 |     }
+1634 |   }
+1635 | 
+1636 |   private handleStatError(
+1637 |     error: NodeJS.ErrnoException,
+1638 |     filePath: string
+1639 |   ): never {
+1640 |     if (error.code === "ENOENT") {
+1641 |       throw new FileNotFoundError(filePath);
+1642 |     }
+1643 |     throw new DocumentError(String(error), filePath);
+1644 |   }
+1645 | 
+1646 |   private async checkAccess(filePath: string): Promise<IAccessFlags> {
+1647 |     const check = async (mode: number): Promise<boolean> => {
+1648 |       try {
+1649 |         await fs.access(filePath, mode);
+1650 |         return true;
+1651 |       } catch {
+1652 |         return false;
+1653 |       }
+1654 |     };
+1655 | 
+1656 |     return {
+1657 |       readable: await check(fs.constants.R_OK),
+1658 |       writable: await check(fs.constants.W_OK),
+1659 |       executable: await check(fs.constants.X_OK)
+1660 |     };
+1661 |   }
+1662 | 
+1663 |   private mapStatsToFileInfo(
+1664 |     stats: Stats,
+1665 |     accessFlags: IAccessFlags
+1666 |   ): IFileStats {
+1667 |     return {
+1668 |       size: stats.size,
+1669 |       created: stats.birthtime,
+1670 |       modified: stats.mtime,
+1671 |       accessed: stats.atime,
+1672 |       isDirectory: stats.isDirectory(),
+1673 |       isFile: stats.isFile(),
+1674 |       permissions: accessFlags
+1675 |     };
+1676 |   }
+1677 | }
+1678 | 
+1679 | export const fileStatsService = async (
+1680 |   filePath: string
+1681 | ): Promise<IFileStats> => {
+1682 |   const fileStatsService = new FileStatsService();
+1683 |   return await fileStatsService.getStats(filePath);
+1684 | };
+1685 | 
+1686 | ```
+1687 | #### File: JsonReader.ts
+1688 | 
+1689 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/JsonReader.ts
+1690 | - **Extension:** ts
+1691 | - **Size:** 1568 bytes
+1692 | - **Depth:** 3
+1693 | - **Lines:** 52
+1694 | 
+1695 | ```ts
+1696 | import fs from "fs/promises";
+1697 | 
+1698 | import { documentFactory } from "./DocumentFactory";
+1699 | import { DocumentError } from "../../core/errors/DocumentError";
+1700 | import { FileNotFoundError } from "../../core/errors/FileNotFoundError";
+1701 | 
+1702 | export class JsonReader {
+1703 |   public async readJsonSync(filePath: string): Promise<object> {
+1704 |     try {
+1705 |       const absolutePath = this.validatePath(filePath);
+1706 |       const content = await this.readFileContent(absolutePath, filePath);
+1707 |       return this.parseJsonContent(content, filePath);
+1708 |     } catch (error) {
+1709 |       if (error instanceof DocumentError) {
+1710 |         throw error;
+1711 |       }
+1712 |       throw new DocumentError(String(error), filePath);
+1713 |     }
+1714 |   }
+1715 |   private validatePath(filePath: string): string {
+1716 |     const absolutePath = documentFactory.resolve(filePath);
+1717 |     if (!documentFactory.exists(absolutePath)) {
+1718 |       throw new FileNotFoundError(filePath);
+1719 |     }
+1720 |     return absolutePath;
+1721 |   }
+1722 | 
+1723 |   private async readFileContent(
+1724 |     absolutePath: string,
+1725 |     filePath: string
+1726 |   ): Promise<string> {
+1727 |     const content = await fs.readFile(absolutePath, "utf-8");
+1728 |     if (!content) {
+1729 |       throw new DocumentError(`File is empty`, filePath);
+1730 |     }
+1731 |     return content;
+1732 |   }
+1733 | 
+1734 |   private parseJsonContent(content: string, filePath: string): object {
+1735 |     try {
+1736 |       return JSON.parse(content);
+1737 |     } catch (error) {
+1738 |       throw new DocumentError(`Invalid JSON: ${String(error)}`, filePath);
+1739 |     }
+1740 |   }
+1741 | }
+1742 | 
+1743 | export const jsonReader = async (path: string): Promise<object> => {
+1744 |   const jsonReader = new JsonReader();
+1745 |   return await jsonReader.readJsonSync(path);
+1746 | };
+1747 | 
+1748 | ```
+1749 | ### Directory: __tests__
+1750 | 
+1751 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/__tests__
+1752 | - **Size:** 0 bytes
+1753 | - **Files:** 0
+1754 | - **Total Files (including subdirectories):** 0
+1755 | - **Depth:** 3
+1756 | 
+1757 | #### Contents:
 1758 | 
-1759 | #### Contents:
+1759 | ### Directory: __mocks__
 1760 | 
-1761 | ### Directory: __mocks__
-1762 | 
-1763 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/__tests__/__mocks__
-1764 | - **Size:** 0 bytes
-1765 | - **Files:** 0
-1766 | - **Total Files (including subdirectories):** 0
-1767 | - **Depth:** 4
+1761 | - **Path:** /root/git/codewrangler/src/infrastructure/filesystem/__tests__/__mocks__
+1762 | - **Size:** 0 bytes
+1763 | - **Files:** 0
+1764 | - **Total Files (including subdirectories):** 0
+1765 | - **Depth:** 4
+1766 | 
+1767 | #### Contents:
 1768 | 
-1769 | #### Contents:
+1769 | ### Directory: templates
 1770 | 
-1771 | ### Directory: templates
-1772 | 
-1773 | - **Path:** /root/git/codewrangler/src/infrastructure/templates
-1774 | - **Size:** 5581 bytes
-1775 | - **Files:** 2
-1776 | - **Total Files (including subdirectories):** 2
-1777 | - **Depth:** 2
+1771 | - **Path:** /root/git/codewrangler/src/infrastructure/templates
+1772 | - **Size:** 5581 bytes
+1773 | - **Files:** 2
+1774 | - **Total Files (including subdirectories):** 2
+1775 | - **Depth:** 2
+1776 | 
+1777 | #### Contents:
 1778 | 
-1779 | #### Contents:
+1779 | #### File: TemplateEngine.ts
 1780 | 
-1781 | #### File: TemplateEngine.ts
-1782 | 
-1783 | - **Path:** /root/git/codewrangler/src/infrastructure/templates/TemplateEngine.ts
-1784 | - **Extension:** ts
-1785 | - **Size:** 4369 bytes
-1786 | - **Depth:** 3
-1787 | - **Lines:** 157
-1788 | 
-1789 | ```ts
-1790 | import { ZodObject, z } from "zod";
-1791 | 
-1792 | import { TemplateType } from "../../types/template";
-1793 | import { Config } from "../../utils/config";
-1794 | import { logger } from "../../utils/logger";
-1795 | import { documentFactory } from "../filesystem/DocumentFactory";
+1781 | - **Path:** /root/git/codewrangler/src/infrastructure/templates/TemplateEngine.ts
+1782 | - **Extension:** ts
+1783 | - **Size:** 4369 bytes
+1784 | - **Depth:** 3
+1785 | - **Lines:** 157
+1786 | 
+1787 | ```ts
+1788 | import { ZodObject, z } from "zod";
+1789 | 
+1790 | import { TemplateType } from "../../types/template";
+1791 | import { Config } from "../../utils/config";
+1792 | import { logger } from "../../utils/logger";
+1793 | import { documentFactory } from "../filesystem/DocumentFactory";
+1794 | 
+1795 | type TemplateValue = z.ZodType<string | number | boolean | undefined>;
 1796 | 
-1797 | type TemplateValue = z.ZodType<string | number | boolean | undefined>;
-1798 | 
-1799 | export class Template<
-1800 |   T extends Record<string, TemplateValue> = Record<string, TemplateValue>
-1801 | > {
-1802 |   private _content: string = "";
-1803 |   private schema: ZodObject<T>;
-1804 | 
-1805 |   public constructor(
-1806 |     private type: TemplateType,
-1807 |     schema: ZodObject<T>
-1808 |   ) {
-1809 |     // convert all fields to optional
-1810 |     const optionalFields = Object.fromEntries(
-1811 |       Object.entries(schema.shape).map(([key, value]) => [
-1812 |         key,
-1813 |         value.optional()
-1814 |       ])
-1815 |     );
-1816 |     this.schema = schema.extend(optionalFields) as unknown as ZodObject<T>;
-1817 |   }
-1818 | 
-1819 |   public async load(
-1820 |     path: string,
-1821 |     additionalFields?: Record<string, z.ZodSchema<string>>
-1822 |   ): Promise<void> {
-1823 |     this._content = await documentFactory.readFile(path);
-1824 |     if (additionalFields) {
-1825 |       this.schema = this.schema.extend(additionalFields) as ZodObject<T>;
-1826 |     }
-1827 |     this.validate();
-1828 |   }
-1829 | 
-1830 |   public static getTemplateDir(config: Config): string {
-1831 |     const dir = documentFactory.join(
-1832 |       config.get("rootDir") as string,
-1833 |       config.get("templatesDir") as string
-1834 |     );
-1835 |     if (!documentFactory.exists(dir)) {
-1836 |       throw new Error(`Templates directory not found: ${dir}`);
-1837 |     }
-1838 |     return dir;
-1839 |   }
-1840 | 
-1841 |   public get content(): string {
-1842 |     if (!this._content) {
-1843 |       throw new Error(`Template content is not loaded for ${this.type}`);
-1844 |     }
-1845 |     return this._content;
-1846 |   }
-1847 | 
-1848 |   public static async create<T extends Record<string, TemplateValue>>(
-1849 |     type: TemplateType,
-1850 |     schema: ZodObject<T>,
-1851 |     path: string,
-1852 |     additionalFields?: Record<string, z.ZodSchema<string>>
-1853 |   ): Promise<Template<T>> {
-1854 |     const template = new Template(type, schema);
-1855 |     await template.load(path, additionalFields);
-1856 |     return template;
-1857 |   }
-1858 | 
-1859 |   public render(data: Record<string, string | number | boolean>): string {
-1860 |     try {
-1861 |       this.validateData(data);
-1862 |       return this.replaceTokens(data);
-1863 |     } catch (error) {
-1864 |       if (error instanceof Error) {
-1865 |         throw new Error(`Template content validation failed for ${this.type}`);
-1866 |       }
-1867 |       throw error;
-1868 |     }
-1869 |   }
-1870 | 
-1871 |   public dispose(): void {
-1872 |     this._content = "";
-1873 |   }
-1874 | 
-1875 |   private validateData(data: Record<string, string | number | boolean>): void {
-1876 |     this.schema.parse(data);
-1877 |     this.validateRequiredTokens(data);
-1878 |   }
-1879 | 
-1880 |   private validateRequiredTokens(
-1881 |     data: Record<string, string | number | boolean>
-1882 |   ): void {
-1883 |     const contentTokens = this.getTemplateTokens();
-1884 |     const missingTokens = this.findMissingRequiredTokens(contentTokens, data);
-1885 | 
-1886 |     if (missingTokens.length > 0) {
-1887 |       throw new Error(
-1888 |         `Missing required values for tokens: ${missingTokens.join(", ")}`
-1889 |       );
-1890 |     }
-1891 |   }
-1892 | 
-1893 |   private findMissingRequiredTokens(
-1894 |     tokens: string[],
-1895 |     data: Record<string, string | number | boolean>
-1896 |   ): string[] {
-1897 |     return tokens.filter(token => {
-1898 |       const isRequired = this.schema.shape[token]?.isOptional() === false;
-1899 |       return isRequired && !(token in data);
-1900 |     });
-1901 |   }
-1902 | 
-1903 |   private getTemplateTokens(): string[] {
-1904 |     const tokenRegex = /\{\{(\w+)\}\}/g;
-1905 |     const tokens: string[] = [];
-1906 |     let match;
-1907 | 
-1908 |     while ((match = tokenRegex.exec(this.content)) !== null) {
-1909 |       const token = match[1];
-1910 |       if (token === undefined) {
-1911 |         throw new Error(`Invalid template content for ${this.type}`);
-1912 |       }
-1913 |       tokens.push(token);
-1914 |     }
-1915 | 
-1916 |     return tokens;
-1917 |   }
-1918 | 
-1919 |   private replaceTokens(
-1920 |     data: Record<string, string | number | boolean>
-1921 |   ): string {
-1922 |     const contentTokens = this.getTemplateTokens();
-1923 |     const pattern = new RegExp(`\\{\\{(${contentTokens.join("|")})\\}\\}`, "g");
-1924 | 
-1925 |     return this.content.replace(pattern, (_, key) =>
-1926 |       key in data ? String(data[key]) : `{{${key}}}`
-1927 |     );
-1928 |   }
-1929 | 
-1930 |   private validate(): void {
-1931 |     const tokens = this.getTemplateTokens();
-1932 |     const requiredFields = Object.keys(this.schema.shape);
-1933 |     const missingRequired = requiredFields.filter(
-1934 |       field => !tokens.includes(field)
-1935 |     );
-1936 | 
-1937 |     if (missingRequired.length > 0) {
-1938 |       logger.warn(
-1939 |         `Missing required tokens in ${this.type} template: ${missingRequired.join(
-1940 |           ", "
-1941 |         )}`
-1942 |       );
-1943 |     }
-1944 |   }
-1945 | }
-1946 | 
-1947 | ```
-1948 | ### Directory: __tests__
-1949 | 
-1950 | - **Path:** /root/git/codewrangler/src/infrastructure/templates/__tests__
-1951 | - **Size:** 0 bytes
-1952 | - **Files:** 0
-1953 | - **Total Files (including subdirectories):** 0
-1954 | - **Depth:** 3
+1797 | export class Template<
+1798 |   T extends Record<string, TemplateValue> = Record<string, TemplateValue>
+1799 | > {
+1800 |   private _content: string = "";
+1801 |   private schema: ZodObject<T>;
+1802 | 
+1803 |   public constructor(
+1804 |     private type: TemplateType,
+1805 |     schema: ZodObject<T>
+1806 |   ) {
+1807 |     // convert all fields to optional
+1808 |     const optionalFields = Object.fromEntries(
+1809 |       Object.entries(schema.shape).map(([key, value]) => [
+1810 |         key,
+1811 |         value.optional()
+1812 |       ])
+1813 |     );
+1814 |     this.schema = schema.extend(optionalFields) as unknown as ZodObject<T>;
+1815 |   }
+1816 | 
+1817 |   public async load(
+1818 |     path: string,
+1819 |     additionalFields?: Record<string, z.ZodSchema<string>>
+1820 |   ): Promise<void> {
+1821 |     this._content = await documentFactory.readFile(path);
+1822 |     if (additionalFields) {
+1823 |       this.schema = this.schema.extend(additionalFields) as ZodObject<T>;
+1824 |     }
+1825 |     this.validate();
+1826 |   }
+1827 | 
+1828 |   public static getTemplateDir(config: Config): string {
+1829 |     const dir = documentFactory.join(
+1830 |       config.get("rootDir") as string,
+1831 |       config.get("templatesDir") as string
+1832 |     );
+1833 |     if (!documentFactory.exists(dir)) {
+1834 |       throw new Error(`Templates directory not found: ${dir}`);
+1835 |     }
+1836 |     return dir;
+1837 |   }
+1838 | 
+1839 |   public get content(): string {
+1840 |     if (!this._content) {
+1841 |       throw new Error(`Template content is not loaded for ${this.type}`);
+1842 |     }
+1843 |     return this._content;
+1844 |   }
+1845 | 
+1846 |   public static async create<T extends Record<string, TemplateValue>>(
+1847 |     type: TemplateType,
+1848 |     schema: ZodObject<T>,
+1849 |     path: string,
+1850 |     additionalFields?: Record<string, z.ZodSchema<string>>
+1851 |   ): Promise<Template<T>> {
+1852 |     const template = new Template(type, schema);
+1853 |     await template.load(path, additionalFields);
+1854 |     return template;
+1855 |   }
+1856 | 
+1857 |   public render(data: Record<string, string | number | boolean>): string {
+1858 |     try {
+1859 |       this.validateData(data);
+1860 |       return this.replaceTokens(data);
+1861 |     } catch (error) {
+1862 |       if (error instanceof Error) {
+1863 |         throw new Error(`Template content validation failed for ${this.type}`);
+1864 |       }
+1865 |       throw error;
+1866 |     }
+1867 |   }
+1868 | 
+1869 |   public dispose(): void {
+1870 |     this._content = "";
+1871 |   }
+1872 | 
+1873 |   private validateData(data: Record<string, string | number | boolean>): void {
+1874 |     this.schema.parse(data);
+1875 |     this.validateRequiredTokens(data);
+1876 |   }
+1877 | 
+1878 |   private validateRequiredTokens(
+1879 |     data: Record<string, string | number | boolean>
+1880 |   ): void {
+1881 |     const contentTokens = this.getTemplateTokens();
+1882 |     const missingTokens = this.findMissingRequiredTokens(contentTokens, data);
+1883 | 
+1884 |     if (missingTokens.length > 0) {
+1885 |       throw new Error(
+1886 |         `Missing required values for tokens: ${missingTokens.join(", ")}`
+1887 |       );
+1888 |     }
+1889 |   }
+1890 | 
+1891 |   private findMissingRequiredTokens(
+1892 |     tokens: string[],
+1893 |     data: Record<string, string | number | boolean>
+1894 |   ): string[] {
+1895 |     return tokens.filter(token => {
+1896 |       const isRequired = this.schema.shape[token]?.isOptional() === false;
+1897 |       return isRequired && !(token in data);
+1898 |     });
+1899 |   }
+1900 | 
+1901 |   private getTemplateTokens(): string[] {
+1902 |     const tokenRegex = /\{\{(\w+)\}\}/g;
+1903 |     const tokens: string[] = [];
+1904 |     let match;
+1905 | 
+1906 |     while ((match = tokenRegex.exec(this.content)) !== null) {
+1907 |       const token = match[1];
+1908 |       if (token === undefined) {
+1909 |         throw new Error(`Invalid template content for ${this.type}`);
+1910 |       }
+1911 |       tokens.push(token);
+1912 |     }
+1913 | 
+1914 |     return tokens;
+1915 |   }
+1916 | 
+1917 |   private replaceTokens(
+1918 |     data: Record<string, string | number | boolean>
+1919 |   ): string {
+1920 |     const contentTokens = this.getTemplateTokens();
+1921 |     const pattern = new RegExp(`\\{\\{(${contentTokens.join("|")})\\}\\}`, "g");
+1922 | 
+1923 |     return this.content.replace(pattern, (_, key) =>
+1924 |       key in data ? String(data[key]) : `{{${key}}}`
+1925 |     );
+1926 |   }
+1927 | 
+1928 |   private validate(): void {
+1929 |     const tokens = this.getTemplateTokens();
+1930 |     const requiredFields = Object.keys(this.schema.shape);
+1931 |     const missingRequired = requiredFields.filter(
+1932 |       field => !tokens.includes(field)
+1933 |     );
+1934 | 
+1935 |     if (missingRequired.length > 0) {
+1936 |       logger.warn(
+1937 |         `Missing required tokens in ${this.type} template: ${missingRequired.join(
+1938 |           ", "
+1939 |         )}`
+1940 |       );
+1941 |     }
+1942 |   }
+1943 | }
+1944 | 
+1945 | ```
+1946 | ### Directory: __tests__
+1947 | 
+1948 | - **Path:** /root/git/codewrangler/src/infrastructure/templates/__tests__
+1949 | - **Size:** 0 bytes
+1950 | - **Files:** 0
+1951 | - **Total Files (including subdirectories):** 0
+1952 | - **Depth:** 3
+1953 | 
+1954 | #### Contents:
 1955 | 
-1956 | #### Contents:
+1956 | #### File: zod.ts
 1957 | 
-1958 | #### File: zod.ts
-1959 | 
-1960 | - **Path:** /root/git/codewrangler/src/infrastructure/templates/zod.ts
-1961 | - **Extension:** ts
-1962 | - **Size:** 1212 bytes
-1963 | - **Depth:** 3
-1964 | - **Lines:** 42
-1965 | 
-1966 | ```ts
-1967 | import { z } from "zod";
-1968 | 
-1969 | export const baseTemplateSchema = z.object({
-1970 |   PROJECT_NAME: z.string(),
-1971 |   GENERATION_DATE: z.string().datetime(),
-1972 |   DIRECTORY_STRUCTURE: z.string(),
-1973 |   TOTAL_SIZE: z.number(),
-1974 |   TOTAL_FILES: z.number(),
-1975 |   TOTAL_DIRECTORIES: z.number(),
-1976 |   CONTENT: z.string()
-1977 | });
-1978 | 
-1979 | export type BaseTemplate = z.infer<typeof baseTemplateSchema>;
-1980 | export type BaseTemplateString = keyof BaseTemplate;
-1981 | 
-1982 | export const fileTemplateSchema = z.object({
-1983 |   FILE_NAME: z.string(),
-1984 |   FILE_EXTENSION: z.string(),
-1985 |   FILE_SIZE: z.number(),
-1986 |   FILE_DEPTH: z.number(),
-1987 |   FILE_LINES: z.number(),
-1988 |   FILE_PATH: z.string(),
-1989 |   FILE_CONTENTS: z.string()
-1990 | });
-1991 | 
-1992 | export type FileTemplate = z.infer<typeof fileTemplateSchema>;
-1993 | export type FileTemplateString = keyof FileTemplate;
-1994 | 
-1995 | export const directoryTemplateSchema = z.object({
-1996 |   DIRECTORY_NAME: z.string(),
-1997 |   DIRECTORY_PATH: z.string(),
-1998 |   DIRECTORY_SIZE: z.number(),
-1999 |   DIRECTORY_LENGTH: z.number(),
-2000 |   DIRECTORY_DEEP_LENGTH: z.number(),
-2001 |   DIRECTORY_DEPTH: z.number(),
-2002 |   DIRECTORY_NUMBER_OF_FILES: z.number(),
-2003 |   DIRECTORY_CONTENT: z.string()
-2004 | });
-2005 | 
-2006 | export type DirectoryTemplate = z.infer<typeof directoryTemplateSchema>;
-2007 | export type DirectoryTemplateString = keyof DirectoryTemplate;
-2008 | 
-2009 | ```
-2010 | ### Directory: orchestration
-2011 | 
-2012 | - **Path:** /root/git/codewrangler/src/orchestration
-2013 | - **Size:** 5232 bytes
-2014 | - **Files:** 3
-2015 | - **Total Files (including subdirectories):** 6
-2016 | - **Depth:** 1
+1958 | - **Path:** /root/git/codewrangler/src/infrastructure/templates/zod.ts
+1959 | - **Extension:** ts
+1960 | - **Size:** 1212 bytes
+1961 | - **Depth:** 3
+1962 | - **Lines:** 42
+1963 | 
+1964 | ```ts
+1965 | import { z } from "zod";
+1966 | 
+1967 | export const baseTemplateSchema = z.object({
+1968 |   PROJECT_NAME: z.string(),
+1969 |   GENERATION_DATE: z.string().datetime(),
+1970 |   DIRECTORY_STRUCTURE: z.string(),
+1971 |   TOTAL_SIZE: z.number(),
+1972 |   TOTAL_FILES: z.number(),
+1973 |   TOTAL_DIRECTORIES: z.number(),
+1974 |   CONTENT: z.string()
+1975 | });
+1976 | 
+1977 | export type BaseTemplate = z.infer<typeof baseTemplateSchema>;
+1978 | export type BaseTemplateString = keyof BaseTemplate;
+1979 | 
+1980 | export const fileTemplateSchema = z.object({
+1981 |   FILE_NAME: z.string(),
+1982 |   FILE_EXTENSION: z.string(),
+1983 |   FILE_SIZE: z.number(),
+1984 |   FILE_DEPTH: z.number(),
+1985 |   FILE_LINES: z.number(),
+1986 |   FILE_PATH: z.string(),
+1987 |   FILE_CONTENTS: z.string()
+1988 | });
+1989 | 
+1990 | export type FileTemplate = z.infer<typeof fileTemplateSchema>;
+1991 | export type FileTemplateString = keyof FileTemplate;
+1992 | 
+1993 | export const directoryTemplateSchema = z.object({
+1994 |   DIRECTORY_NAME: z.string(),
+1995 |   DIRECTORY_PATH: z.string(),
+1996 |   DIRECTORY_SIZE: z.number(),
+1997 |   DIRECTORY_LENGTH: z.number(),
+1998 |   DIRECTORY_DEEP_LENGTH: z.number(),
+1999 |   DIRECTORY_DEPTH: z.number(),
+2000 |   DIRECTORY_NUMBER_OF_FILES: z.number(),
+2001 |   DIRECTORY_CONTENT: z.string()
+2002 | });
+2003 | 
+2004 | export type DirectoryTemplate = z.infer<typeof directoryTemplateSchema>;
+2005 | export type DirectoryTemplateString = keyof DirectoryTemplate;
+2006 | 
+2007 | ```
+2008 | ### Directory: orchestration
+2009 | 
+2010 | - **Path:** /root/git/codewrangler/src/orchestration
+2011 | - **Size:** 5232 bytes
+2012 | - **Files:** 3
+2013 | - **Total Files (including subdirectories):** 6
+2014 | - **Depth:** 1
+2015 | 
+2016 | #### Contents:
 2017 | 
-2018 | #### Contents:
+2018 | #### File: DocumentOrchestrator.ts
 2019 | 
-2020 | #### File: DocumentOrchestrator.ts
-2021 | 
-2022 | - **Path:** /root/git/codewrangler/src/orchestration/DocumentOrchestrator.ts
-2023 | - **Extension:** ts
-2024 | - **Size:** 2826 bytes
-2025 | - **Depth:** 2
-2026 | - **Lines:** 94
-2027 | 
-2028 | ```ts
-2029 | import { IDocumentOrchestrator } from "./interfaces/IDocumentOrchestrator";
-2030 | import { NodeDirectory } from "../core/entities/NodeDirectory";
-2031 | import { NodeFile } from "../core/entities/NodeFile";
-2032 | import { documentFactory } from "../infrastructure/filesystem/DocumentFactory";
-2033 | import { IRenderStrategy } from "../services/renderer/RenderStrategy";
-2034 | import { Config } from "../utils/config/Config";
-2035 | import { OUTPUT_FORMATS, OutputFormat } from "../utils/config/schema";
-2036 | import { logger } from "../utils/logger/Logger";
-2037 | 
-2038 | export class DocumentOrchestrator implements IDocumentOrchestrator {
-2039 |   private strategy: IRenderStrategy | null = null;
-2040 | 
-2041 |   private constructor(
-2042 |     private readonly root: NodeDirectory | NodeFile,
-2043 |     private readonly config: Config
-2044 |   ) {}
-2045 | 
-2046 |   public static create(
-2047 |     root: NodeDirectory | NodeFile,
-2048 |     config: Config
-2049 |   ): DocumentOrchestrator {
-2050 |     const orchestrator = new DocumentOrchestrator(root, config);
-2051 |     orchestrator.initialize();
-2052 |     return orchestrator;
-2053 |   }
-2054 | 
-2055 |   public setStrategy(strategy: IRenderStrategy): this {
-2056 |     this.strategy = strategy;
-2057 |     return this;
-2058 |   }
-2059 | 
-2060 |   public async build(): Promise<void> {
-2061 |     try {
-2062 |       if (!this.strategy) {
-2063 |         throw new Error("Strategy is not set");
-2064 |       }
-2065 | 
-2066 |       const content = this.strategy.render(this.root as NodeDirectory);
-2067 |       const outputFormat = this.strategy.getName();
-2068 |       const outputPath = this.resolveOutputPath(outputFormat);
-2069 |       await this.ensureOutputDirectory(outputPath);
-2070 |       await this.writeOutput(outputPath, content);
-2071 | 
-2072 |       logger.success(`Document built successfully at ${outputPath}`);
-2073 |     } catch (error) {
-2074 |       logger.error("Failed to build document", error as Error);
-2075 |       throw error;
-2076 |     }
-2077 |   }
-2078 | 
-2079 |   public getStrategyName(): string {
-2080 |     return this.strategy?.getName() ?? "Unknown";
-2081 |   }
-2082 | 
-2083 |   public dispose(): void {
-2084 |     this.strategy?.dispose();
-2085 |   }
-2086 | 
-2087 |   private initialize(): void {
-2088 |     this.validateStructure();
-2089 |   }
-2090 | 
-2091 |   private validateStructure(): void {
-2092 |     if (!(this.root.type == "directory") && !(this.root.type == "file")) {
-2093 |       throw new Error("Invalid root node type");
-2094 |     }
-2095 |   }
-2096 | 
-2097 |   private resolveOutputPath(outputFormat: OutputFormat): string {
-2098 |     const outputFile = this.config.get("outputFile");
-2099 |     return documentFactory.resolve(
-2100 |       `${outputFile}.${OUTPUT_FORMATS[outputFormat]}`
-2101 |     );
-2102 |   }
-2103 | 
-2104 |   private async ensureOutputDirectory(outputPath: string): Promise<void> {
-2105 |     const directory = documentFactory.baseName(outputPath);
-2106 |     if (
-2107 |       outputPath.endsWith(`.${OUTPUT_FORMATS.html}`) ||
-2108 |       outputPath.endsWith(`.${OUTPUT_FORMATS.markdown}`)
-2109 |     ) {
-2110 |       return;
-2111 |     }
-2112 |     await documentFactory.ensureDirectory(directory);
-2113 |   }
-2114 | 
-2115 |   private async writeOutput(
-2116 |     outputPath: string,
-2117 |     content: string
-2118 |   ): Promise<void> {
-2119 |     await documentFactory.writeFile(outputPath, content);
-2120 |   }
-2121 | }
-2122 | 
-2123 | ```
-2124 | #### File: DocumentOrchestratorBuilder.ts
-2125 | 
-2126 | - **Path:** /root/git/codewrangler/src/orchestration/DocumentOrchestratorBuilder.ts
-2127 | - **Extension:** ts
-2128 | - **Size:** 2018 bytes
-2129 | - **Depth:** 2
-2130 | - **Lines:** 72
-2131 | 
-2132 | ```ts
-2133 | import { DocumentOrchestrator } from "./DocumentOrchestrator";
-2134 | import { NodeDirectory } from "../core/entities/NodeDirectory";
-2135 | import { NodeFile } from "../core/entities/NodeFile";
-2136 | import { IRenderStrategy } from "../services/renderer/RenderStrategy";
-2137 | import { Config } from "../utils/config/Config";
-2138 | import { logger } from "../utils/logger/Logger";
-2139 | 
-2140 | export class DocumentOrchestratorBuilder {
-2141 |   private root: NodeDirectory | NodeFile | null = null;
-2142 |   private config: Config | null = null;
-2143 |   private strategies: IRenderStrategy[] = [];
-2144 | 
-2145 |   public setRoot(root: NodeDirectory | NodeFile): this {
-2146 |     this.root = root;
-2147 |     return this;
-2148 |   }
-2149 | 
-2150 |   public setConfig(config: Config): this {
-2151 |     this.config = config;
-2152 |     return this;
-2153 |   }
-2154 | 
-2155 |   public addStrategy(strategy: IRenderStrategy): this {
-2156 |     this.strategies.push(strategy);
-2157 |     return this;
-2158 |   }
-2159 | 
-2160 |   public setStrategies(strategies: IRenderStrategy[]): this {
-2161 |     this.strategies = strategies;
-2162 |     return this;
-2163 |   }
-2164 | 
-2165 |   public async build(): Promise<DocumentOrchestrator[]> {
-2166 |     if (!this.root || !this.config) {
-2167 |       throw new Error("Missing required components for DocumentOrchestrator");
-2168 |     }
-2169 | 
-2170 |     if (this.strategies.length === 0) {
-2171 |       throw new Error("At least one render strategy is required");
-2172 |     }
+2020 | - **Path:** /root/git/codewrangler/src/orchestration/DocumentOrchestrator.ts
+2021 | - **Extension:** ts
+2022 | - **Size:** 2826 bytes
+2023 | - **Depth:** 2
+2024 | - **Lines:** 94
+2025 | 
+2026 | ```ts
+2027 | import { IDocumentOrchestrator } from "./interfaces/IDocumentOrchestrator";
+2028 | import { NodeDirectory } from "../core/entities/NodeDirectory";
+2029 | import { NodeFile } from "../core/entities/NodeFile";
+2030 | import { documentFactory } from "../infrastructure/filesystem/DocumentFactory";
+2031 | import { IRenderStrategy } from "../services/renderer/RenderStrategy";
+2032 | import { Config } from "../utils/config/Config";
+2033 | import { OUTPUT_FORMATS, OutputFormat } from "../utils/config/schema";
+2034 | import { logger } from "../utils/logger/Logger";
+2035 | 
+2036 | export class DocumentOrchestrator implements IDocumentOrchestrator {
+2037 |   private strategy: IRenderStrategy | null = null;
+2038 | 
+2039 |   private constructor(
+2040 |     private readonly root: NodeDirectory | NodeFile,
+2041 |     private readonly config: Config
+2042 |   ) {}
+2043 | 
+2044 |   public static create(
+2045 |     root: NodeDirectory | NodeFile,
+2046 |     config: Config
+2047 |   ): DocumentOrchestrator {
+2048 |     const orchestrator = new DocumentOrchestrator(root, config);
+2049 |     orchestrator.initialize();
+2050 |     return orchestrator;
+2051 |   }
+2052 | 
+2053 |   public setStrategy(strategy: IRenderStrategy): this {
+2054 |     this.strategy = strategy;
+2055 |     return this;
+2056 |   }
+2057 | 
+2058 |   public async build(): Promise<void> {
+2059 |     try {
+2060 |       if (!this.strategy) {
+2061 |         throw new Error("Strategy is not set");
+2062 |       }
+2063 | 
+2064 |       const content = this.strategy.render(this.root as NodeDirectory);
+2065 |       const outputFormat = this.strategy.getName();
+2066 |       const outputPath = this.resolveOutputPath(outputFormat);
+2067 |       await this.ensureOutputDirectory(outputPath);
+2068 |       await this.writeOutput(outputPath, content);
+2069 | 
+2070 |       logger.success(`Document built successfully at ${outputPath}`);
+2071 |     } catch (error) {
+2072 |       logger.error("Failed to build document", error as Error);
+2073 |       throw error;
+2074 |     }
+2075 |   }
+2076 | 
+2077 |   public getStrategyName(): string {
+2078 |     return this.strategy?.getName() ?? "Unknown";
+2079 |   }
+2080 | 
+2081 |   public dispose(): void {
+2082 |     this.strategy?.dispose();
+2083 |   }
+2084 | 
+2085 |   private initialize(): void {
+2086 |     this.validateStructure();
+2087 |   }
+2088 | 
+2089 |   private validateStructure(): void {
+2090 |     if (!(this.root.type == "directory") && !(this.root.type == "file")) {
+2091 |       throw new Error("Invalid root node type");
+2092 |     }
+2093 |   }
+2094 | 
+2095 |   private resolveOutputPath(outputFormat: OutputFormat): string {
+2096 |     const outputFile = this.config.get("outputFile");
+2097 |     return documentFactory.resolve(
+2098 |       `${outputFile}.${OUTPUT_FORMATS[outputFormat]}`
+2099 |     );
+2100 |   }
+2101 | 
+2102 |   private async ensureOutputDirectory(outputPath: string): Promise<void> {
+2103 |     const directory = documentFactory.baseName(outputPath);
+2104 |     if (
+2105 |       outputPath.endsWith(`.${OUTPUT_FORMATS.html}`) ||
+2106 |       outputPath.endsWith(`.${OUTPUT_FORMATS.markdown}`)
+2107 |     ) {
+2108 |       return;
+2109 |     }
+2110 |     await documentFactory.ensureDirectory(directory);
+2111 |   }
+2112 | 
+2113 |   private async writeOutput(
+2114 |     outputPath: string,
+2115 |     content: string
+2116 |   ): Promise<void> {
+2117 |     await documentFactory.writeFile(outputPath, content);
+2118 |   }
+2119 | }
+2120 | 
+2121 | ```
+2122 | #### File: DocumentOrchestratorBuilder.ts
+2123 | 
+2124 | - **Path:** /root/git/codewrangler/src/orchestration/DocumentOrchestratorBuilder.ts
+2125 | - **Extension:** ts
+2126 | - **Size:** 2018 bytes
+2127 | - **Depth:** 2
+2128 | - **Lines:** 72
+2129 | 
+2130 | ```ts
+2131 | import { DocumentOrchestrator } from "./DocumentOrchestrator";
+2132 | import { NodeDirectory } from "../core/entities/NodeDirectory";
+2133 | import { NodeFile } from "../core/entities/NodeFile";
+2134 | import { IRenderStrategy } from "../services/renderer/RenderStrategy";
+2135 | import { Config } from "../utils/config/Config";
+2136 | import { logger } from "../utils/logger/Logger";
+2137 | 
+2138 | export class DocumentOrchestratorBuilder {
+2139 |   private root: NodeDirectory | NodeFile | null = null;
+2140 |   private config: Config | null = null;
+2141 |   private strategies: IRenderStrategy[] = [];
+2142 | 
+2143 |   public setRoot(root: NodeDirectory | NodeFile): this {
+2144 |     this.root = root;
+2145 |     return this;
+2146 |   }
+2147 | 
+2148 |   public setConfig(config: Config): this {
+2149 |     this.config = config;
+2150 |     return this;
+2151 |   }
+2152 | 
+2153 |   public addStrategy(strategy: IRenderStrategy): this {
+2154 |     this.strategies.push(strategy);
+2155 |     return this;
+2156 |   }
+2157 | 
+2158 |   public setStrategies(strategies: IRenderStrategy[]): this {
+2159 |     this.strategies = strategies;
+2160 |     return this;
+2161 |   }
+2162 | 
+2163 |   public async build(): Promise<DocumentOrchestrator[]> {
+2164 |     if (!this.root || !this.config) {
+2165 |       throw new Error("Missing required components for DocumentOrchestrator");
+2166 |     }
+2167 | 
+2168 |     if (this.strategies.length === 0) {
+2169 |       throw new Error("At least one render strategy is required");
+2170 |     }
+2171 | 
+2172 |     const orchestrators: DocumentOrchestrator[] = [];
 2173 | 
-2174 |     const orchestrators: DocumentOrchestrator[] = [];
-2175 | 
-2176 |     for (const strategy of this.strategies) {
-2177 |       const orchestrator = await DocumentOrchestrator.create(
-2178 |         this.root,
-2179 |         this.config
-2180 |       );
-2181 |       orchestrator.setStrategy(strategy);
-2182 |       orchestrators.push(orchestrator);
-2183 |     }
-2184 | 
-2185 |     return orchestrators;
-2186 |   }
-2187 |   public async buildAndExecute(): Promise<DocumentOrchestrator[]> {
-2188 |     const orchestrators = await this.build();
-2189 | 
-2190 |     for (const orchestrator of orchestrators) {
-2191 |       try {
-2192 |         await orchestrator.build();
-2193 |       } catch (error) {
-2194 |         logger.error(
-2195 |           `Failed to build documentation with strategy ${orchestrator.getStrategyName()}`,
-2196 |           error as Error
-2197 |         );
-2198 |       }
-2199 |     }
-2200 | 
-2201 |     return orchestrators;
-2202 |   }
-2203 | }
-2204 | 
-2205 | ```
-2206 | #### File: index.ts
-2207 | 
-2208 | - **Path:** /root/git/codewrangler/src/orchestration/index.ts
-2209 | - **Extension:** ts
-2210 | - **Size:** 0 bytes
-2211 | - **Depth:** 2
-2212 | - **Lines:** 1
+2174 |     for (const strategy of this.strategies) {
+2175 |       const orchestrator = await DocumentOrchestrator.create(
+2176 |         this.root,
+2177 |         this.config
+2178 |       );
+2179 |       orchestrator.setStrategy(strategy);
+2180 |       orchestrators.push(orchestrator);
+2181 |     }
+2182 | 
+2183 |     return orchestrators;
+2184 |   }
+2185 |   public async buildAndExecute(): Promise<DocumentOrchestrator[]> {
+2186 |     const orchestrators = await this.build();
+2187 | 
+2188 |     for (const orchestrator of orchestrators) {
+2189 |       try {
+2190 |         await orchestrator.build();
+2191 |       } catch (error) {
+2192 |         logger.error(
+2193 |           `Failed to build documentation with strategy ${orchestrator.getStrategyName()}`,
+2194 |           error as Error
+2195 |         );
+2196 |       }
+2197 |     }
+2198 | 
+2199 |     return orchestrators;
+2200 |   }
+2201 | }
+2202 | 
+2203 | ```
+2204 | #### File: index.ts
+2205 | 
+2206 | - **Path:** /root/git/codewrangler/src/orchestration/index.ts
+2207 | - **Extension:** ts
+2208 | - **Size:** 0 bytes
+2209 | - **Depth:** 2
+2210 | - **Lines:** 1
+2211 | 
+2212 | ```ts
 2213 | 
-2214 | ```ts
-2215 | 
-2216 | ```
-2217 | ### Directory: interfaces
-2218 | 
-2219 | - **Path:** /root/git/codewrangler/src/orchestration/interfaces
-2220 | - **Size:** 388 bytes
-2221 | - **Files:** 3
-2222 | - **Total Files (including subdirectories):** 3
-2223 | - **Depth:** 2
+2214 | ```
+2215 | ### Directory: interfaces
+2216 | 
+2217 | - **Path:** /root/git/codewrangler/src/orchestration/interfaces
+2218 | - **Size:** 388 bytes
+2219 | - **Files:** 3
+2220 | - **Total Files (including subdirectories):** 3
+2221 | - **Depth:** 2
+2222 | 
+2223 | #### Contents:
 2224 | 
-2225 | #### Contents:
+2225 | #### File: IDocumentMetadata.ts
 2226 | 
-2227 | #### File: IDocumentMetadata.ts
-2228 | 
-2229 | - **Path:** /root/git/codewrangler/src/orchestration/interfaces/IDocumentMetadata.ts
-2230 | - **Extension:** ts
-2231 | - **Size:** 132 bytes
-2232 | - **Depth:** 3
-2233 | - **Lines:** 8
-2234 | 
-2235 | ```ts
-2236 | export interface IDocumentMetadata {
-2237 |   title: string;
-2238 |   description: string;
-2239 |   author: string;
-2240 |   date: string;
-2241 |   version: string;
-2242 | }
-2243 | 
-2244 | ```
-2245 | #### File: IDocumentOrchestrator.ts
-2246 | 
-2247 | - **Path:** /root/git/codewrangler/src/orchestration/interfaces/IDocumentOrchestrator.ts
-2248 | - **Extension:** ts
-2249 | - **Size:** 256 bytes
-2250 | - **Depth:** 3
-2251 | - **Lines:** 9
-2252 | 
-2253 | ```ts
-2254 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
-2255 | 
-2256 | export interface IDocumentOrchestrator {
-2257 |   setStrategy: (strategy: IRenderStrategy) => this;
-2258 |   getStrategyName: () => string;
-2259 |   build: () => Promise<void>;
-2260 |   dispose: () => void;
-2261 | }
-2262 | 
-2263 | ```
-2264 | #### File: index.ts
-2265 | 
-2266 | - **Path:** /root/git/codewrangler/src/orchestration/interfaces/index.ts
-2267 | - **Extension:** ts
-2268 | - **Size:** 0 bytes
-2269 | - **Depth:** 3
-2270 | - **Lines:** 1
+2227 | - **Path:** /root/git/codewrangler/src/orchestration/interfaces/IDocumentMetadata.ts
+2228 | - **Extension:** ts
+2229 | - **Size:** 132 bytes
+2230 | - **Depth:** 3
+2231 | - **Lines:** 8
+2232 | 
+2233 | ```ts
+2234 | export interface IDocumentMetadata {
+2235 |   title: string;
+2236 |   description: string;
+2237 |   author: string;
+2238 |   date: string;
+2239 |   version: string;
+2240 | }
+2241 | 
+2242 | ```
+2243 | #### File: IDocumentOrchestrator.ts
+2244 | 
+2245 | - **Path:** /root/git/codewrangler/src/orchestration/interfaces/IDocumentOrchestrator.ts
+2246 | - **Extension:** ts
+2247 | - **Size:** 256 bytes
+2248 | - **Depth:** 3
+2249 | - **Lines:** 9
+2250 | 
+2251 | ```ts
+2252 | import { IRenderStrategy } from "../../services/renderer/RenderStrategy";
+2253 | 
+2254 | export interface IDocumentOrchestrator {
+2255 |   setStrategy: (strategy: IRenderStrategy) => this;
+2256 |   getStrategyName: () => string;
+2257 |   build: () => Promise<void>;
+2258 |   dispose: () => void;
+2259 | }
+2260 | 
+2261 | ```
+2262 | #### File: index.ts
+2263 | 
+2264 | - **Path:** /root/git/codewrangler/src/orchestration/interfaces/index.ts
+2265 | - **Extension:** ts
+2266 | - **Size:** 0 bytes
+2267 | - **Depth:** 3
+2268 | - **Lines:** 1
+2269 | 
+2270 | ```ts
 2271 | 
-2272 | ```ts
-2273 | 
-2274 | ```
-2275 | ### Directory: services
-2276 | 
-2277 | - **Path:** /root/git/codewrangler/src/services
-2278 | - **Size:** 14713 bytes
-2279 | - **Files:** 0
-2280 | - **Total Files (including subdirectories):** 8
-2281 | - **Depth:** 1
+2272 | ```
+2273 | ### Directory: services
+2274 | 
+2275 | - **Path:** /root/git/codewrangler/src/services
+2276 | - **Size:** 14713 bytes
+2277 | - **Files:** 0
+2278 | - **Total Files (including subdirectories):** 8
+2279 | - **Depth:** 1
+2280 | 
+2281 | #### Contents:
 2282 | 
-2283 | #### Contents:
+2283 | ### Directory: builder
 2284 | 
-2285 | ### Directory: builder
-2286 | 
-2287 | - **Path:** /root/git/codewrangler/src/services/builder
-2288 | - **Size:** 5920 bytes
-2289 | - **Files:** 3
-2290 | - **Total Files (including subdirectories):** 3
-2291 | - **Depth:** 2
+2285 | - **Path:** /root/git/codewrangler/src/services/builder
+2286 | - **Size:** 5920 bytes
+2287 | - **Files:** 3
+2288 | - **Total Files (including subdirectories):** 3
+2289 | - **Depth:** 2
+2290 | 
+2291 | #### Contents:
 2292 | 
-2293 | #### Contents:
+2293 | #### File: DocumentTreeBuilder.ts
 2294 | 
-2295 | #### File: DocumentTreeBuilder.ts
-2296 | 
-2297 | - **Path:** /root/git/codewrangler/src/services/builder/DocumentTreeBuilder.ts
-2298 | - **Extension:** ts
-2299 | - **Size:** 1814 bytes
-2300 | - **Depth:** 3
-2301 | - **Lines:** 59
-2302 | 
-2303 | ```ts
-2304 | import { INodeTree, NodeTreeBuilder } from "./NodeTreeBuilder";
-2305 | import { RenderableDirectory } from "../../core/entities/NodeDirectory";
-2306 | import { RenderableFile } from "../../core/entities/NodeFile";
-2307 | import { FILE_TYPE } from "../../types/type";
-2308 | import { Config } from "../../utils/config";
-2309 | import { logger } from "../../utils/logger";
-2310 | 
-2311 | export class DocumentTreeBuilder {
-2312 |   private root: RenderableDirectory | RenderableFile | undefined;
-2313 |   private builder: NodeTreeBuilder;
-2314 |   public constructor(config: Config) {
-2315 |     this.builder = new NodeTreeBuilder(config);
-2316 |   }
-2317 | 
-2318 |   public async build(): Promise<RenderableDirectory | RenderableFile> {
-2319 |     try {
-2320 |       // Build file tree structure
-2321 |       const fileTree = await this.builder.build();
-2322 | 
-2323 |       // Convert file tree to Document tree
-2324 |       this.root = await this.createDocumentStructure(fileTree);
-2325 | 
-2326 |       // Initialize the entire document tree
-2327 |       await this.root.bundle();
-2328 | 
-2329 |       if (!this.root) {
-2330 |         throw new Error("No files found matching the specified pattern");
-2331 |       }
+2295 | - **Path:** /root/git/codewrangler/src/services/builder/DocumentTreeBuilder.ts
+2296 | - **Extension:** ts
+2297 | - **Size:** 1814 bytes
+2298 | - **Depth:** 3
+2299 | - **Lines:** 59
+2300 | 
+2301 | ```ts
+2302 | import { INodeTree, NodeTreeBuilder } from "./NodeTreeBuilder";
+2303 | import { RenderableDirectory } from "../../core/entities/NodeDirectory";
+2304 | import { RenderableFile } from "../../core/entities/NodeFile";
+2305 | import { FILE_TYPE } from "../../types/type";
+2306 | import { Config } from "../../utils/config";
+2307 | import { logger } from "../../utils/logger";
+2308 | 
+2309 | export class DocumentTreeBuilder {
+2310 |   private root: RenderableDirectory | RenderableFile | undefined;
+2311 |   private builder: NodeTreeBuilder;
+2312 |   public constructor(config: Config) {
+2313 |     this.builder = new NodeTreeBuilder(config);
+2314 |   }
+2315 | 
+2316 |   public async build(): Promise<RenderableDirectory | RenderableFile> {
+2317 |     try {
+2318 |       // Build file tree structure
+2319 |       const fileTree = await this.builder.build();
+2320 | 
+2321 |       // Convert file tree to Document tree
+2322 |       this.root = await this.createDocumentStructure(fileTree);
+2323 | 
+2324 |       // Initialize the entire document tree
+2325 |       await this.root.bundle();
+2326 | 
+2327 |       if (!this.root) {
+2328 |         throw new Error("No files found matching the specified pattern");
+2329 |       }
+2330 | 
+2331 |       logger.info("Document tree built successfully");
 2332 | 
-2333 |       logger.info("Document tree built successfully");
-2334 | 
-2335 |       return this.root;
-2336 |     } catch (error) {
-2337 |       logger.error("Error building document tree", error as Error);
-2338 |       throw error;
-2339 |     }
-2340 |   }
-2341 | 
-2342 |   private async createDocumentStructure(
-2343 |     node: INodeTree
-2344 |   ): Promise<RenderableDirectory | RenderableFile> {
-2345 |     if (node.type === FILE_TYPE.Directory) {
-2346 |       const directory = new RenderableDirectory(node.name, node.path);
-2347 | 
-2348 |       if (node.children) {
-2349 |         // Recursively create children
-2350 |         for (const child of node.children) {
-2351 |           const childDocument = await this.createDocumentStructure(child);
-2352 |           directory.addChild(childDocument);
-2353 |         }
-2354 |       }
-2355 | 
-2356 |       return directory;
-2357 |     } else {
-2358 |       return new RenderableFile(node.name, node.path);
-2359 |     }
-2360 |   }
-2361 | }
-2362 | 
-2363 | ```
-2364 | #### File: FileHidden.ts
-2365 | 
-2366 | - **Path:** /root/git/codewrangler/src/services/builder/FileHidden.ts
-2367 | - **Extension:** ts
-2368 | - **Size:** 893 bytes
-2369 | - **Depth:** 3
-2370 | - **Lines:** 33
-2371 | 
-2372 | ```ts
-2373 | import { minimatch } from "minimatch";
+2333 |       return this.root;
+2334 |     } catch (error) {
+2335 |       logger.error("Error building document tree", error as Error);
+2336 |       throw error;
+2337 |     }
+2338 |   }
+2339 | 
+2340 |   private async createDocumentStructure(
+2341 |     node: INodeTree
+2342 |   ): Promise<RenderableDirectory | RenderableFile> {
+2343 |     if (node.type === FILE_TYPE.Directory) {
+2344 |       const directory = new RenderableDirectory(node.name, node.path);
+2345 | 
+2346 |       if (node.children) {
+2347 |         // Recursively create children
+2348 |         for (const child of node.children) {
+2349 |           const childDocument = await this.createDocumentStructure(child);
+2350 |           directory.addChild(childDocument);
+2351 |         }
+2352 |       }
+2353 | 
+2354 |       return directory;
+2355 |     } else {
+2356 |       return new RenderableFile(node.name, node.path);
+2357 |     }
+2358 |   }
+2359 | }
+2360 | 
+2361 | ```
+2362 | #### File: FileHidden.ts
+2363 | 
+2364 | - **Path:** /root/git/codewrangler/src/services/builder/FileHidden.ts
+2365 | - **Extension:** ts
+2366 | - **Size:** 893 bytes
+2367 | - **Depth:** 3
+2368 | - **Lines:** 33
+2369 | 
+2370 | ```ts
+2371 | import { minimatch } from "minimatch";
+2372 | 
+2373 | import { Config } from "../../utils/config";
 2374 | 
-2375 | import { Config } from "../../utils/config";
-2376 | 
-2377 | export default class FileHidden {
-2378 |   private ignoreHiddenFiles: boolean;
-2379 |   private patterns: string[];
-2380 |   private additionalIgnoreFiles: string[];
-2381 | 
-2382 |   public constructor(config: Config) {
-2383 |     this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
-2384 |     this.patterns = [...config.get("excludePatterns")];
-2385 |     this.additionalIgnoreFiles = config.get("additionalIgnoreFiles");
-2386 |   }
-2387 | 
-2388 |   public shouldExclude(fileName: string): boolean {
-2389 |     if (this.ignoreHiddenFiles && fileName.startsWith(".")) {
-2390 |       return true;
-2391 |     }
-2392 | 
-2393 |     if (this.patterns.some(pattern => minimatch(fileName, pattern))) {
-2394 |       return true;
-2395 |     }
-2396 | 
-2397 |     if (this.additionalIgnoreFiles.some(file => minimatch(fileName, file))) {
-2398 |       // Additional ignore files are always excluded
-2399 |       return true;
-2400 |     }
-2401 | 
-2402 |     return false;
-2403 |   }
-2404 | }
-2405 | 
-2406 | ```
-2407 | #### File: NodeTreeBuilder.ts
-2408 | 
-2409 | - **Path:** /root/git/codewrangler/src/services/builder/NodeTreeBuilder.ts
-2410 | - **Extension:** ts
-2411 | - **Size:** 3213 bytes
-2412 | - **Depth:** 3
-2413 | - **Lines:** 119
-2414 | 
-2415 | ```ts
-2416 | import FileHidden from "./FileHidden";
-2417 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-2418 | import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
-2419 | import { FILE_TYPE, FileType } from "../../types/type";
-2420 | import { Config, ConfigOptions } from "../../utils/config";
-2421 | 
-2422 | export interface INodeTree {
-2423 |   name: string;
-2424 |   path: string;
-2425 |   type: FileType;
-2426 |   children?: INodeTree[];
-2427 | }
-2428 | 
-2429 | export interface INodeTreeBuilderOptions
-2430 |   extends Pick<
-2431 |     ConfigOptions,
-2432 |     | "additionalIgnoreFiles"
-2433 |     | "maxDepth"
-2434 |     | "excludePatterns"
-2435 |     | "dir"
-2436 |     | "followSymlinks"
-2437 |   > {
-2438 |   pattern: RegExp;
-2439 |   returnType: "paths" | "details";
-2440 | }
-2441 | 
-2442 | export class NodeTreeBuilder {
-2443 |   private config: Config;
-2444 |   private options: INodeTreeBuilderOptions;
-2445 |   private fileHidden: FileHidden;
-2446 | 
-2447 |   public constructor(config: Config) {
-2448 |     this.config = config;
-2449 |     this.options = this.initializeOptions();
-2450 |     this.fileHidden = new FileHidden(config);
-2451 |   }
-2452 | 
-2453 |   public async build(): Promise<INodeTree> {
-2454 |     const rootDir = this.options.dir;
-2455 |     if (!documentFactory.exists(rootDir)) {
-2456 |       throw new Error(`Directory ${rootDir} does not exist`);
-2457 |     }
-2458 |     return await this.buildTree(rootDir);
-2459 |   }
-2460 | 
-2461 |   private initializeOptions(): INodeTreeBuilderOptions {
-2462 |     return {
-2463 |       dir: this.config.get("dir"),
-2464 |       pattern: new RegExp(this.config.get("pattern")),
-2465 |       maxDepth: this.config.get("maxDepth"),
-2466 |       excludePatterns: this.config.get("excludePatterns"),
-2467 |       additionalIgnoreFiles: this.config.get("additionalIgnoreFiles"),
-2468 |       returnType: "details",
-2469 |       followSymlinks: false
-2470 |     };
-2471 |   }
-2472 | 
-2473 |   private async createNode(nodePath: string): Promise<INodeTree> {
-2474 |     const stats = await fileStatsService(nodePath);
-2475 |     const name = documentFactory.baseName(nodePath);
-2476 | 
-2477 |     return {
-2478 |       name,
-2479 |       path: nodePath,
-2480 |       type: stats.isDirectory ? FILE_TYPE.Directory : FILE_TYPE.File
-2481 |     };
-2482 |   }
-2483 | 
-2484 |   private shouldProcessChildren(node: INodeTree, depth: number): boolean {
-2485 |     const isDirectory = node.type === FILE_TYPE.Directory;
-2486 |     const withinDepthLimit =
-2487 |       !this.options.maxDepth || depth < this.options.maxDepth;
-2488 |     return isDirectory && withinDepthLimit;
-2489 |   }
-2490 | 
-2491 |   private async processChildren(
-2492 |     nodePath: string,
-2493 |     depth: number
-2494 |   ): Promise<INodeTree[]> {
-2495 |     const entries = await documentFactory.readDir(nodePath);
-2496 |     const children: INodeTree[] = [];
-2497 | 
-2498 |     for (const entry of entries) {
-2499 |       const childNode = await this.processChild(nodePath, entry, depth);
-2500 |       if (childNode) {
-2501 |         children.push(childNode);
-2502 |       }
-2503 |     }
-2504 | 
-2505 |     return children;
-2506 |   }
-2507 | 
-2508 |   private async processChild(
-2509 |     parentPath: string,
-2510 |     entry: string,
-2511 |     depth: number
-2512 |   ): Promise<INodeTree | null> {
-2513 |     if (this.fileHidden.shouldExclude(entry)) {
-2514 |       return null;
-2515 |     }
-2516 | 
-2517 |     const childPath = documentFactory.join(parentPath, entry);
-2518 |     return await this.buildTree(childPath, depth + 1);
-2519 |   }
-2520 | 
-2521 |   private async buildTree(
-2522 |     nodePath: string,
-2523 |     depth: number = 0
-2524 |   ): Promise<INodeTree> {
-2525 |     const node = await this.createNode(nodePath);
-2526 | 
-2527 |     if (this.shouldProcessChildren(node, depth)) {
-2528 |       node.children = await this.processChildren(nodePath, depth);
-2529 |     }
-2530 | 
-2531 |     return node;
-2532 |   }
-2533 | }
-2534 | 
-2535 | ```
-2536 | ### Directory: __tests__
-2537 | 
-2538 | - **Path:** /root/git/codewrangler/src/services/builder/__tests__
-2539 | - **Size:** 0 bytes
-2540 | - **Files:** 0
-2541 | - **Total Files (including subdirectories):** 0
-2542 | - **Depth:** 3
+2375 | export default class FileHidden {
+2376 |   private ignoreHiddenFiles: boolean;
+2377 |   private patterns: string[];
+2378 |   private additionalIgnoreFiles: string[];
+2379 | 
+2380 |   public constructor(config: Config) {
+2381 |     this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
+2382 |     this.patterns = [...config.get("excludePatterns")];
+2383 |     this.additionalIgnoreFiles = config.get("additionalIgnoreFiles");
+2384 |   }
+2385 | 
+2386 |   public shouldExclude(fileName: string): boolean {
+2387 |     if (this.ignoreHiddenFiles && fileName.startsWith(".")) {
+2388 |       return true;
+2389 |     }
+2390 | 
+2391 |     if (this.patterns.some(pattern => minimatch(fileName, pattern))) {
+2392 |       return true;
+2393 |     }
+2394 | 
+2395 |     if (this.additionalIgnoreFiles.some(file => minimatch(fileName, file))) {
+2396 |       // Additional ignore files are always excluded
+2397 |       return true;
+2398 |     }
+2399 | 
+2400 |     return false;
+2401 |   }
+2402 | }
+2403 | 
+2404 | ```
+2405 | #### File: NodeTreeBuilder.ts
+2406 | 
+2407 | - **Path:** /root/git/codewrangler/src/services/builder/NodeTreeBuilder.ts
+2408 | - **Extension:** ts
+2409 | - **Size:** 3213 bytes
+2410 | - **Depth:** 3
+2411 | - **Lines:** 119
+2412 | 
+2413 | ```ts
+2414 | import FileHidden from "./FileHidden";
+2415 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+2416 | import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
+2417 | import { FILE_TYPE, FileType } from "../../types/type";
+2418 | import { Config, ConfigOptions } from "../../utils/config";
+2419 | 
+2420 | export interface INodeTree {
+2421 |   name: string;
+2422 |   path: string;
+2423 |   type: FileType;
+2424 |   children?: INodeTree[];
+2425 | }
+2426 | 
+2427 | export interface INodeTreeBuilderOptions
+2428 |   extends Pick<
+2429 |     ConfigOptions,
+2430 |     | "additionalIgnoreFiles"
+2431 |     | "maxDepth"
+2432 |     | "excludePatterns"
+2433 |     | "dir"
+2434 |     | "followSymlinks"
+2435 |   > {
+2436 |   pattern: RegExp;
+2437 |   returnType: "paths" | "details";
+2438 | }
+2439 | 
+2440 | export class NodeTreeBuilder {
+2441 |   private config: Config;
+2442 |   private options: INodeTreeBuilderOptions;
+2443 |   private fileHidden: FileHidden;
+2444 | 
+2445 |   public constructor(config: Config) {
+2446 |     this.config = config;
+2447 |     this.options = this.initializeOptions();
+2448 |     this.fileHidden = new FileHidden(config);
+2449 |   }
+2450 | 
+2451 |   public async build(): Promise<INodeTree> {
+2452 |     const rootDir = this.options.dir;
+2453 |     if (!documentFactory.exists(rootDir)) {
+2454 |       throw new Error(`Directory ${rootDir} does not exist`);
+2455 |     }
+2456 |     return await this.buildTree(rootDir);
+2457 |   }
+2458 | 
+2459 |   private initializeOptions(): INodeTreeBuilderOptions {
+2460 |     return {
+2461 |       dir: this.config.get("dir"),
+2462 |       pattern: new RegExp(this.config.get("pattern")),
+2463 |       maxDepth: this.config.get("maxDepth"),
+2464 |       excludePatterns: this.config.get("excludePatterns"),
+2465 |       additionalIgnoreFiles: this.config.get("additionalIgnoreFiles"),
+2466 |       returnType: "details",
+2467 |       followSymlinks: false
+2468 |     };
+2469 |   }
+2470 | 
+2471 |   private async createNode(nodePath: string): Promise<INodeTree> {
+2472 |     const stats = await fileStatsService(nodePath);
+2473 |     const name = documentFactory.baseName(nodePath);
+2474 | 
+2475 |     return {
+2476 |       name,
+2477 |       path: nodePath,
+2478 |       type: stats.isDirectory ? FILE_TYPE.Directory : FILE_TYPE.File
+2479 |     };
+2480 |   }
+2481 | 
+2482 |   private shouldProcessChildren(node: INodeTree, depth: number): boolean {
+2483 |     const isDirectory = node.type === FILE_TYPE.Directory;
+2484 |     const withinDepthLimit =
+2485 |       !this.options.maxDepth || depth < this.options.maxDepth;
+2486 |     return isDirectory && withinDepthLimit;
+2487 |   }
+2488 | 
+2489 |   private async processChildren(
+2490 |     nodePath: string,
+2491 |     depth: number
+2492 |   ): Promise<INodeTree[]> {
+2493 |     const entries = await documentFactory.readDir(nodePath);
+2494 |     const children: INodeTree[] = [];
+2495 | 
+2496 |     for (const entry of entries) {
+2497 |       const childNode = await this.processChild(nodePath, entry, depth);
+2498 |       if (childNode) {
+2499 |         children.push(childNode);
+2500 |       }
+2501 |     }
+2502 | 
+2503 |     return children;
+2504 |   }
+2505 | 
+2506 |   private async processChild(
+2507 |     parentPath: string,
+2508 |     entry: string,
+2509 |     depth: number
+2510 |   ): Promise<INodeTree | null> {
+2511 |     if (this.fileHidden.shouldExclude(entry)) {
+2512 |       return null;
+2513 |     }
+2514 | 
+2515 |     const childPath = documentFactory.join(parentPath, entry);
+2516 |     return await this.buildTree(childPath, depth + 1);
+2517 |   }
+2518 | 
+2519 |   private async buildTree(
+2520 |     nodePath: string,
+2521 |     depth: number = 0
+2522 |   ): Promise<INodeTree> {
+2523 |     const node = await this.createNode(nodePath);
+2524 | 
+2525 |     if (this.shouldProcessChildren(node, depth)) {
+2526 |       node.children = await this.processChildren(nodePath, depth);
+2527 |     }
+2528 | 
+2529 |     return node;
+2530 |   }
+2531 | }
+2532 | 
+2533 | ```
+2534 | ### Directory: __tests__
+2535 | 
+2536 | - **Path:** /root/git/codewrangler/src/services/builder/__tests__
+2537 | - **Size:** 0 bytes
+2538 | - **Files:** 0
+2539 | - **Total Files (including subdirectories):** 0
+2540 | - **Depth:** 3
+2541 | 
+2542 | #### Contents:
 2543 | 
-2544 | #### Contents:
+2544 | ### Directory: renderer
 2545 | 
-2546 | ### Directory: renderer
-2547 | 
-2548 | - **Path:** /root/git/codewrangler/src/services/renderer
-2549 | - **Size:** 8793 bytes
-2550 | - **Files:** 3
-2551 | - **Total Files (including subdirectories):** 5
-2552 | - **Depth:** 2
+2546 | - **Path:** /root/git/codewrangler/src/services/renderer
+2547 | - **Size:** 8793 bytes
+2548 | - **Files:** 3
+2549 | - **Total Files (including subdirectories):** 5
+2550 | - **Depth:** 2
+2551 | 
+2552 | #### Contents:
 2553 | 
-2554 | #### Contents:
+2554 | #### File: RenderStrategy.ts
 2555 | 
-2556 | #### File: RenderStrategy.ts
-2557 | 
-2558 | - **Path:** /root/git/codewrangler/src/services/renderer/RenderStrategy.ts
-2559 | - **Extension:** ts
-2560 | - **Size:** 3388 bytes
-2561 | - **Depth:** 3
-2562 | - **Lines:** 109
-2563 | 
-2564 | ```ts
-2565 | import { NodeDirectory } from "../../core/entities/NodeDirectory";
-2566 | import { NodeFile } from "../../core/entities/NodeFile";
-2567 | import { Template } from "../../infrastructure/templates/TemplateEngine";
-2568 | import {
-2569 |   BaseTemplate,
-2570 |   DirectoryTemplate,
-2571 |   FileTemplate
-2572 | } from "../../infrastructure/templates/zod";
-2573 | import { Config, OutputFormat } from "../../utils/config";
-2574 | 
-2575 | interface IContentRenderer {
-2576 |   renderFile: (file: NodeFile) => string;
-2577 |   renderDirectory: (directory: NodeDirectory) => string;
-2578 | }
-2579 | 
-2580 | interface IDocumentRenderer {
-2581 |   render: (rootDirectory: NodeDirectory) => string;
-2582 |   dispose: () => void;
-2583 | }
-2584 | 
-2585 | export interface IRenderStrategy extends IContentRenderer, IDocumentRenderer {
-2586 |   getName: () => OutputFormat;
-2587 | }
-2588 | 
-2589 | export abstract class RenderBaseStrategy implements IRenderStrategy {
-2590 |   protected templatePage: Template;
-2591 |   protected templateDirectory: Template;
-2592 |   protected templateFile: Template;
-2593 | 
-2594 |   protected constructor(
-2595 |     private readonly config: Config,
-2596 |     public readonly name: OutputFormat,
-2597 |     templatePage: Template,
-2598 |     templateDirectory: Template,
-2599 |     templateFile: Template
-2600 |   ) {
-2601 |     this.templatePage = templatePage;
-2602 |     this.templateDirectory = templateDirectory;
-2603 |     this.templateFile = templateFile;
-2604 |   }
-2605 | 
-2606 |   public getName(): OutputFormat {
-2607 |     return this.name;
-2608 |   }
-2609 | 
-2610 |   public renderFile(file: NodeFile): string {
-2611 |     return this.templateFile.render({
-2612 |       FILE_NAME: file.name,
-2613 |       FILE_EXTENSION: file.extension.replace(".", ""),
-2614 |       FILE_SIZE: file.size,
-2615 |       FILE_DEPTH: file.deep,
-2616 |       FILE_LINES: file.content?.split("\n").length || 0,
-2617 |       FILE_PATH: file.path,
-2618 |       FILE_CONTENTS: file.content || ""
-2619 |     } as FileTemplate & Record<string, string>);
-2620 |   }
-2621 | 
-2622 |   public renderDirectory(directory: NodeDirectory): string {
-2623 |     const content = this.renderChildren(directory.children);
-2624 | 
-2625 |     return this.templateDirectory.render({
-2626 |       DIRECTORY_NAME: directory.name,
-2627 |       DIRECTORY_PATH: directory.path,
-2628 |       DIRECTORY_SIZE: directory.size,
-2629 |       DIRECTORY_LENGTH: directory.length,
-2630 |       DIRECTORY_NUMBER_OF_FILES: directory.numberOfFiles,
-2631 |       DIRECTORY_DEEP_LENGTH: directory.deepLength,
-2632 |       DIRECTORY_DEPTH: directory.deep,
-2633 |       DIRECTORY_CONTENT: content
-2634 |     } as DirectoryTemplate & Record<string, string>);
-2635 |   }
-2636 | 
-2637 |   public render(rootDirectory: NodeDirectory | NodeFile): string {
-2638 |     const rootContent = this.renderNode(rootDirectory);
-2639 | 
-2640 |     const templateConfig = {
-2641 |       PROJECT_NAME:
-2642 |         this.config.get("projectName") || rootDirectory.name || "Project",
-2643 |       GENERATION_DATE: new Date().toISOString(),
-2644 |       TOTAL_SIZE: rootDirectory.size,
-2645 |       CONTENT: rootContent
-2646 |     } as BaseTemplate & Record<string, string>;
-2647 | 
-2648 |     if (rootDirectory.type === "directory") {
-2649 |       templateConfig["TOTAL_FILES"] = rootDirectory.length;
-2650 |       templateConfig["TOTAL_DIRECTORIES"] = rootDirectory.deepLength;
-2651 |     }
-2652 | 
-2653 |     return this.templatePage.render(templateConfig);
-2654 |   }
-2655 | 
-2656 |   public dispose(): void {
-2657 |     this.templatePage.dispose();
-2658 |     this.templateDirectory.dispose();
-2659 |     this.templateFile.dispose();
-2660 |   }
-2661 | 
-2662 |   protected renderNode(node: NodeFile | NodeDirectory): string {
-2663 |     return node.type === "file"
-2664 |       ? this.renderFile(node)
-2665 |       : this.renderDirectory(node);
-2666 |   }
-2667 | 
-2668 |   protected renderChildren(children: (NodeFile | NodeDirectory)[]): string {
-2669 |     if (!children) return "";
-2670 |     return children.map(child => this.renderNode(child)).join("");
-2671 |   }
-2672 | }
-2673 | 
-2674 | ```
-2675 | #### File: RenderStrategyBuilder.ts
-2676 | 
-2677 | - **Path:** /root/git/codewrangler/src/services/renderer/RenderStrategyBuilder.ts
-2678 | - **Extension:** ts
-2679 | - **Size:** 3112 bytes
-2680 | - **Depth:** 3
-2681 | - **Lines:** 105
-2682 | 
-2683 | ```ts
-2684 | import { RenderBaseStrategy } from "./RenderStrategy";
-2685 | import { RenderHTMLStrategy } from "./strategies/HTMLStrategy";
-2686 | import { RenderMarkdownStrategy } from "./strategies/MarkdownStrategy";
-2687 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-2688 | import { Template } from "../../infrastructure/templates/TemplateEngine";
-2689 | import {
-2690 |   baseTemplateSchema,
-2691 |   directoryTemplateSchema,
-2692 |   fileTemplateSchema
-2693 | } from "../../infrastructure/templates/zod";
-2694 | import { Config, OutputFormatExtension } from "../../utils/config";
-2695 | 
-2696 | export class RenderStrategyBuilder {
-2697 |   private config: Config | null = null;
-2698 |   private extension: OutputFormatExtension | null = null;
-2699 |   private name: string | null = null;
-2700 |   private templatePage: Template | null = null;
-2701 |   private templateDirectory: Template | null = null;
-2702 |   private templateFile: Template | null = null;
-2703 | 
-2704 |   public setConfig(config: Config): RenderStrategyBuilder {
-2705 |     this.config = config;
-2706 |     return this;
-2707 |   }
-2708 | 
-2709 |   public setExtension(extension: OutputFormatExtension): RenderStrategyBuilder {
-2710 |     this.extension = extension;
-2711 |     return this;
-2712 |   }
-2713 | 
-2714 |   public setName(name: string): RenderStrategyBuilder {
-2715 |     this.name = name;
-2716 |     return this;
-2717 |   }
-2718 | 
-2719 |   public async loadTemplates(): Promise<RenderStrategyBuilder> {
-2720 |     if (!this.config) {
-2721 |       throw new Error("Config is required");
-2722 |     }
+2556 | - **Path:** /root/git/codewrangler/src/services/renderer/RenderStrategy.ts
+2557 | - **Extension:** ts
+2558 | - **Size:** 3388 bytes
+2559 | - **Depth:** 3
+2560 | - **Lines:** 109
+2561 | 
+2562 | ```ts
+2563 | import { NodeDirectory } from "../../core/entities/NodeDirectory";
+2564 | import { NodeFile } from "../../core/entities/NodeFile";
+2565 | import { Template } from "../../infrastructure/templates/TemplateEngine";
+2566 | import {
+2567 |   BaseTemplate,
+2568 |   DirectoryTemplate,
+2569 |   FileTemplate
+2570 | } from "../../infrastructure/templates/zod";
+2571 | import { Config, OutputFormat } from "../../utils/config";
+2572 | 
+2573 | interface IContentRenderer {
+2574 |   renderFile: (file: NodeFile) => string;
+2575 |   renderDirectory: (directory: NodeDirectory) => string;
+2576 | }
+2577 | 
+2578 | interface IDocumentRenderer {
+2579 |   render: (rootDirectory: NodeDirectory) => string;
+2580 |   dispose: () => void;
+2581 | }
+2582 | 
+2583 | export interface IRenderStrategy extends IContentRenderer, IDocumentRenderer {
+2584 |   getName: () => OutputFormat;
+2585 | }
+2586 | 
+2587 | export abstract class RenderBaseStrategy implements IRenderStrategy {
+2588 |   protected templatePage: Template;
+2589 |   protected templateDirectory: Template;
+2590 |   protected templateFile: Template;
+2591 | 
+2592 |   protected constructor(
+2593 |     private readonly config: Config,
+2594 |     public readonly name: OutputFormat,
+2595 |     templatePage: Template,
+2596 |     templateDirectory: Template,
+2597 |     templateFile: Template
+2598 |   ) {
+2599 |     this.templatePage = templatePage;
+2600 |     this.templateDirectory = templateDirectory;
+2601 |     this.templateFile = templateFile;
+2602 |   }
+2603 | 
+2604 |   public getName(): OutputFormat {
+2605 |     return this.name;
+2606 |   }
+2607 | 
+2608 |   public renderFile(file: NodeFile): string {
+2609 |     return this.templateFile.render({
+2610 |       FILE_NAME: file.name,
+2611 |       FILE_EXTENSION: file.extension.replace(".", ""),
+2612 |       FILE_SIZE: file.size,
+2613 |       FILE_DEPTH: file.deep,
+2614 |       FILE_LINES: file.content?.split("\n").length || 0,
+2615 |       FILE_PATH: file.path,
+2616 |       FILE_CONTENTS: file.content || ""
+2617 |     } as FileTemplate & Record<string, string>);
+2618 |   }
+2619 | 
+2620 |   public renderDirectory(directory: NodeDirectory): string {
+2621 |     const content = this.renderChildren(directory.children);
+2622 | 
+2623 |     return this.templateDirectory.render({
+2624 |       DIRECTORY_NAME: directory.name,
+2625 |       DIRECTORY_PATH: directory.path,
+2626 |       DIRECTORY_SIZE: directory.size,
+2627 |       DIRECTORY_LENGTH: directory.length,
+2628 |       DIRECTORY_NUMBER_OF_FILES: directory.numberOfFiles,
+2629 |       DIRECTORY_DEEP_LENGTH: directory.deepLength,
+2630 |       DIRECTORY_DEPTH: directory.deep,
+2631 |       DIRECTORY_CONTENT: content
+2632 |     } as DirectoryTemplate & Record<string, string>);
+2633 |   }
+2634 | 
+2635 |   public render(rootDirectory: NodeDirectory | NodeFile): string {
+2636 |     const rootContent = this.renderNode(rootDirectory);
+2637 | 
+2638 |     const templateConfig = {
+2639 |       PROJECT_NAME:
+2640 |         this.config.get("projectName") || rootDirectory.name || "Project",
+2641 |       GENERATION_DATE: new Date().toISOString(),
+2642 |       TOTAL_SIZE: rootDirectory.size,
+2643 |       CONTENT: rootContent
+2644 |     } as BaseTemplate & Record<string, string>;
+2645 | 
+2646 |     if (rootDirectory.type === "directory") {
+2647 |       templateConfig["TOTAL_FILES"] = rootDirectory.length;
+2648 |       templateConfig["TOTAL_DIRECTORIES"] = rootDirectory.deepLength;
+2649 |     }
+2650 | 
+2651 |     return this.templatePage.render(templateConfig);
+2652 |   }
+2653 | 
+2654 |   public dispose(): void {
+2655 |     this.templatePage.dispose();
+2656 |     this.templateDirectory.dispose();
+2657 |     this.templateFile.dispose();
+2658 |   }
+2659 | 
+2660 |   protected renderNode(node: NodeFile | NodeDirectory): string {
+2661 |     return node.type === "file"
+2662 |       ? this.renderFile(node)
+2663 |       : this.renderDirectory(node);
+2664 |   }
+2665 | 
+2666 |   protected renderChildren(children: (NodeFile | NodeDirectory)[]): string {
+2667 |     if (!children) return "";
+2668 |     return children.map(child => this.renderNode(child)).join("");
+2669 |   }
+2670 | }
+2671 | 
+2672 | ```
+2673 | #### File: RenderStrategyBuilder.ts
+2674 | 
+2675 | - **Path:** /root/git/codewrangler/src/services/renderer/RenderStrategyBuilder.ts
+2676 | - **Extension:** ts
+2677 | - **Size:** 3112 bytes
+2678 | - **Depth:** 3
+2679 | - **Lines:** 105
+2680 | 
+2681 | ```ts
+2682 | import { RenderBaseStrategy } from "./RenderStrategy";
+2683 | import { RenderHTMLStrategy } from "./strategies/HTMLStrategy";
+2684 | import { RenderMarkdownStrategy } from "./strategies/MarkdownStrategy";
+2685 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+2686 | import { Template } from "../../infrastructure/templates/TemplateEngine";
+2687 | import {
+2688 |   baseTemplateSchema,
+2689 |   directoryTemplateSchema,
+2690 |   fileTemplateSchema
+2691 | } from "../../infrastructure/templates/zod";
+2692 | import { Config, OutputFormatExtension } from "../../utils/config";
+2693 | 
+2694 | export class RenderStrategyBuilder {
+2695 |   private config: Config | null = null;
+2696 |   private extension: OutputFormatExtension | null = null;
+2697 |   private name: string | null = null;
+2698 |   private templatePage: Template | null = null;
+2699 |   private templateDirectory: Template | null = null;
+2700 |   private templateFile: Template | null = null;
+2701 | 
+2702 |   public setConfig(config: Config): RenderStrategyBuilder {
+2703 |     this.config = config;
+2704 |     return this;
+2705 |   }
+2706 | 
+2707 |   public setExtension(extension: OutputFormatExtension): RenderStrategyBuilder {
+2708 |     this.extension = extension;
+2709 |     return this;
+2710 |   }
+2711 | 
+2712 |   public setName(name: string): RenderStrategyBuilder {
+2713 |     this.name = name;
+2714 |     return this;
+2715 |   }
+2716 | 
+2717 |   public async loadTemplates(): Promise<RenderStrategyBuilder> {
+2718 |     if (!this.config) {
+2719 |       throw new Error("Config is required");
+2720 |     }
+2721 | 
+2722 |     const templateDir = Template.getTemplateDir(this.config);
 2723 | 
-2724 |     const templateDir = Template.getTemplateDir(this.config);
-2725 | 
-2726 |     this.templatePage = await this.loadTemplatePage(templateDir);
-2727 |     this.templateDirectory = await this.loadTemplateDirectory(templateDir);
-2728 |     this.templateFile = await this.loadTemplateFile(templateDir);
-2729 | 
-2730 |     return this;
-2731 |   }
-2732 | 
-2733 |   public build(): RenderBaseStrategy {
-2734 |     this.validate();
-2735 | 
-2736 |     const concreteRenderStrategy =
-2737 |       this.name === "Markdown" ? RenderMarkdownStrategy : RenderHTMLStrategy;
-2738 | 
-2739 |     return new concreteRenderStrategy(
-2740 |       this.config as Config,
-2741 |       this.templatePage as Template,
-2742 |       this.templateDirectory as Template,
-2743 |       this.templateFile as Template
-2744 |     );
-2745 |   }
-2746 | 
-2747 |   private validate(): boolean {
-2748 |     if (!this.config) {
-2749 |       throw new Error("Config is required");
-2750 |     }
-2751 |     if (!this.extension) {
-2752 |       throw new Error("Extension is required");
-2753 |     }
-2754 |     if (!this.name) {
-2755 |       throw new Error("Name is required");
-2756 |     }
-2757 |     if (!this.templatePage || !this.templateDirectory || !this.templateFile) {
-2758 |       throw new Error("Templates must be loaded before building");
-2759 |     }
-2760 | 
-2761 |     return true;
-2762 |   }
-2763 | 
-2764 |   private loadTemplateFile(templateDir: string): Promise<Template> {
-2765 |     return Template.create(
-2766 |       "file",
-2767 |       fileTemplateSchema,
-2768 |       documentFactory.join(templateDir, `file.${this.extension}`)
-2769 |     );
-2770 |   }
-2771 | 
-2772 |   private loadTemplateDirectory(templateDir: string): Promise<Template> {
-2773 |     return Template.create(
-2774 |       "directory",
-2775 |       directoryTemplateSchema,
-2776 |       documentFactory.join(templateDir, `directory.${this.extension}`)
-2777 |     );
-2778 |   }
-2779 | 
-2780 |   private loadTemplatePage(templateDir: string): Promise<Template> {
-2781 |     return Template.create(
-2782 |       "page",
-2783 |       baseTemplateSchema,
-2784 |       documentFactory.join(templateDir, `page.${this.extension}`)
-2785 |     );
-2786 |   }
-2787 | }
-2788 | 
-2789 | ```
-2790 | #### File: RenderStrategyFactory.ts
-2791 | 
-2792 | - **Path:** /root/git/codewrangler/src/services/renderer/RenderStrategyFactory.ts
-2793 | - **Extension:** ts
-2794 | - **Size:** 1367 bytes
-2795 | - **Depth:** 3
-2796 | - **Lines:** 47
-2797 | 
-2798 | ```ts
-2799 | import { RenderBaseStrategy } from "./RenderStrategy";
-2800 | import { RenderStrategyBuilder } from "./RenderStrategyBuilder";
-2801 | import { Config } from "../../utils/config/Config";
-2802 | import { OutputFormat } from "../../utils/config/schema";
-2803 | 
-2804 | // Factory function for common render strategies
-2805 | export const renderStrategyFactory = {
-2806 |   async createMarkdownStrategy(config: Config): Promise<RenderBaseStrategy> {
-2807 |     return await new RenderStrategyBuilder()
-2808 |       .setConfig(config)
-2809 |       .setExtension("md")
-2810 |       .setName("Markdown")
-2811 |       .loadTemplates()
-2812 |       .then(builder => builder.build());
-2813 |   },
-2814 | 
-2815 |   async createHTMLStrategy(config: Config): Promise<RenderBaseStrategy> {
-2816 |     return await new RenderStrategyBuilder()
-2817 |       .setConfig(config)
-2818 |       .setExtension("html")
-2819 |       .setName("HTML")
-2820 |       .loadTemplates()
-2821 |       .then(builder => builder.build());
-2822 |   },
-2823 | 
-2824 |   async createStrategies(
-2825 |     config: Config,
-2826 |     formats: OutputFormat[]
-2827 |   ): Promise<RenderBaseStrategy[]> {
-2828 |     return await Promise.all(
-2829 |       formats.map(format => this.createStrategy(config, format))
-2830 |     );
-2831 |   },
-2832 | 
-2833 |   async createStrategy(
-2834 |     config: Config,
-2835 |     format: OutputFormat
-2836 |   ): Promise<RenderBaseStrategy> {
-2837 |     switch (format) {
-2838 |       case "markdown":
-2839 |         return await this.createMarkdownStrategy(config);
-2840 |       case "html":
-2841 |         return await this.createHTMLStrategy(config);
-2842 |     }
-2843 |   }
-2844 | };
-2845 | 
-2846 | ```
-2847 | ### Directory: __tests__
-2848 | 
-2849 | - **Path:** /root/git/codewrangler/src/services/renderer/__tests__
-2850 | - **Size:** 0 bytes
-2851 | - **Files:** 0
-2852 | - **Total Files (including subdirectories):** 0
-2853 | - **Depth:** 3
+2724 |     this.templatePage = await this.loadTemplatePage(templateDir);
+2725 |     this.templateDirectory = await this.loadTemplateDirectory(templateDir);
+2726 |     this.templateFile = await this.loadTemplateFile(templateDir);
+2727 | 
+2728 |     return this;
+2729 |   }
+2730 | 
+2731 |   public build(): RenderBaseStrategy {
+2732 |     this.validate();
+2733 | 
+2734 |     const concreteRenderStrategy =
+2735 |       this.name === "Markdown" ? RenderMarkdownStrategy : RenderHTMLStrategy;
+2736 | 
+2737 |     return new concreteRenderStrategy(
+2738 |       this.config as Config,
+2739 |       this.templatePage as Template,
+2740 |       this.templateDirectory as Template,
+2741 |       this.templateFile as Template
+2742 |     );
+2743 |   }
+2744 | 
+2745 |   private validate(): boolean {
+2746 |     if (!this.config) {
+2747 |       throw new Error("Config is required");
+2748 |     }
+2749 |     if (!this.extension) {
+2750 |       throw new Error("Extension is required");
+2751 |     }
+2752 |     if (!this.name) {
+2753 |       throw new Error("Name is required");
+2754 |     }
+2755 |     if (!this.templatePage || !this.templateDirectory || !this.templateFile) {
+2756 |       throw new Error("Templates must be loaded before building");
+2757 |     }
+2758 | 
+2759 |     return true;
+2760 |   }
+2761 | 
+2762 |   private loadTemplateFile(templateDir: string): Promise<Template> {
+2763 |     return Template.create(
+2764 |       "file",
+2765 |       fileTemplateSchema,
+2766 |       documentFactory.join(templateDir, `file.${this.extension}`)
+2767 |     );
+2768 |   }
+2769 | 
+2770 |   private loadTemplateDirectory(templateDir: string): Promise<Template> {
+2771 |     return Template.create(
+2772 |       "directory",
+2773 |       directoryTemplateSchema,
+2774 |       documentFactory.join(templateDir, `directory.${this.extension}`)
+2775 |     );
+2776 |   }
+2777 | 
+2778 |   private loadTemplatePage(templateDir: string): Promise<Template> {
+2779 |     return Template.create(
+2780 |       "page",
+2781 |       baseTemplateSchema,
+2782 |       documentFactory.join(templateDir, `page.${this.extension}`)
+2783 |     );
+2784 |   }
+2785 | }
+2786 | 
+2787 | ```
+2788 | #### File: RenderStrategyFactory.ts
+2789 | 
+2790 | - **Path:** /root/git/codewrangler/src/services/renderer/RenderStrategyFactory.ts
+2791 | - **Extension:** ts
+2792 | - **Size:** 1367 bytes
+2793 | - **Depth:** 3
+2794 | - **Lines:** 47
+2795 | 
+2796 | ```ts
+2797 | import { RenderBaseStrategy } from "./RenderStrategy";
+2798 | import { RenderStrategyBuilder } from "./RenderStrategyBuilder";
+2799 | import { Config } from "../../utils/config/Config";
+2800 | import { OutputFormat } from "../../utils/config/schema";
+2801 | 
+2802 | // Factory function for common render strategies
+2803 | export const renderStrategyFactory = {
+2804 |   async createMarkdownStrategy(config: Config): Promise<RenderBaseStrategy> {
+2805 |     return await new RenderStrategyBuilder()
+2806 |       .setConfig(config)
+2807 |       .setExtension("md")
+2808 |       .setName("Markdown")
+2809 |       .loadTemplates()
+2810 |       .then(builder => builder.build());
+2811 |   },
+2812 | 
+2813 |   async createHTMLStrategy(config: Config): Promise<RenderBaseStrategy> {
+2814 |     return await new RenderStrategyBuilder()
+2815 |       .setConfig(config)
+2816 |       .setExtension("html")
+2817 |       .setName("HTML")
+2818 |       .loadTemplates()
+2819 |       .then(builder => builder.build());
+2820 |   },
+2821 | 
+2822 |   async createStrategies(
+2823 |     config: Config,
+2824 |     formats: OutputFormat[]
+2825 |   ): Promise<RenderBaseStrategy[]> {
+2826 |     return await Promise.all(
+2827 |       formats.map(format => this.createStrategy(config, format))
+2828 |     );
+2829 |   },
+2830 | 
+2831 |   async createStrategy(
+2832 |     config: Config,
+2833 |     format: OutputFormat
+2834 |   ): Promise<RenderBaseStrategy> {
+2835 |     switch (format) {
+2836 |       case "markdown":
+2837 |         return await this.createMarkdownStrategy(config);
+2838 |       case "html":
+2839 |         return await this.createHTMLStrategy(config);
+2840 |     }
+2841 |   }
+2842 | };
+2843 | 
+2844 | ```
+2845 | ### Directory: __tests__
+2846 | 
+2847 | - **Path:** /root/git/codewrangler/src/services/renderer/__tests__
+2848 | - **Size:** 0 bytes
+2849 | - **Files:** 0
+2850 | - **Total Files (including subdirectories):** 0
+2851 | - **Depth:** 3
+2852 | 
+2853 | #### Contents:
 2854 | 
-2855 | #### Contents:
+2855 | ### Directory: strategies
 2856 | 
-2857 | ### Directory: strategies
-2858 | 
-2859 | - **Path:** /root/git/codewrangler/src/services/renderer/strategies
-2860 | - **Size:** 926 bytes
-2861 | - **Files:** 2
-2862 | - **Total Files (including subdirectories):** 2
-2863 | - **Depth:** 3
+2857 | - **Path:** /root/git/codewrangler/src/services/renderer/strategies
+2858 | - **Size:** 926 bytes
+2859 | - **Files:** 2
+2860 | - **Total Files (including subdirectories):** 2
+2861 | - **Depth:** 3
+2862 | 
+2863 | #### Contents:
 2864 | 
-2865 | #### Contents:
+2865 | #### File: HTMLStrategy.ts
 2866 | 
-2867 | #### File: HTMLStrategy.ts
-2868 | 
-2869 | - **Path:** /root/git/codewrangler/src/services/renderer/strategies/HTMLStrategy.ts
-2870 | - **Extension:** ts
-2871 | - **Size:** 459 bytes
-2872 | - **Depth:** 4
-2873 | - **Lines:** 15
-2874 | 
-2875 | ```ts
-2876 | import { Template } from "../../../infrastructure/templates/TemplateEngine";
-2877 | import { Config } from "../../../utils/config";
-2878 | import { RenderBaseStrategy } from "../RenderStrategy";
-2879 | 
-2880 | export class RenderHTMLStrategy extends RenderBaseStrategy {
-2881 |   public constructor(
-2882 |     config: Config,
-2883 |     templatePage: Template,
-2884 |     templateDirectory: Template,
-2885 |     templateFile: Template
-2886 |   ) {
-2887 |     super(config, "html", templatePage, templateDirectory, templateFile);
-2888 |   }
-2889 | }
-2890 | 
-2891 | ```
-2892 | #### File: MarkdownStrategy.ts
-2893 | 
-2894 | - **Path:** /root/git/codewrangler/src/services/renderer/strategies/MarkdownStrategy.ts
-2895 | - **Extension:** ts
-2896 | - **Size:** 467 bytes
-2897 | - **Depth:** 4
-2898 | - **Lines:** 15
-2899 | 
-2900 | ```ts
-2901 | import { Template } from "../../../infrastructure/templates/TemplateEngine";
-2902 | import { Config } from "../../../utils/config";
-2903 | import { RenderBaseStrategy } from "../RenderStrategy";
-2904 | 
-2905 | export class RenderMarkdownStrategy extends RenderBaseStrategy {
-2906 |   public constructor(
-2907 |     config: Config,
-2908 |     templatePage: Template,
-2909 |     templateDirectory: Template,
-2910 |     templateFile: Template
-2911 |   ) {
-2912 |     super(config, "markdown", templatePage, templateDirectory, templateFile);
-2913 |   }
-2914 | }
-2915 | 
-2916 | ```
-2917 | ### Directory: types
-2918 | 
-2919 | - **Path:** /root/git/codewrangler/src/types
-2920 | - **Size:** 1314 bytes
-2921 | - **Files:** 2
-2922 | - **Total Files (including subdirectories):** 2
-2923 | - **Depth:** 1
+2867 | - **Path:** /root/git/codewrangler/src/services/renderer/strategies/HTMLStrategy.ts
+2868 | - **Extension:** ts
+2869 | - **Size:** 459 bytes
+2870 | - **Depth:** 4
+2871 | - **Lines:** 15
+2872 | 
+2873 | ```ts
+2874 | import { Template } from "../../../infrastructure/templates/TemplateEngine";
+2875 | import { Config } from "../../../utils/config";
+2876 | import { RenderBaseStrategy } from "../RenderStrategy";
+2877 | 
+2878 | export class RenderHTMLStrategy extends RenderBaseStrategy {
+2879 |   public constructor(
+2880 |     config: Config,
+2881 |     templatePage: Template,
+2882 |     templateDirectory: Template,
+2883 |     templateFile: Template
+2884 |   ) {
+2885 |     super(config, "html", templatePage, templateDirectory, templateFile);
+2886 |   }
+2887 | }
+2888 | 
+2889 | ```
+2890 | #### File: MarkdownStrategy.ts
+2891 | 
+2892 | - **Path:** /root/git/codewrangler/src/services/renderer/strategies/MarkdownStrategy.ts
+2893 | - **Extension:** ts
+2894 | - **Size:** 467 bytes
+2895 | - **Depth:** 4
+2896 | - **Lines:** 15
+2897 | 
+2898 | ```ts
+2899 | import { Template } from "../../../infrastructure/templates/TemplateEngine";
+2900 | import { Config } from "../../../utils/config";
+2901 | import { RenderBaseStrategy } from "../RenderStrategy";
+2902 | 
+2903 | export class RenderMarkdownStrategy extends RenderBaseStrategy {
+2904 |   public constructor(
+2905 |     config: Config,
+2906 |     templatePage: Template,
+2907 |     templateDirectory: Template,
+2908 |     templateFile: Template
+2909 |   ) {
+2910 |     super(config, "markdown", templatePage, templateDirectory, templateFile);
+2911 |   }
+2912 | }
+2913 | 
+2914 | ```
+2915 | ### Directory: types
+2916 | 
+2917 | - **Path:** /root/git/codewrangler/src/types
+2918 | - **Size:** 1314 bytes
+2919 | - **Files:** 2
+2920 | - **Total Files (including subdirectories):** 2
+2921 | - **Depth:** 1
+2922 | 
+2923 | #### Contents:
 2924 | 
-2925 | #### Contents:
+2925 | #### File: template.ts
 2926 | 
-2927 | #### File: template.ts
-2928 | 
-2929 | - **Path:** /root/git/codewrangler/src/types/template.ts
-2930 | - **Extension:** ts
-2931 | - **Size:** 229 bytes
-2932 | - **Depth:** 2
-2933 | - **Lines:** 10
-2934 | 
-2935 | ```ts
-2936 | import { z } from "zod";
+2927 | - **Path:** /root/git/codewrangler/src/types/template.ts
+2928 | - **Extension:** ts
+2929 | - **Size:** 229 bytes
+2930 | - **Depth:** 2
+2931 | - **Lines:** 10
+2932 | 
+2933 | ```ts
+2934 | import { z } from "zod";
+2935 | 
+2936 | export type TemplateType = "page" | "file" | "directory";
 2937 | 
-2938 | export type TemplateType = "page" | "file" | "directory";
-2939 | 
-2940 | export interface ITemplateContent<T> {
-2941 |   content: string;
-2942 |   schema: z.ZodSchema<T>;
-2943 |   additionalFields?: Record<string, z.ZodSchema<string>>;
-2944 | }
-2945 | 
-2946 | ```
-2947 | #### File: type.ts
-2948 | 
-2949 | - **Path:** /root/git/codewrangler/src/types/type.ts
-2950 | - **Extension:** ts
-2951 | - **Size:** 1085 bytes
-2952 | - **Depth:** 2
-2953 | - **Lines:** 62
-2954 | 
-2955 | ```ts
-2956 | export const FILE_TYPE = {
-2957 |   File: "file",
-2958 |   Directory: "directory"
-2959 | } as const;
+2938 | export interface ITemplateContent<T> {
+2939 |   content: string;
+2940 |   schema: z.ZodSchema<T>;
+2941 |   additionalFields?: Record<string, z.ZodSchema<string>>;
+2942 | }
+2943 | 
+2944 | ```
+2945 | #### File: type.ts
+2946 | 
+2947 | - **Path:** /root/git/codewrangler/src/types/type.ts
+2948 | - **Extension:** ts
+2949 | - **Size:** 1085 bytes
+2950 | - **Depth:** 2
+2951 | - **Lines:** 62
+2952 | 
+2953 | ```ts
+2954 | export const FILE_TYPE = {
+2955 |   File: "file",
+2956 |   Directory: "directory"
+2957 | } as const;
+2958 | 
+2959 | export type FileType = (typeof FILE_TYPE)[keyof typeof FILE_TYPE];
 2960 | 
-2961 | export type FileType = (typeof FILE_TYPE)[keyof typeof FILE_TYPE];
-2962 | 
-2963 | export interface IAccessFlags {
-2964 |   readable: boolean;
-2965 |   writable: boolean;
-2966 |   executable: boolean;
-2967 | }
-2968 | 
-2969 | export interface IFileStats {
-2970 |   size: number;
-2971 |   created: Date;
-2972 |   modified: Date;
-2973 |   accessed: Date;
-2974 |   isDirectory: boolean;
-2975 |   isFile: boolean;
-2976 |   permissions: IAccessFlags;
-2977 | }
-2978 | 
-2979 | export interface IReadOptions {
-2980 |   encoding?: BufferEncoding;
-2981 |   flag?: string;
-2982 | }
-2983 | 
-2984 | export interface IWriteOptions extends IReadOptions {
-2985 |   mode?: number;
-2986 |   flag?: string;
-2987 | }
-2988 | 
-2989 | export interface IDirectoryOptions {
-2990 |   recursive?: boolean;
-2991 |   mode?: number;
-2992 | }
-2993 | 
-2994 | export interface IFileTreeItem {
-2995 |   path: string;
-2996 |   type: FileType;
-2997 |   stats?: IFileStats;
-2998 | }
-2999 | 
-3000 | export interface IPropsNode {
-3001 |   name: string;
-3002 |   path: string;
-3003 |   deep: number;
-3004 |   size: number;
-3005 |   extension?: string;
-3006 |   stats?: IFileStats;
-3007 | }
-3008 | 
-3009 | export interface IPropsDirectoryNode extends IPropsNode {
-3010 |   deepLength: number;
-3011 |   length: number;
-3012 | }
-3013 | 
-3014 | export interface IPropsFileNode extends IPropsNode {
-3015 |   extension: string;
-3016 | }
-3017 | 
-3018 | ```
-3019 | ### Directory: utils
-3020 | 
-3021 | - **Path:** /root/git/codewrangler/src/utils
-3022 | - **Size:** 9151 bytes
-3023 | - **Files:** 0
-3024 | - **Total Files (including subdirectories):** 6
-3025 | - **Depth:** 1
+2961 | export interface IAccessFlags {
+2962 |   readable: boolean;
+2963 |   writable: boolean;
+2964 |   executable: boolean;
+2965 | }
+2966 | 
+2967 | export interface IFileStats {
+2968 |   size: number;
+2969 |   created: Date;
+2970 |   modified: Date;
+2971 |   accessed: Date;
+2972 |   isDirectory: boolean;
+2973 |   isFile: boolean;
+2974 |   permissions: IAccessFlags;
+2975 | }
+2976 | 
+2977 | export interface IReadOptions {
+2978 |   encoding?: BufferEncoding;
+2979 |   flag?: string;
+2980 | }
+2981 | 
+2982 | export interface IWriteOptions extends IReadOptions {
+2983 |   mode?: number;
+2984 |   flag?: string;
+2985 | }
+2986 | 
+2987 | export interface IDirectoryOptions {
+2988 |   recursive?: boolean;
+2989 |   mode?: number;
+2990 | }
+2991 | 
+2992 | export interface IFileTreeItem {
+2993 |   path: string;
+2994 |   type: FileType;
+2995 |   stats?: IFileStats;
+2996 | }
+2997 | 
+2998 | export interface IPropsNode {
+2999 |   name: string;
+3000 |   path: string;
+3001 |   deep: number;
+3002 |   size: number;
+3003 |   extension?: string;
+3004 |   stats?: IFileStats;
+3005 | }
+3006 | 
+3007 | export interface IPropsDirectoryNode extends IPropsNode {
+3008 |   deepLength: number;
+3009 |   length: number;
+3010 | }
+3011 | 
+3012 | export interface IPropsFileNode extends IPropsNode {
+3013 |   extension: string;
+3014 | }
+3015 | 
+3016 | ```
+3017 | ### Directory: utils
+3018 | 
+3019 | - **Path:** /root/git/codewrangler/src/utils
+3020 | - **Size:** 9149 bytes
+3021 | - **Files:** 0
+3022 | - **Total Files (including subdirectories):** 6
+3023 | - **Depth:** 1
+3024 | 
+3025 | #### Contents:
 3026 | 
-3027 | #### Contents:
+3027 | ### Directory: config
 3028 | 
-3029 | ### Directory: config
-3030 | 
-3031 | - **Path:** /root/git/codewrangler/src/utils/config
-3032 | - **Size:** 5536 bytes
-3033 | - **Files:** 3
-3034 | - **Total Files (including subdirectories):** 3
-3035 | - **Depth:** 2
+3029 | - **Path:** /root/git/codewrangler/src/utils/config
+3030 | - **Size:** 5564 bytes
+3031 | - **Files:** 3
+3032 | - **Total Files (including subdirectories):** 3
+3033 | - **Depth:** 2
+3034 | 
+3035 | #### Contents:
 3036 | 
-3037 | #### Contents:
+3037 | #### File: Config.ts
 3038 | 
-3039 | #### File: Config.ts
-3040 | 
-3041 | - **Path:** /root/git/codewrangler/src/utils/config/Config.ts
-3042 | - **Extension:** ts
-3043 | - **Size:** 2621 bytes
-3044 | - **Depth:** 3
-3045 | - **Lines:** 95
-3046 | 
-3047 | ```ts
-3048 | import { z } from "zod";
-3049 | 
-3050 | import {
-3051 |   ConfigKeys,
-3052 |   ConfigOptions,
-3053 |   DEFAULT_CONFIG,
-3054 |   configSchema
-3055 | } from "./schema";
-3056 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
-3057 | import { JsonReader } from "../../infrastructure/filesystem/JsonReader";
-3058 | import { logger } from "../logger/Logger";
-3059 | 
-3060 | export class Config {
-3061 |   private static instance: Config | undefined;
-3062 |   private config: ConfigOptions;
-3063 |   private jsonReader: JsonReader;
-3064 | 
-3065 |   private constructor() {
-3066 |     this.jsonReader = new JsonReader();
-3067 |     this.config = configSchema.parse(DEFAULT_CONFIG);
-3068 |   }
-3069 | 
-3070 |   public static async load(): Promise<Config> {
-3071 |     if (!Config.instance) {
-3072 |       Config.instance = new Config();
-3073 |       await Config.instance.loadUserConfig();
-3074 |     }
-3075 |     return Config.instance;
-3076 |   }
-3077 | 
-3078 |   public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
-3079 |     return this.config[key] as ConfigOptions[T];
-3080 |   }
-3081 | 
-3082 |   public set(
-3083 |     key: keyof ConfigOptions,
-3084 |     value: ConfigOptions[keyof ConfigOptions] | undefined
-3085 |   ): void {
-3086 |     if (value === undefined) {
-3087 |       return;
-3088 |     }
-3089 |     const updatedConfig = { ...this.config, [key]: value };
-3090 |     try {
-3091 |       configSchema.parse(updatedConfig);
-3092 |       this.config = updatedConfig;
-3093 |     } catch (error) {
-3094 |       if (error instanceof z.ZodError) {
-3095 |         logger.error(`Invalid configuration value: ${error.errors}`);
-3096 |       }
-3097 |       throw error;
-3098 |     }
-3099 |   }
-3100 |   public getAll(): ConfigOptions {
-3101 |     return this.config;
-3102 |   }
-3103 |   public reset(): void {
-3104 |     this.config = DEFAULT_CONFIG;
-3105 |   }
-3106 |   public static destroy(): void {
-3107 |     Config.instance = undefined;
-3108 |   }
-3109 |   public override(config: Partial<ConfigOptions>): void {
-3110 |     const newOverrideConfig = { ...this.config, ...config };
-3111 |     try {
-3112 |       configSchema.parse(newOverrideConfig);
-3113 |       this.config = newOverrideConfig;
-3114 |     } catch (error) {
-3115 |       if (error instanceof z.ZodError) {
-3116 |         logger.error(`Invalid configuration value: ${error.errors}`);
-3117 |       }
-3118 |       throw error;
-3119 |     }
-3120 |   }
-3121 | 
-3122 |   private async loadUserConfig(): Promise<void> {
-3123 |     try {
-3124 |       const configPath = documentFactory.resolve(this.config.codeConfigFile);
-3125 |       const userConfig = await this.jsonReader.readJsonSync(configPath);
-3126 |       this.config = configSchema.parse({ ...this.config, ...userConfig });
-3127 |     } catch (error) {
-3128 |       this.handleConfigError(error);
-3129 |     }
-3130 |   }
-3131 | 
-3132 |   private handleConfigError(error: unknown): void {
-3133 |     if (error instanceof z.ZodError) {
-3134 |       const details = error.errors
-3135 |         .map(err => `${err.path.join(".")}: ${err.message}`)
-3136 |         .join(", ");
-3137 |       throw new Error(`Configuration validation failed: ${details}`);
-3138 |     }
-3139 |     throw error;
-3140 |   }
-3141 | }
-3142 | 
-3143 | ```
-3144 | ### Directory: __tests__
-3145 | 
-3146 | - **Path:** /root/git/codewrangler/src/utils/config/__tests__
-3147 | - **Size:** 0 bytes
-3148 | - **Files:** 0
-3149 | - **Total Files (including subdirectories):** 0
-3150 | - **Depth:** 3
-3151 | 
-3152 | #### Contents:
-3153 | 
-3154 | #### File: index.ts
-3155 | 
-3156 | - **Path:** /root/git/codewrangler/src/utils/config/index.ts
-3157 | - **Extension:** ts
-3158 | - **Size:** 52 bytes
-3159 | - **Depth:** 3
-3160 | - **Lines:** 3
-3161 | 
-3162 | ```ts
-3163 | export * from "./Config";
-3164 | export * from "./schema";
-3165 | 
-3166 | ```
-3167 | #### File: schema.ts
-3168 | 
-3169 | - **Path:** /root/git/codewrangler/src/utils/config/schema.ts
-3170 | - **Extension:** ts
-3171 | - **Size:** 2863 bytes
-3172 | - **Depth:** 3
-3173 | - **Lines:** 97
-3174 | 
-3175 | ```ts
-3176 | import { z } from "zod";
-3177 | 
-3178 | import { LOG_VALUES } from "../logger/Logger";
-3179 | 
-3180 | export const OUTPUT_FORMATS = {
-3181 |   markdown: "md",
-3182 |   html: "html"
-3183 | } as const;
-3184 | 
-3185 | export type OutputFormats = typeof OUTPUT_FORMATS;
-3186 | export type OutputFormatName = keyof OutputFormats;
-3187 | export type OutputFormatExtension = OutputFormats[OutputFormatName];
-3188 | 
-3189 | export const outputFormatSchema = z.enum(["markdown", "html"] as const);
-3190 | 
-3191 | export const fileExtensionSchema = z.enum(["md", "html"] as const);
-3192 | 
-3193 | export type OutputFormat = z.infer<typeof outputFormatSchema>;
-3194 | export type FileExtension = z.infer<typeof fileExtensionSchema>;
-3195 | 
-3196 | export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
-3197 |   markdown: "md",
-3198 |   html: "html"
-3199 | };
-3200 | 
-3201 | export const configSchema = z
-3202 |   .object({
-3203 |     dir: z.string().default(process.cwd()),
-3204 |     rootDir: z.string().default(process.cwd()),
-3205 |     templatesDir: z.string().default("public/templates"),
-3206 |     pattern: z
-3207 |       .string()
-3208 |       .regex(/^.*$/, "Pattern must be a valid regex")
-3209 |       .default(".*"),
-3210 |     outputFile: z.string().default("output"),
-3211 |     logLevel: z.enum(LOG_VALUES as [string, ...string[]]).default("INFO"),
-3212 |     outputFormat: z.array(outputFormatSchema).default(["markdown"]),
-3213 |     maxFileSize: z.number().positive().default(1048576),
-3214 |     maxDepth: z.number().default(100),
-3215 |     excludePatterns: z
-3216 |       .array(z.string())
-3217 |       .default(["node_modules/**", "**/*.test.ts", "dist/**"]),
-3218 |     ignoreHiddenFiles: z.boolean().default(true),
-3219 |     additionalIgnoreFiles: z.array(z.string()).optional().default([]),
-3220 |     projectName: z.string().optional(),
-3221 |     verbose: z.boolean().default(false),
-3222 |     followSymlinks: z.boolean().default(false),
-3223 |     codeConfigFile: z
-3224 |       .string()
-3225 |       .regex(/\.json$/, "Config file must end with .json")
-3226 |       .default("public/codewrangler.json")
-3227 |   })
-3228 |   .strict();
-3229 | 
-3230 | export type ConfigOptions = z.infer<typeof configSchema>;
-3231 | // get a type listing all the keys of the config
-3232 | export type ConfigKeys = keyof ConfigOptions;
-3233 | 
-3234 | const DEFAULT_CONFIG_IGNORE = {
-3235 |   ignoreHiddenFiles: true, // Default value
-3236 |   additionalIgnoreFiles: [],
-3237 |   excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"]
-3238 | };
-3239 | 
-3240 | const DEFAULT_CONFIG_LOG = {
-3241 |   logLevel: "INFO",
-3242 |   verbose: false
-3243 | };
-3244 | 
-3245 | const DEFAULT_CONFIG_LIMITS = {
-3246 |   maxFileSize: 1048576,
-3247 |   maxDepth: 100
-3248 | };
-3249 | 
-3250 | const DEFAULT_CONFIG_PATHS = {
-3251 |   templatesDir: "public/templates",
-3252 |   codeConfigFile: "public/codewrangler.json"
-3253 | };
-3254 | 
-3255 | const DEFAULT_CONFIG_OUTPUT = {
-3256 |   outputFormat: ["markdown"] as OutputFormat[],
-3257 |   outputFile: "output"
-3258 | };
-3259 | 
-3260 | export const DEFAULT_CONFIG: ConfigOptions = {
-3261 |   dir: process.cwd(), // current working directory, where the command is run
-3262 |   rootDir: process.cwd(),
-3263 |   projectName: undefined,
-3264 |   pattern: ".*",
-3265 |   followSymlinks: false,
-3266 |   ...DEFAULT_CONFIG_PATHS,
-3267 |   ...DEFAULT_CONFIG_LIMITS,
-3268 |   ...DEFAULT_CONFIG_IGNORE,
-3269 |   ...DEFAULT_CONFIG_LOG,
-3270 |   ...DEFAULT_CONFIG_OUTPUT
-3271 | };
-3272 | 
-3273 | ```
-3274 | ### Directory: helpers
-3275 | 
-3276 | - **Path:** /root/git/codewrangler/src/utils/helpers
-3277 | - **Size:** 1554 bytes
-3278 | - **Files:** 1
-3279 | - **Total Files (including subdirectories):** 1
-3280 | - **Depth:** 2
-3281 | 
-3282 | #### Contents:
-3283 | 
-3284 | #### File: ProgressBar.ts
-3285 | 
-3286 | - **Path:** /root/git/codewrangler/src/utils/helpers/ProgressBar.ts
-3287 | - **Extension:** ts
-3288 | - **Size:** 1554 bytes
-3289 | - **Depth:** 3
-3290 | - **Lines:** 68
-3291 | 
-3292 | ```ts
-3293 | import cliProgress from "cli-progress";
-3294 | 
-3295 | export class ProgressBar {
-3296 |   private bar: cliProgress.SingleBar;
-3297 |   private intervalId: NodeJS.Timeout | null = null;
-3298 |   private currentValue: number = 0;
-3299 | 
-3300 |   public constructor(private total: number = 100) {
-3301 |     this.bar = new cliProgress.SingleBar(
-3302 |       {},
-3303 |       cliProgress.Presets.shades_classic
-3304 |     );
-3305 |   }
-3306 | 
-3307 |   public start(): ProgressBar {
-3308 |     this.bar.start(this.total, 0, {
-3309 |       compress: true
-3310 |     });
-3311 |     this.intervalId = setInterval(() => this.simulateProgress(), 200);
-3312 |     return this;
-3313 |   }
-3314 | 
-3315 |   public update(value: number): ProgressBar {
-3316 |     this.currentValue = value;
-3317 |     this.bar.update(value);
-3318 |     return this;
-3319 |   }
-3320 | 
-3321 |   public stop(): ProgressBar {
-3322 |     if (this.intervalId) {
-3323 |       clearInterval(this.intervalId);
-3324 |       this.intervalId = null;
-3325 |     }
-3326 |     this.bar.update(this.total);
-3327 |     this.bar.stop();
-3328 |     return this;
-3329 |   }
-3330 | 
-3331 |   public async execute<T>(fn: () => Promise<T>): Promise<T> {
-3332 |     this.start();
-3333 |     try {
-3334 |       return await fn();
-3335 |     } finally {
-3336 |       this.stop();
-3337 |     }
-3338 |   }
-3339 | 
-3340 |   private simulateProgress(): void {
-3341 |     const remainingProgress = this.total - this.currentValue;
-3342 |     const increment = Math.random() * remainingProgress * 0.1;
-3343 |     this.currentValue = Math.min(
-3344 |       this.currentValue + increment,
-3345 |       this.total * 0.95
-3346 |     );
-3347 |     this.bar.update(this.currentValue);
-3348 |   }
-3349 | }
-3350 | 
-3351 | export async function progressBar(
-3352 |   total: number,
-3353 |   callback: () => Promise<void>
-3354 | ): Promise<void> {
-3355 |   const bar = new ProgressBar(total);
-3356 |   await bar.execute(async () => {
-3357 |     await callback();
-3358 |   });
-3359 | }
+3039 | - **Path:** /root/git/codewrangler/src/utils/config/Config.ts
+3040 | - **Extension:** ts
+3041 | - **Size:** 2649 bytes
+3042 | - **Depth:** 3
+3043 | - **Lines:** 96
+3044 | 
+3045 | ```ts
+3046 | import { z } from "zod";
+3047 | 
+3048 | import {
+3049 |   ConfigKeys,
+3050 |   ConfigOptions,
+3051 |   DEFAULT_CONFIG,
+3052 |   configSchema
+3053 | } from "./schema";
+3054 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
+3055 | import { JsonReader } from "../../infrastructure/filesystem/JsonReader";
+3056 | import { logger } from "../logger/Logger";
+3057 | 
+3058 | export class Config {
+3059 |   private static instance: Config | undefined;
+3060 |   private config: ConfigOptions;
+3061 |   private jsonReader: JsonReader;
+3062 | 
+3063 |   private constructor() {
+3064 |     this.jsonReader = new JsonReader();
+3065 |     this.config = configSchema.parse(DEFAULT_CONFIG);
+3066 |     logger.setConfig(this);
+3067 |   }
+3068 | 
+3069 |   public static async load(): Promise<Config> {
+3070 |     if (!Config.instance) {
+3071 |       Config.instance = new Config();
+3072 |       await Config.instance.loadUserConfig();
+3073 |     }
+3074 |     return Config.instance;
+3075 |   }
+3076 | 
+3077 |   public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
+3078 |     return this.config[key] as ConfigOptions[T];
+3079 |   }
+3080 | 
+3081 |   public set(
+3082 |     key: keyof ConfigOptions,
+3083 |     value: ConfigOptions[keyof ConfigOptions] | undefined
+3084 |   ): void {
+3085 |     if (value === undefined) {
+3086 |       return;
+3087 |     }
+3088 |     const updatedConfig = { ...this.config, [key]: value };
+3089 |     try {
+3090 |       configSchema.parse(updatedConfig);
+3091 |       this.config = updatedConfig;
+3092 |     } catch (error) {
+3093 |       if (error instanceof z.ZodError) {
+3094 |         logger.error(`Invalid configuration value: ${error.errors}`);
+3095 |       }
+3096 |       throw error;
+3097 |     }
+3098 |   }
+3099 |   public getAll(): ConfigOptions {
+3100 |     return this.config;
+3101 |   }
+3102 |   public reset(): void {
+3103 |     this.config = DEFAULT_CONFIG;
+3104 |   }
+3105 |   public static destroy(): void {
+3106 |     Config.instance = undefined;
+3107 |   }
+3108 |   public override(config: Partial<ConfigOptions>): void {
+3109 |     const newOverrideConfig = { ...this.config, ...config };
+3110 |     try {
+3111 |       configSchema.parse(newOverrideConfig);
+3112 |       this.config = newOverrideConfig;
+3113 |     } catch (error) {
+3114 |       if (error instanceof z.ZodError) {
+3115 |         logger.error(`Invalid configuration value: ${error.errors}`);
+3116 |       }
+3117 |       throw error;
+3118 |     }
+3119 |   }
+3120 | 
+3121 |   private async loadUserConfig(): Promise<void> {
+3122 |     try {
+3123 |       const configPath = documentFactory.resolve(this.config.codeConfigFile);
+3124 |       const userConfig = await this.jsonReader.readJsonSync(configPath);
+3125 |       this.config = configSchema.parse({ ...this.config, ...userConfig });
+3126 |     } catch (error) {
+3127 |       this.handleConfigError(error);
+3128 |     }
+3129 |   }
+3130 | 
+3131 |   private handleConfigError(error: unknown): void {
+3132 |     if (error instanceof z.ZodError) {
+3133 |       const details = error.errors
+3134 |         .map(err => `${err.path.join(".")}: ${err.message}`)
+3135 |         .join(", ");
+3136 |       throw new Error(`Configuration validation failed: ${details}`);
+3137 |     }
+3138 |     throw error;
+3139 |   }
+3140 | }
+3141 | 
+3142 | ```
+3143 | ### Directory: __tests__
+3144 | 
+3145 | - **Path:** /root/git/codewrangler/src/utils/config/__tests__
+3146 | - **Size:** 0 bytes
+3147 | - **Files:** 0
+3148 | - **Total Files (including subdirectories):** 0
+3149 | - **Depth:** 3
+3150 | 
+3151 | #### Contents:
+3152 | 
+3153 | #### File: index.ts
+3154 | 
+3155 | - **Path:** /root/git/codewrangler/src/utils/config/index.ts
+3156 | - **Extension:** ts
+3157 | - **Size:** 52 bytes
+3158 | - **Depth:** 3
+3159 | - **Lines:** 3
+3160 | 
+3161 | ```ts
+3162 | export * from "./Config";
+3163 | export * from "./schema";
+3164 | 
+3165 | ```
+3166 | #### File: schema.ts
+3167 | 
+3168 | - **Path:** /root/git/codewrangler/src/utils/config/schema.ts
+3169 | - **Extension:** ts
+3170 | - **Size:** 2863 bytes
+3171 | - **Depth:** 3
+3172 | - **Lines:** 97
+3173 | 
+3174 | ```ts
+3175 | import { z } from "zod";
+3176 | 
+3177 | import { LOG_VALUES } from "../logger/Logger";
+3178 | 
+3179 | export const OUTPUT_FORMATS = {
+3180 |   markdown: "md",
+3181 |   html: "html"
+3182 | } as const;
+3183 | 
+3184 | export type OutputFormats = typeof OUTPUT_FORMATS;
+3185 | export type OutputFormatName = keyof OutputFormats;
+3186 | export type OutputFormatExtension = OutputFormats[OutputFormatName];
+3187 | 
+3188 | export const outputFormatSchema = z.enum(["markdown", "html"] as const);
+3189 | 
+3190 | export const fileExtensionSchema = z.enum(["md", "html"] as const);
+3191 | 
+3192 | export type OutputFormat = z.infer<typeof outputFormatSchema>;
+3193 | export type FileExtension = z.infer<typeof fileExtensionSchema>;
+3194 | 
+3195 | export const FILE_EXTENSION: Record<OutputFormat, FileExtension> = {
+3196 |   markdown: "md",
+3197 |   html: "html"
+3198 | };
+3199 | 
+3200 | export const configSchema = z
+3201 |   .object({
+3202 |     dir: z.string().default(process.cwd()),
+3203 |     rootDir: z.string().default(process.cwd()),
+3204 |     templatesDir: z.string().default("public/templates"),
+3205 |     pattern: z
+3206 |       .string()
+3207 |       .regex(/^.*$/, "Pattern must be a valid regex")
+3208 |       .default(".*"),
+3209 |     outputFile: z.string().default("output"),
+3210 |     logLevel: z.enum(LOG_VALUES as [string, ...string[]]).default("INFO"),
+3211 |     outputFormat: z.array(outputFormatSchema).default(["markdown"]),
+3212 |     maxFileSize: z.number().positive().default(1048576),
+3213 |     maxDepth: z.number().default(100),
+3214 |     excludePatterns: z
+3215 |       .array(z.string())
+3216 |       .default(["node_modules/**", "**/*.test.ts", "dist/**"]),
+3217 |     ignoreHiddenFiles: z.boolean().default(true),
+3218 |     additionalIgnoreFiles: z.array(z.string()).optional().default([]),
+3219 |     projectName: z.string().optional(),
+3220 |     verbose: z.boolean().default(false),
+3221 |     followSymlinks: z.boolean().default(false),
+3222 |     codeConfigFile: z
+3223 |       .string()
+3224 |       .regex(/\.json$/, "Config file must end with .json")
+3225 |       .default("public/codewrangler.json")
+3226 |   })
+3227 |   .strict();
+3228 | 
+3229 | export type ConfigOptions = z.infer<typeof configSchema>;
+3230 | // get a type listing all the keys of the config
+3231 | export type ConfigKeys = keyof ConfigOptions;
+3232 | 
+3233 | const DEFAULT_CONFIG_IGNORE = {
+3234 |   ignoreHiddenFiles: true, // Default value
+3235 |   additionalIgnoreFiles: [],
+3236 |   excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"]
+3237 | };
+3238 | 
+3239 | const DEFAULT_CONFIG_LOG = {
+3240 |   logLevel: "INFO",
+3241 |   verbose: false
+3242 | };
+3243 | 
+3244 | const DEFAULT_CONFIG_LIMITS = {
+3245 |   maxFileSize: 1048576,
+3246 |   maxDepth: 100
+3247 | };
+3248 | 
+3249 | const DEFAULT_CONFIG_PATHS = {
+3250 |   templatesDir: "public/templates",
+3251 |   codeConfigFile: "public/codewrangler.json"
+3252 | };
+3253 | 
+3254 | const DEFAULT_CONFIG_OUTPUT = {
+3255 |   outputFormat: ["markdown"] as OutputFormat[],
+3256 |   outputFile: "output"
+3257 | };
+3258 | 
+3259 | export const DEFAULT_CONFIG: ConfigOptions = {
+3260 |   dir: process.cwd(), // current working directory, where the command is run
+3261 |   rootDir: process.cwd(),
+3262 |   projectName: undefined,
+3263 |   pattern: ".*",
+3264 |   followSymlinks: false,
+3265 |   ...DEFAULT_CONFIG_PATHS,
+3266 |   ...DEFAULT_CONFIG_LIMITS,
+3267 |   ...DEFAULT_CONFIG_IGNORE,
+3268 |   ...DEFAULT_CONFIG_LOG,
+3269 |   ...DEFAULT_CONFIG_OUTPUT
+3270 | };
+3271 | 
+3272 | ```
+3273 | ### Directory: helpers
+3274 | 
+3275 | - **Path:** /root/git/codewrangler/src/utils/helpers
+3276 | - **Size:** 1524 bytes
+3277 | - **Files:** 1
+3278 | - **Total Files (including subdirectories):** 1
+3279 | - **Depth:** 2
+3280 | 
+3281 | #### Contents:
+3282 | 
+3283 | #### File: ProgressBar.ts
+3284 | 
+3285 | - **Path:** /root/git/codewrangler/src/utils/helpers/ProgressBar.ts
+3286 | - **Extension:** ts
+3287 | - **Size:** 1524 bytes
+3288 | - **Depth:** 3
+3289 | - **Lines:** 66
+3290 | 
+3291 | ```ts
+3292 | import cliProgress from "cli-progress";
+3293 | 
+3294 | export class ProgressBar {
+3295 |   private bar: cliProgress.SingleBar;
+3296 |   private intervalId: NodeJS.Timeout | null = null;
+3297 |   private currentValue: number = 0;
+3298 | 
+3299 |   public constructor(private total: number = 100) {
+3300 |     this.bar = new cliProgress.SingleBar(
+3301 |       {},
+3302 |       cliProgress.Presets.shades_classic
+3303 |     );
+3304 |   }
+3305 | 
+3306 |   public start(): ProgressBar {
+3307 |     this.bar.start(this.total, 0);
+3308 |     this.intervalId = setInterval(() => this.simulateProgress(), 200);
+3309 |     return this;
+3310 |   }
+3311 | 
+3312 |   public update(value: number): ProgressBar {
+3313 |     this.currentValue = value;
+3314 |     this.bar.update(value);
+3315 |     return this;
+3316 |   }
+3317 | 
+3318 |   public stop(): ProgressBar {
+3319 |     if (this.intervalId) {
+3320 |       clearInterval(this.intervalId);
+3321 |       this.intervalId = null;
+3322 |     }
+3323 |     this.bar.update(this.total);
+3324 |     this.bar.stop();
+3325 |     return this;
+3326 |   }
+3327 | 
+3328 |   public async execute<T>(fn: () => Promise<T>): Promise<T> {
+3329 |     this.start();
+3330 |     try {
+3331 |       return await fn();
+3332 |     } finally {
+3333 |       this.stop();
+3334 |     }
+3335 |   }
+3336 | 
+3337 |   private simulateProgress(): void {
+3338 |     const remainingProgress = this.total - this.currentValue;
+3339 |     const increment = Math.random() * remainingProgress * 0.1;
+3340 |     this.currentValue = Math.min(
+3341 |       this.currentValue + increment,
+3342 |       this.total * 0.95
+3343 |     );
+3344 |     this.bar.update(this.currentValue);
+3345 |   }
+3346 | }
+3347 | 
+3348 | export async function progressBar(
+3349 |   total: number,
+3350 |   callback: () => Promise<void>
+3351 | ): Promise<void> {
+3352 |   const bar = new ProgressBar(total);
+3353 |   await bar.execute(async () => {
+3354 |     await callback();
+3355 |   });
+3356 | }
+3357 | 
+3358 | ```
+3359 | ### Directory: __tests__
 3360 | 
-3361 | ```
-3362 | ### Directory: __tests__
-3363 | 
-3364 | - **Path:** /root/git/codewrangler/src/utils/helpers/__tests__
-3365 | - **Size:** 0 bytes
-3366 | - **Files:** 0
-3367 | - **Total Files (including subdirectories):** 0
-3368 | - **Depth:** 3
-3369 | 
-3370 | #### Contents:
-3371 | 
-3372 | ### Directory: logger
-3373 | 
-3374 | - **Path:** /root/git/codewrangler/src/utils/logger
-3375 | - **Size:** 2061 bytes
-3376 | - **Files:** 2
-3377 | - **Total Files (including subdirectories):** 2
-3378 | - **Depth:** 2
-3379 | 
-3380 | #### Contents:
-3381 | 
-3382 | #### File: Logger.ts
-3383 | 
-3384 | - **Path:** /root/git/codewrangler/src/utils/logger/Logger.ts
-3385 | - **Extension:** ts
-3386 | - **Size:** 2035 bytes
-3387 | - **Depth:** 3
-3388 | - **Lines:** 83
-3389 | 
-3390 | ```ts
-3391 | /* eslint-disable no-console */
-3392 | import colors from "colors";
-3393 | 
-3394 | import { Config } from "../config/Config";
-3395 | 
-3396 | export const LOG_LEVEL = {
-3397 |   ERROR: 0,
-3398 |   WARN: 1,
-3399 |   INFO: 2,
-3400 |   DEBUG: 3
-3401 | } as const;
-3402 | 
-3403 | type LogLevel = (typeof LOG_LEVEL)[keyof typeof LOG_LEVEL];
-3404 | export type LogLevelString = keyof typeof LOG_LEVEL;
-3405 | export const LOG_VALUES = Object.keys(LOG_LEVEL) as LogLevelString[];
-3406 | 
-3407 | export class Logger {
-3408 |   private static instance: Logger;
-3409 |   private config: Config | null = null;
-3410 | 
-3411 |   private constructor() {}
-3412 |   public static load(): Logger {
-3413 |     if (!Logger.instance) {
-3414 |       Logger.instance = new Logger();
-3415 |     }
-3416 |     return Logger.instance;
-3417 |   }
-3418 |   public setConfig(config: Config): Logger {
-3419 |     this.config = config;
-3420 |     return this;
-3421 |   }
-3422 |   public setLogLevel(logLevel: LogLevelString): Logger {
-3423 |     if (this.config) {
-3424 |       this.config.set("logLevel", logLevel);
-3425 |     }
-3426 |     return this;
-3427 |   }
-3428 | 
-3429 |   private get logLevel(): LogLevel {
-3430 |     const configLogLevel = this.config?.get("logLevel") as
-3431 |       | LogLevelString
-3432 |       | undefined;
-3433 |     return configLogLevel ? LOG_LEVEL[configLogLevel] : LOG_LEVEL.ERROR;
-3434 |   }
-3435 | 
-3436 |   public error(message: string, error?: Error, ...other: unknown[]): void {
-3437 |     if (this.logLevel >= LOG_LEVEL.ERROR) {
-3438 |       console.log(colors.red(`[ERROR] ${message}`), ...other);
-3439 |       if (error instanceof Error && error.stack) {
-3440 |         console.log(colors.red(error.stack));
-3441 |       }
-3442 |     }
-3443 |   }
-3444 | 
-3445 |   public warn(message: string): void {
-3446 |     if (this.logLevel >= LOG_LEVEL.WARN) {
-3447 |       console.log(colors.yellow(`[WARN] ${message}`));
-3448 |     }
-3449 |   }
-3450 | 
-3451 |   public info(message: string): void {
-3452 |     if (this.logLevel >= LOG_LEVEL.INFO) {
-3453 |       console.log(colors.blue(`[INFO] ${message}`));
-3454 |     }
-3455 |   }
-3456 | 
-3457 |   public debug(message: string): void {
-3458 |     if (this.logLevel >= LOG_LEVEL.DEBUG) {
-3459 |       console.log(colors.gray(`[DEBUG] ${message}`));
-3460 |     }
-3461 |   }
-3462 | 
-3463 |   public success(message: string): void {
-3464 |     console.log(colors.green(message));
-3465 |   }
-3466 | 
-3467 |   public log(message: string): void {
-3468 |     console.log(message);
-3469 |   }
-3470 | }
-3471 | 
-3472 | export const logger = Logger.load();
+3361 | - **Path:** /root/git/codewrangler/src/utils/helpers/__tests__
+3362 | - **Size:** 0 bytes
+3363 | - **Files:** 0
+3364 | - **Total Files (including subdirectories):** 0
+3365 | - **Depth:** 3
+3366 | 
+3367 | #### Contents:
+3368 | 
+3369 | ### Directory: logger
+3370 | 
+3371 | - **Path:** /root/git/codewrangler/src/utils/logger
+3372 | - **Size:** 2061 bytes
+3373 | - **Files:** 2
+3374 | - **Total Files (including subdirectories):** 2
+3375 | - **Depth:** 2
+3376 | 
+3377 | #### Contents:
+3378 | 
+3379 | #### File: Logger.ts
+3380 | 
+3381 | - **Path:** /root/git/codewrangler/src/utils/logger/Logger.ts
+3382 | - **Extension:** ts
+3383 | - **Size:** 2035 bytes
+3384 | - **Depth:** 3
+3385 | - **Lines:** 83
+3386 | 
+3387 | ```ts
+3388 | /* eslint-disable no-console */
+3389 | import colors from "colors";
+3390 | 
+3391 | import { Config } from "../config/Config";
+3392 | 
+3393 | export const LOG_LEVEL = {
+3394 |   ERROR: 0,
+3395 |   WARN: 1,
+3396 |   INFO: 2,
+3397 |   DEBUG: 3
+3398 | } as const;
+3399 | 
+3400 | type LogLevel = (typeof LOG_LEVEL)[keyof typeof LOG_LEVEL];
+3401 | export type LogLevelString = keyof typeof LOG_LEVEL;
+3402 | export const LOG_VALUES = Object.keys(LOG_LEVEL) as LogLevelString[];
+3403 | 
+3404 | export class Logger {
+3405 |   private static instance: Logger;
+3406 |   private config: Config | null = null;
+3407 | 
+3408 |   private constructor() {}
+3409 |   public static load(): Logger {
+3410 |     if (!Logger.instance) {
+3411 |       Logger.instance = new Logger();
+3412 |     }
+3413 |     return Logger.instance;
+3414 |   }
+3415 |   public setConfig(config: Config): Logger {
+3416 |     this.config = config;
+3417 |     return this;
+3418 |   }
+3419 |   public setLogLevel(logLevel: LogLevelString): Logger {
+3420 |     if (this.config) {
+3421 |       this.config.set("logLevel", logLevel);
+3422 |     }
+3423 |     return this;
+3424 |   }
+3425 | 
+3426 |   private get logLevel(): LogLevel {
+3427 |     const configLogLevel = this.config?.get("logLevel") as
+3428 |       | LogLevelString
+3429 |       | undefined;
+3430 |     return configLogLevel ? LOG_LEVEL[configLogLevel] : LOG_LEVEL.ERROR;
+3431 |   }
+3432 | 
+3433 |   public error(message: string, error?: Error, ...other: unknown[]): void {
+3434 |     if (this.logLevel >= LOG_LEVEL.ERROR) {
+3435 |       console.log(colors.red(`[ERROR] ${message}`), ...other);
+3436 |       if (error instanceof Error && error.stack) {
+3437 |         console.log(colors.red(error.stack));
+3438 |       }
+3439 |     }
+3440 |   }
+3441 | 
+3442 |   public warn(message: string): void {
+3443 |     if (this.logLevel >= LOG_LEVEL.WARN) {
+3444 |       console.log(colors.yellow(`[WARN] ${message}`));
+3445 |     }
+3446 |   }
+3447 | 
+3448 |   public info(message: string): void {
+3449 |     if (this.logLevel >= LOG_LEVEL.INFO) {
+3450 |       console.log(colors.blue(`[INFO] ${message}`));
+3451 |     }
+3452 |   }
+3453 | 
+3454 |   public debug(message: string): void {
+3455 |     if (this.logLevel >= LOG_LEVEL.DEBUG) {
+3456 |       console.log(colors.gray(`[DEBUG] ${message}`));
+3457 |     }
+3458 |   }
+3459 | 
+3460 |   public success(message: string): void {
+3461 |     console.log(colors.green(message));
+3462 |   }
+3463 | 
+3464 |   public log(message: string): void {
+3465 |     console.log(message);
+3466 |   }
+3467 | }
+3468 | 
+3469 | export const logger = Logger.load();
+3470 | 
+3471 | ```
+3472 | ### Directory: __tests__
 3473 | 
-3474 | ```
-3475 | ### Directory: __tests__
-3476 | 
-3477 | - **Path:** /root/git/codewrangler/src/utils/logger/__tests__
-3478 | - **Size:** 0 bytes
-3479 | - **Files:** 0
-3480 | - **Total Files (including subdirectories):** 0
-3481 | - **Depth:** 3
-3482 | 
-3483 | #### Contents:
-3484 | 
-3485 | #### File: index.ts
-3486 | 
-3487 | - **Path:** /root/git/codewrangler/src/utils/logger/index.ts
-3488 | - **Extension:** ts
-3489 | - **Size:** 26 bytes
-3490 | - **Depth:** 3
-3491 | - **Lines:** 2
+3474 | - **Path:** /root/git/codewrangler/src/utils/logger/__tests__
+3475 | - **Size:** 0 bytes
+3476 | - **Files:** 0
+3477 | - **Total Files (including subdirectories):** 0
+3478 | - **Depth:** 3
+3479 | 
+3480 | #### Contents:
+3481 | 
+3482 | #### File: index.ts
+3483 | 
+3484 | - **Path:** /root/git/codewrangler/src/utils/logger/index.ts
+3485 | - **Extension:** ts
+3486 | - **Size:** 26 bytes
+3487 | - **Depth:** 3
+3488 | - **Lines:** 2
+3489 | 
+3490 | ```ts
+3491 | export * from "./Logger";
 3492 | 
-3493 | ```ts
-3494 | export * from "./Logger";
+3493 | ```
+3494 | 
 3495 | 
-3496 | ```
-3497 | 
-3498 | 
 ```
 
 ---------------------------------------------------------------------------
