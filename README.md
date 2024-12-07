@@ -20,6 +20,16 @@ CodeWrangler is an extensible documentation automation platform that transforms 
 
 CodeWrangler is an intelligent documentation assistant that automatically creates comprehensive knowledge bases from your code repositories. It's designed to bridge the gap between your codebase and AI language models like ChatGPT and Claude, making it easier to have meaningful conversations about your code.
 
+## Future & Plugin Marketplace
+
+CodeWrangler is evolving into a vibrant ecosystem where developers can both use and create specialized documentation tools. Our plugin marketplace will enable you to transform your code documentation in unlimited ways - from generating architectural diagrams and dependency maps, to creating interactive documentation sites, to producing custom AI training datasets.
+
+Every development team has different documentation needs. Need to analyze security patterns? Install a security scanning plugin. Want to generate API documentation? There's a plugin for that. Building documentation for a specific framework or language? Use language-specific plugins that understand your code's unique patterns.
+
+The marketplace will be a platform where documentation solutions come together. Developers can contribute their own plugins, monetize their documentation tools, and help build a community of documentation automation tools. The possibilities are endless - from team onboarding tools to code analysis utilities to specialized AI integration plugins.
+
+Whether you're documenting a small project or a large enterprise codebase, the marketplace will have a plugin to match your specific use case - and if it doesn't, you can build and share your own. Join us in building the future of code documentation automation.
+
 ## Key Features
 
 - 🌳 **Smart Repository Scanning**: Advanced file tree generation with intelligent filtering and customizable ignore patterns
