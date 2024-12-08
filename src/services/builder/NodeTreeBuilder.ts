@@ -2,7 +2,7 @@ import FileHidden from "./FileHidden";
 import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
 import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
 import { FILE_TYPE, FileType } from "../../types/type";
-import { Config, ConfigOptions } from "../../utils/config";
+import { IJobConfig, JobConfig } from "../../utils/config";
 
 export interface INodeTree {
   name: string;
@@ -13,11 +13,11 @@ export interface INodeTree {
 
 export interface INodeTreeBuilderOptions
   extends Pick<
-    ConfigOptions,
+    IJobConfig,
     | "additionalIgnoreFiles"
     | "maxDepth"
     | "excludePatterns"
-    | "dir"
+    | "rootDir"
     | "followSymlinks"
   > {
   pattern: RegExp;
@@ -25,18 +25,18 @@ export interface INodeTreeBuilderOptions
 }
 
 export class NodeTreeBuilder {
-  private config: Config;
+  private config: JobConfig;
   private options: INodeTreeBuilderOptions;
   private fileHidden: FileHidden;
 
-  public constructor(config: Config) {
+  public constructor(config: JobConfig) {
     this.config = config;
     this.options = this.initializeOptions();
     this.fileHidden = new FileHidden(config);
   }
 
   public async build(): Promise<INodeTree> {
-    const rootDir = this.options.dir;
+    const rootDir = this.options.rootDir;
     if (!documentFactory.exists(rootDir)) {
       throw new Error(`Directory ${rootDir} does not exist`);
     }
@@ -45,7 +45,7 @@ export class NodeTreeBuilder {
 
   private initializeOptions(): INodeTreeBuilderOptions {
     return {
-      dir: this.config.get("dir"),
+      rootDir: this.config.get("rootDir"),
       pattern: new RegExp(this.config.get("pattern")),
       maxDepth: this.config.get("maxDepth"),
       excludePatterns: this.config.get("excludePatterns"),

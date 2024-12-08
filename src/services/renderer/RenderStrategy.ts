@@ -6,7 +6,7 @@ import {
   DirectoryTemplate,
   FileTemplate
 } from "../../infrastructure/templates/zod";
-import { Config, OutputFormat } from "../../utils/config";
+import { JobConfig, OutputFormat } from "../../utils/config";
 
 interface IContentRenderer {
   renderFile: (file: NodeFile) => string;
@@ -28,7 +28,7 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
   protected templateFile: Template;
 
   protected constructor(
-    private readonly config: Config,
+    private readonly config: JobConfig,
     public readonly name: OutputFormat,
     templatePage: Template,
     templateDirectory: Template,
@@ -74,8 +74,7 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
     const rootContent = this.renderNode(rootDirectory);
 
     const templateConfig = {
-      PROJECT_NAME:
-        this.config.get("projectName") || rootDirectory.name || "Project",
+      PROJECT_NAME: this.getProjectName(rootDirectory.name),
       GENERATION_DATE: new Date().toISOString(),
       TOTAL_SIZE: rootDirectory.size,
       CONTENT: rootContent
@@ -93,6 +92,10 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
     this.templatePage.dispose();
     this.templateDirectory.dispose();
     this.templateFile.dispose();
+  }
+
+  protected getProjectName(otherName?: string): string {
+    return this.config.global.get("projectName") || otherName || "Project";
   }
 
   protected renderNode(node: NodeFile | NodeDirectory): string {

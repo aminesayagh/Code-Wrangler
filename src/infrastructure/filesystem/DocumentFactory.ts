@@ -58,6 +58,15 @@ export const documentFactory = {
     return path.resolve(filePath);
   },
 
+  async check(filePath: string, mode: number): Promise<boolean> {
+    try {
+      await fs.access(filePath, mode);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
   /**
    * Checks various access flags for a path
    * @private
@@ -69,19 +78,10 @@ export const documentFactory = {
     writable: boolean;
     executable: boolean;
   }> {
-    const check = async (mode: number): Promise<boolean> => {
-      try {
-        await fs.access(filePath, mode);
-        return true;
-      } catch {
-        return false;
-      }
-    };
-
     return {
-      readable: await check(fs.constants.R_OK),
-      writable: await check(fs.constants.W_OK),
-      executable: await check(fs.constants.X_OK)
+      readable: await this.check(filePath, fs.constants.R_OK),
+      writable: await this.check(filePath, fs.constants.W_OK),
+      executable: await this.check(filePath, fs.constants.X_OK)
     };
   },
 
@@ -117,10 +117,8 @@ export const documentFactory = {
         flag: options.flag
       });
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        throw new FileNotFoundError(filePath);
-      }
-      throw new DocumentError(String(error), filePath);
+      this.handleError(error, filePath);
+      throw null;
     }
   },
 
@@ -137,10 +135,6 @@ export const documentFactory = {
     options: IWriteOptions = {}
   ): Promise<void> {
     try {
-      // Ensure parent directory exists
-      const parentDir = path.dirname(filePath);
-      await fs.mkdir(parentDir, { recursive: true });
-
       // Write the file
       await fs.writeFile(filePath, data, {
         encoding: options.encoding ?? "utf-8",
@@ -148,10 +142,7 @@ export const documentFactory = {
         flag: options.flag
       });
     } catch (error) {
-      if (error instanceof DocumentError) {
-        throw error;
-      }
-      throw new DocumentError(String(error), filePath);
+      this.handleError(error, filePath);
     }
   },
 
@@ -174,7 +165,7 @@ export const documentFactory = {
         flag: options.flag
       });
     } catch (error) {
-      throw new DocumentError(String(error), filePath);
+      this.handleError(error, filePath);
     }
   },
 
@@ -259,7 +250,8 @@ export const documentFactory = {
         type: entry.isDirectory() ? FILE_TYPE.Directory : FILE_TYPE.File
       }));
     } catch (error) {
-      throw new DocumentError(String(error), dirPath);
+      this.handleError(error, dirPath);
+      return [];
     }
   },
 
@@ -281,7 +273,7 @@ export const documentFactory = {
         });
       }
     } catch (error) {
-      throw new DocumentError(String(error), dirPath);
+      this.handleError(error, dirPath);
     }
   },
 
@@ -345,5 +337,21 @@ export const documentFactory = {
    */
   join(...paths: string[]): string {
     return path.join(...paths);
+  },
+
+  /**
+   * Handles errors
+   * @param error - The error to handle
+   * @param filePath - The path to the file
+   * @throws {DocumentError} If the error is not an instance of DocumentError
+   */
+  handleError(error: unknown, filePath: string): void {
+    if (error instanceof DocumentError) {
+      throw error;
+    }
+    if (error instanceof FileNotFoundError) {
+      throw error;
+    }
+    throw new DocumentError(String(error), filePath);
   }
 };

@@ -1,7 +1,7 @@
 import { RenderableDirectory } from "../../../core/entities/NodeDirectory";
 import { RenderableFile } from "../../../core/entities/NodeFile";
 import { FILE_TYPE } from "../../../types/type";
-import { Config } from "../../../utils/config";
+import { JobConfig } from "../../../utils/config";
 import { logger } from "../../../utils/logger";
 import { DocumentTreeBuilder } from "../DocumentTreeBuilder";
 import { NodeTreeBuilder } from "../NodeTreeBuilder";
@@ -13,7 +13,7 @@ jest.mock("../../../utils/logger");
 jest.mock("../../../utils/config");
 
 describe("DocumentTreeBuilder", () => {
-  let mockConfig: jest.Mocked<Config>;
+  let mockConfig: jest.Mocked<JobConfig>;
   let documentTreeBuilder: DocumentTreeBuilder;
   let mockNodeTreeBuilder: jest.Mocked<NodeTreeBuilder>;
   const TEMPLATE_PATH = "/test/test.txt";
@@ -25,7 +25,7 @@ describe("DocumentTreeBuilder", () => {
     // Set up mock config
     mockConfig = {
       get: jest.fn()
-    } as unknown as jest.Mocked<Config>;
+    } as unknown as jest.Mocked<JobConfig>;
 
     // Set up mock NodeTreeBuilder
     mockNodeTreeBuilder = {

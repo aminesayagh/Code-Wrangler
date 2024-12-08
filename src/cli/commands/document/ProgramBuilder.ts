@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { Config } from "../../../utils/config/Config";
+import { Config } from "../../../utils/config";
 
 export class ProgramBuilder {
   private program: Command;
@@ -38,7 +38,11 @@ export class ProgramBuilder {
   // eslint-disable-next-line max-lines-per-function
   private buildOptions(): ProgramBuilder {
     this.program
-      .option("-d, --dir <dir>", "Directory to search", this.config.get("dir"))
+      .option(
+        "-d, --dir <dir>",
+        "Directory to search",
+        this.config.defaultJob.get("rootDir")
+      )
       .option(
         "-c, --config <config>",
         "Config file",
@@ -48,27 +52,27 @@ export class ProgramBuilder {
       .option(
         "-f, --format <format>",
         "Output format",
-        this.config.get("outputFormat")
+        this.config.defaultJob.get("outputFormat")
       )
       .option(
         "-o, --output <output>",
         "Output file",
-        this.config.get("outputFile")
+        this.config.defaultJob.get("outputFile")
       )
       .option(
         "-e, --exclude <exclude>",
         "Exclude patterns",
-        this.config.get("excludePatterns")
+        this.config.defaultJob.get("excludePatterns")
       )
       .option(
         "-i, --ignore-hidden",
         "Ignore hidden files",
-        this.config.get("ignoreHiddenFiles")
+        this.config.defaultJob.get("ignoreHiddenFiles")
       )
       .option(
         "-a, --additional-ignore <additional-ignore>",
         "Additional ignore patterns",
-        this.config.get("additionalIgnoreFiles")
+        this.config.defaultJob.get("additionalIgnoreFiles")
       );
     return this;
   }

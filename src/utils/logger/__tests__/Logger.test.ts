@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 import colors from "colors";
 
-import { Config } from "../../config/Config";
+import { Config } from "../../config";
 import { LOG_LEVEL, LOG_VALUES, Logger } from "../Logger";
 
-jest.mock("../../config/Config");
+jest.mock("../../config");
 jest.spyOn(console, "log").mockImplementation(() => {});
 
 describe("Logger", () => {

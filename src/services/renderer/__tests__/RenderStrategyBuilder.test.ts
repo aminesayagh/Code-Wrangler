@@ -1,5 +1,10 @@
 import { Template } from "../../../infrastructure/templates/TemplateEngine";
-import { Config, OutputFormatExtension } from "../../../utils/config";
+import {
+  Config,
+  JobConfig,
+  OutputFormat,
+  OutputFormatExtension
+} from "../../../utils/config";
 import { RenderStrategyBuilder } from "../RenderStrategyBuilder";
 import { RenderHTMLStrategy } from "../strategies/HTMLStrategy";
 import { RenderMarkdownStrategy } from "../strategies/MarkdownStrategy";
@@ -11,15 +16,16 @@ jest.mock("../strategies/MarkdownStrategy");
 
 describe("RenderStrategyBuilder", () => {
   let builder: RenderStrategyBuilder;
-  let mockConfig: jest.Mocked<Config>;
+  let mockConfig: jest.Mocked<JobConfig>;
   let mockTemplate: jest.Mocked<Template>;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
     mockConfig = {
-      get: jest.fn()
-    } as unknown as jest.Mocked<Config>;
+      get: jest.fn(),
+      global: {} as unknown as Config
+    } as unknown as jest.Mocked<JobConfig>;
 
     mockTemplate = {
       content: "template content"
@@ -47,9 +53,9 @@ describe("RenderStrategyBuilder", () => {
     });
 
     it("should set and store name", () => {
-      const result = builder.setName("Markdown");
+      const result = builder.setName("markdown");
 
-      expect(builder["name"]).toBe("Markdown");
+      expect(builder["name"]).toBe("markdown");
       expect(result).toBe(builder);
     });
   });
@@ -81,7 +87,7 @@ describe("RenderStrategyBuilder", () => {
 
   describe("build", () => {
     it("should build Markdown strategy when configured", async () => {
-      await setupBuilder("Markdown", "md");
+      await setupBuilder("markdown", "md");
 
       const result = builder.build();
 
@@ -89,7 +95,7 @@ describe("RenderStrategyBuilder", () => {
     });
 
     it("should build HTML strategy when configured", async () => {
-      await setupBuilder("HTML", "html");
+      await setupBuilder("html", "html");
 
       const result = builder.build();
 
@@ -116,7 +122,7 @@ describe("RenderStrategyBuilder", () => {
     it("should throw error if templates are not loaded", () => {
       builder.setConfig(mockConfig);
       builder.setExtension("md");
-      builder.setName("Markdown");
+      builder.setName("markdown");
 
       expect(() => builder.build()).toThrow(
         "Templates must be loaded before building"
@@ -126,7 +132,7 @@ describe("RenderStrategyBuilder", () => {
 
   // Helper function to setup builder with all required configurations
   async function setupBuilder(
-    name: string,
+    name: OutputFormat,
     extension: OutputFormatExtension
   ): Promise<void> {
     builder.setConfig(mockConfig).setExtension(extension).setName(name);

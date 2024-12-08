@@ -97,7 +97,7 @@ describe("DocumentFactory", () => {
 
     it("should throw an error if the path doesn't exist on readFile method", async () => {
       await expect(documentFactory.readFile("nonexistent")).rejects.toThrow(
-        DOCUMENT_ERROR_MESSAGE
+        "Document error at nonexistent: Error: ENOENT: no such file or directory, open 'nonexistent'"
       );
     });
 

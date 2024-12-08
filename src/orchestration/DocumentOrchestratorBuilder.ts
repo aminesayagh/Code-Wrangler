@@ -1,14 +1,14 @@
 import { DocumentOrchestrator } from "./DocumentOrchestrator";
 import { NodeDirectory } from "../core/entities/NodeDirectory";
 import { NodeFile } from "../core/entities/NodeFile";
-import { IRenderStrategy } from "../services/renderer/RenderStrategy";
-import { Config } from "../utils/config/Config";
+import { renderStrategyFactory } from "../services/renderer/RenderStrategyFactory";
+import { Config, JobConfig } from "../utils/config";
 import { logger } from "../utils/logger/Logger";
 
 export class DocumentOrchestratorBuilder {
   private root: NodeDirectory | NodeFile | null = null;
   private config: Config | null = null;
-  private strategies: IRenderStrategy[] = [];
+  private jobs: JobConfig[] = [];
 
   public setRoot(root: NodeDirectory | NodeFile): this {
     this.root = root;
@@ -20,34 +20,29 @@ export class DocumentOrchestratorBuilder {
     return this;
   }
 
-  public addStrategy(strategy: IRenderStrategy): this {
-    this.strategies.push(strategy);
-    return this;
-  }
-
-  public setStrategies(strategies: IRenderStrategy[]): this {
-    this.strategies = strategies;
+  public setJobs(jobs: JobConfig[]): this {
+    this.jobs = jobs;
     return this;
   }
 
   public async build(): Promise<DocumentOrchestrator[]> {
-    if (!this.root || !this.config) {
-      throw new Error("Missing required components for DocumentOrchestrator");
-    }
-
-    if (this.strategies.length === 0) {
-      throw new Error("At least one render strategy is required");
-    }
-
+    this.validate();
     const orchestrators: DocumentOrchestrator[] = [];
 
-    for (const strategy of this.strategies) {
-      const orchestrator = await DocumentOrchestrator.create(
-        this.root,
-        this.config
+    for (const job of this.jobs) {
+      const outputFormat = job.get("outputFormat");
+      const strategies = await renderStrategyFactory.createStrategies(
+        job,
+        outputFormat
       );
-      orchestrator.setStrategy(strategy);
-      orchestrators.push(orchestrator);
+      for (const strategy of strategies) {
+        const orchestrator = DocumentOrchestrator.create(
+          this.root as NodeDirectory | NodeFile,
+          job as JobConfig
+        );
+        orchestrator.setStrategy(strategy);
+        orchestrators.push(orchestrator);
+      }
     }
 
     return orchestrators;
@@ -67,5 +62,15 @@ export class DocumentOrchestratorBuilder {
     }
 
     return orchestrators;
+  }
+
+  private validate(): void {
+    if (!this.root || !this.config) {
+      throw new Error("Missing required components for DocumentOrchestrator");
+    }
+
+    if (this.jobs.length === 0) {
+      throw new Error("At least one job is required");
+    }
   }
 }

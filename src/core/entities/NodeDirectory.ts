@@ -68,29 +68,29 @@ export abstract class NodeDirectory extends NodeBase {
     // bundle all children
     await Promise.all(this.children.map(child => child.bundle(deep + 1)));
 
-    // set the length of the directory
-    this.length = this.children.filter(child => child.type === "file").length;
-    this.numberOfFiles =
-      this.length +
-      this.children
-        .filter(child => child.type === "directory")
-        .reduce((acc, child) => acc + child.numberOfFiles, 0);
-
-    // set the deep length of the directory
-    this.deepLength = this.children.reduce(
-      (acc, child) =>
-        acc + (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
-      0
-    );
-
-    // set the size of the directory
-    this.size = this.children.reduce((acc, child) => acc + child.size, 0);
-
-    // set stats
+    this.bundleMetrics();
     this.stats = await fileStatsService(this.path);
   }
 
   public abstract override render(strategy: IRenderStrategy): INodeContent;
+
+  private bundleMetrics(): void {
+    // Calculate directory metrics in a single pass
+    const metrics = this.children.reduce(
+      (acc, child) => ({
+        length: acc.length + (child.type === "file" ? 1 : 0),
+        numberOfFiles:
+          acc.numberOfFiles + (child.type === "file" ? 1 : child.numberOfFiles),
+        deepLength:
+          acc.deepLength +
+          (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
+        size: acc.size + child.size
+      }),
+      { length: 0, numberOfFiles: 0, deepLength: 0, size: 0 }
+    );
+
+    Object.assign(this, metrics);
+  }
 
   private initDirectory(): void {
     this.children = [];

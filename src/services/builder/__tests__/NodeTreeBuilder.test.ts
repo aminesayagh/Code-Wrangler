@@ -1,7 +1,7 @@
 import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
 import { fileStatsService } from "../../../infrastructure/filesystem/FileStats";
 import { FILE_TYPE } from "../../../types/type";
-import { Config } from "../../../utils/config";
+import { IJobConfig, JobConfig } from "../../../utils/config";
 import FileHidden from "../FileHidden";
 import { NodeTreeBuilder } from "../NodeTreeBuilder";
 
@@ -9,8 +9,9 @@ jest.mock("../../../utils/config");
 jest.mock("../../../infrastructure/filesystem/DocumentFactory");
 jest.mock("../FileHidden");
 jest.mock("../../../infrastructure/filesystem/FileStats");
+
 describe("NodeTreeBuilder", () => {
-  let mockConfig: jest.Mocked<Config>;
+  let mockConfig: jest.Mocked<JobConfig>;
   let nodeTreeBuilder: NodeTreeBuilder;
 
   beforeEach(() => {
@@ -18,11 +19,11 @@ describe("NodeTreeBuilder", () => {
 
     mockConfig = {
       get: jest.fn()
-    } as unknown as jest.Mocked<Config>;
+    } as unknown as jest.Mocked<JobConfig>;
 
-    mockConfig.get.mockImplementation((key: string) => {
+    mockConfig.get.mockImplementation((key: keyof IJobConfig) => {
       switch (key) {
-        case "dir":
+        case "rootDir":
           return "/test/dir";
         case "pattern":
           return ".*";
@@ -33,7 +34,7 @@ describe("NodeTreeBuilder", () => {
         case "additionalIgnoreFiles":
           return [];
         default:
-          return undefined;
+          return "";
       }
     });
 
@@ -47,7 +48,7 @@ describe("NodeTreeBuilder", () => {
 
   describe("initialization", () => {
     it("should initialize with correct config values", () => {
-      expect(mockConfig.get).toHaveBeenCalledWith("dir");
+      expect(mockConfig.get).toHaveBeenCalledWith("rootDir");
       expect(mockConfig.get).toHaveBeenCalledWith("pattern");
       expect(mockConfig.get).toHaveBeenCalledWith("maxDepth");
       expect(mockConfig.get).toHaveBeenCalledWith("excludePatterns");
