@@ -1,7 +1,7 @@
 import { NodeDirectory } from "../../../core/entities/NodeDirectory";
 import { NodeFile } from "../../../core/entities/NodeFile";
 import { Template } from "../../../infrastructure/templates/TemplateEngine";
-import { Config, JobConfig } from "../../../utils/config";
+import { JobConfig } from "../../../utils/config";
 import { RenderBaseStrategy } from "../RenderStrategy";
 
 jest.mock("../../../core/entities/NodeFile");
@@ -39,7 +39,9 @@ describe("RenderBaseStrategy", () => {
 
     mockConfig = {
       get: jest.fn().mockReturnValue(PROJECT_NAME),
-      global: {} as unknown as Config
+      global: {
+        get: jest.fn().mockReturnValue(PROJECT_NAME)
+      }
     } as unknown as jest.Mocked<JobConfig>;
 
     mockTemplatePage = {
