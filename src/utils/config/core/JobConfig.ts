@@ -1,12 +1,16 @@
 import { z } from "zod";
 
+import { Config } from "./Config";
 import { ConfigManager } from "./ConfigManager";
 import { logger } from "../../logger";
 import { IJobConfig, jobConfigSchema } from "../schema";
 
 export class JobConfig extends ConfigManager<IJobConfig> {
-  public constructor(config: IJobConfig) {
-    super(config);
+  public constructor(
+    jobConfig: IJobConfig,
+    public global: Config
+  ) {
+    super(jobConfig);
   }
 
   protected validate(config: IJobConfig): IJobConfig {

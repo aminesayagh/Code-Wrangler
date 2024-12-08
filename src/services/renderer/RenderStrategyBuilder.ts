@@ -8,31 +8,50 @@ import {
   directoryTemplateSchema,
   fileTemplateSchema
 } from "../../infrastructure/templates/zod";
-import { Config, OutputFormatExtension } from "../../utils/config";
+import {
+  JobConfig,
+  OutputFormat,
+  OutputFormatExtension
+} from "../../utils/config";
 
 export class RenderStrategyBuilder {
-  private config: Config | null = null;
+  private config: JobConfig | null = null;
   private extension: OutputFormatExtension | null = null;
-  private name: string | null = null;
+  private name: OutputFormat | null = null;
   private templatePage: Template | null = null;
   private templateDirectory: Template | null = null;
   private templateFile: Template | null = null;
 
-  public setConfig(config: Config): RenderStrategyBuilder {
+  /**
+   * @param config - The configuration to use for the strategy.
+   * @returns The builder instance.
+   */
+  public setConfig(config: JobConfig): RenderStrategyBuilder {
     this.config = config;
     return this;
   }
 
+  /**
+   * @param extension - The extension to use for the strategy.
+   * @returns The builder instance.
+   */
   public setExtension(extension: OutputFormatExtension): RenderStrategyBuilder {
     this.extension = extension;
     return this;
   }
 
-  public setName(name: string): RenderStrategyBuilder {
+  /**
+   * @param name - The name to use for the strategy.
+   * @returns The builder instance.
+   */
+  public setName(name: OutputFormat): RenderStrategyBuilder {
     this.name = name;
     return this;
   }
 
+  /**
+   * @returns The builder instance.
+   */
   public async loadTemplates(): Promise<RenderStrategyBuilder> {
     if (!this.config) {
       throw new Error("Config is required");
@@ -47,20 +66,41 @@ export class RenderStrategyBuilder {
     return this;
   }
 
+  /**
+   * @returns The built strategy.
+   */
   public build(): RenderBaseStrategy {
     this.validate();
 
-    const concreteRenderStrategy =
-      this.name === "Markdown" ? RenderMarkdownStrategy : RenderHTMLStrategy;
+    const concreteRenderStrategy = this.getRenderStrategy();
 
     return new concreteRenderStrategy(
-      this.config as Config,
+      this.config as JobConfig,
       this.templatePage as Template,
       this.templateDirectory as Template,
       this.templateFile as Template
     );
   }
 
+  /**
+   * @returns The render strategy.
+   */
+  private getRenderStrategy():
+    | typeof RenderMarkdownStrategy
+    | typeof RenderHTMLStrategy {
+    switch (this.name) {
+      case "markdown":
+        return RenderMarkdownStrategy;
+      case "html":
+        return RenderHTMLStrategy;
+      default:
+        throw new Error(`Unsupported output format: ${this.name}`);
+    }
+  }
+
+  /**
+   * @returns Whether the builder is valid.
+   */
   private validate(): boolean {
     if (!this.config) {
       throw new Error("Config is required");
@@ -78,6 +118,10 @@ export class RenderStrategyBuilder {
     return true;
   }
 
+  /**
+   * @param templateDir - The directory to load the template from.
+   * @returns The loaded template.
+   */
   private loadTemplateFile(templateDir: string): Promise<Template> {
     return Template.create(
       "file",
@@ -86,6 +130,10 @@ export class RenderStrategyBuilder {
     );
   }
 
+  /**
+   * @param templateDir - The directory to load the template from.
+   * @returns The loaded template.
+   */
   private loadTemplateDirectory(templateDir: string): Promise<Template> {
     return Template.create(
       "directory",
@@ -94,6 +142,10 @@ export class RenderStrategyBuilder {
     );
   }
 
+  /**
+   * @param templateDir - The directory to load the template from.
+   * @returns The loaded template.
+   */
   private loadTemplatePage(templateDir: string): Promise<Template> {
     return Template.create(
       "page",

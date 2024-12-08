@@ -1,7 +1,7 @@
 import { NodeDirectory } from "../../../core/entities/NodeDirectory";
 import { NodeFile } from "../../../core/entities/NodeFile";
 import { Template } from "../../../infrastructure/templates/TemplateEngine";
-import { Config } from "../../../utils/config";
+import { Config, JobConfig } from "../../../utils/config";
 import { RenderBaseStrategy } from "../RenderStrategy";
 
 jest.mock("../../../core/entities/NodeFile");
@@ -11,7 +11,7 @@ jest.mock("../../../utils/config");
 
 class TestRenderStrategy extends RenderBaseStrategy {
   public constructor(
-    config: Config,
+    config: JobConfig,
     templatePage: Template,
     templateDirectory: Template,
     templateFile: Template
@@ -26,7 +26,7 @@ describe("RenderBaseStrategy", () => {
   const RENDERED_DIRECTORY = "rendered directory";
   const RENDERED_PAGE = "rendered page";
 
-  let mockConfig: jest.Mocked<Config>;
+  let mockConfig: jest.Mocked<JobConfig>;
   let mockTemplatePage: jest.Mocked<Template>;
   let mockTemplateDirectory: jest.Mocked<Template>;
   let mockTemplateFile: jest.Mocked<Template>;
@@ -38,8 +38,9 @@ describe("RenderBaseStrategy", () => {
     jest.clearAllMocks();
 
     mockConfig = {
-      get: jest.fn().mockReturnValue(PROJECT_NAME)
-    } as unknown as jest.Mocked<Config>;
+      get: jest.fn().mockReturnValue(PROJECT_NAME),
+      global: {} as unknown as Config
+    } as unknown as jest.Mocked<JobConfig>;
 
     mockTemplatePage = {
       content: "page template",

@@ -3,7 +3,7 @@ import { NodeDirectory } from "../core/entities/NodeDirectory";
 import { NodeFile } from "../core/entities/NodeFile";
 import { documentFactory } from "../infrastructure/filesystem/DocumentFactory";
 import { IRenderStrategy } from "../services/renderer/RenderStrategy";
-import { Config } from "../utils/config";
+import { JobConfig } from "../utils/config";
 import { OUTPUT_FORMATS, OutputFormat } from "../utils/config/schema";
 import { logger } from "../utils/logger/Logger";
 
@@ -12,14 +12,14 @@ export class DocumentOrchestrator implements IDocumentOrchestrator {
 
   private constructor(
     private readonly root: NodeDirectory | NodeFile,
-    private readonly config: Config
+    private readonly job: JobConfig
   ) {}
 
   public static create(
     root: NodeDirectory | NodeFile,
-    config: Config
+    job: JobConfig
   ): DocumentOrchestrator {
-    const orchestrator = new DocumentOrchestrator(root, config);
+    const orchestrator = new DocumentOrchestrator(root, job);
     orchestrator.initialize();
     return orchestrator;
   }
@@ -66,7 +66,7 @@ export class DocumentOrchestrator implements IDocumentOrchestrator {
   }
 
   private resolveOutputPath(outputFormat: OutputFormat): string {
-    const outputFile = this.config.get("outputFile");
+    const outputFile = this.job.get("outputFile");
     return documentFactory.resolve(
       `${outputFile}.${OUTPUT_FORMATS[outputFormat]}`
     );

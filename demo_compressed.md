@@ -1,7 +1,7 @@
 
 # Code Documentation
-Generated on: 2024-12-07T15:38:31.267Z
-Total files: 51
+Generated on: 2024-12-08T08:56:11.595Z
+Total files: 54
 
 ## Project Structure
 
@@ -72,6 +72,9 @@ codewrangler
         │   │   └── index.ts
         │   ├── core
         │   │   ├── Config.ts
+        │   │   ├── ConfigManager.ts
+        │   │   ├── JobConfig.ts
+        │   │   ├── JobManager.ts
         │   │   └── index.ts
         │   ├── index.ts
         │   ├── schema
@@ -93,7 +96,7 @@ codewrangler
 
 ## File: CodeWrangler.ts
 - Path: `/root/git/codewrangler/src/cli/CodeWrangler.ts`
-- Size: 1.15 KB
+- Size: 1.14 KB
 - Extension: .ts
 - Lines of code: 31
 - Content:
@@ -101,9 +104,9 @@ codewrangler
 ```ts
  1 | import { Command } from "commander";
  2 | 
- 3 | import { MainCLICommand } from "./program/mainCLI/MainCLICommand";
- 4 | import { ProgramBuilder } from "./program/mainCLI/ProgramBuilder";
- 5 | import { Config } from "../utils/config/Config";
+ 3 | import { Config } from "../utils/config";
+ 4 | import { MainCLICommand } from "./program/mainCLI/MainCLICommand";
+ 5 | import { ProgramBuilder } from "./program/mainCLI/ProgramBuilder";
  6 | import { IMainCLICommandOptions } from "./program/mainCLI/type";
  7 | 
  8 | export class CodeWrangler {
@@ -143,7 +146,7 @@ codewrangler
 
 ## File: Command.ts
 - Path: `/root/git/codewrangler/src/cli/commands/Command.ts`
-- Size: 1.29 KB
+- Size: 1.28 KB
 - Extension: .ts
 - Lines of code: 37
 - Content:
@@ -151,8 +154,8 @@ codewrangler
 ```ts
  1 | /* eslint-disable require-await */
  2 | import { ICommandOptions } from "./types";
- 3 | import { Config } from "../../utils/config/Config";
- 4 | import { logger } from "../../utils/logger/Logger";
+ 3 | import { Config } from "../../utils/config";
+ 4 | import { logger } from "../../utils/logger";
  5 | 
  6 | export abstract class BaseCommand<T extends ICommandOptions> {
  7 |   public constructor(protected config: Config) {}
@@ -617,7 +620,7 @@ codewrangler
 
 ## File: MainCLICommand.ts
 - Path: `/root/git/codewrangler/src/cli/program/mainCLI/MainCLICommand.ts`
-- Size: 2.84 KB
+- Size: 2.90 KB
 - Extension: .ts
 - Lines of code: 74
 - Content:
@@ -629,7 +632,7 @@ codewrangler
  4 | import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrchestratorBuilder";
  5 | import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
  6 | import { renderStrategyFactory } from "../../../services/renderer/RenderStrategyFactory";
- 7 | import { logger } from "../../../utils/logger/Logger";
+ 7 | import { logger } from "../../../utils/logger";
  8 | import { BaseCommand } from "../../commands/Command";
  9 | 
 10 | export class MainCLICommand<
@@ -671,27 +674,27 @@ codewrangler
 46 |   protected override logVerbose(): void {
 47 |     super.logVerbose();
 48 |     logger.debug(
-49 |       `Searching for file matching pattern: ${this.config.get("pattern")}`
+49 |       `Searching for file matching pattern: ${this.config.defaultJob.get("pattern")}`
 50 |     );
 51 |     logger.debug(
-52 |       `Excluding patterns: ${(this.config.get("excludePatterns") as string[]).join(", ")}`
+52 |       `Excluding patterns: ${(this.config.defaultJob.get("excludePatterns") as string[]).join(", ")}`
 53 |     );
 54 |     logger.debug(
-55 |       `Ignoring hidden files: ${this.config.get("ignoreHiddenFiles")}`
+55 |       `Ignoring hidden files: ${this.config.defaultJob.get("ignoreHiddenFiles")}`
 56 |     );
-57 |     logger.debug(`Max file size: ${this.config.get("maxFileSize")} bytes`);
+57 |     logger.debug(`Max file size: ${this.config.defaultJob.get("maxFileSize")} bytes`);
 58 |   }
 59 | 
 60 |   private updateOptions(options: IMainCLICommandOptions): boolean {
 61 |     try {
-62 |       this.config.set("dir", options["dir"]);
-63 |       this.config.set("codeConfigFile", options["config"]);
-64 |       this.config.set("logLevel", options["verbose"] ? "DEBUG" : "INFO");
-65 |       this.config.set("verbose", options["verbose"]);
-66 |       this.config.set("outputFormat", options["format"]);
-67 |       this.config.set("outputFile", options["output"]);
-68 |       this.config.set("ignoreHiddenFiles", options["ignoreHidden"]);
-69 |       this.config.set("additionalIgnoreFiles", options["additionalIgnore"]);
+62 |       // this.config.set("dir", options["dir"]);
+63 |       // this.config.set("codeConfigFile", options["config"]);
+64 |       // this.config.set("logLevel", options["verbose"] ? "DEBUG" : "INFO");
+65 |       // this.config.set("verbose", options["verbose"]);
+66 |       // this.config.set("outputFormat", options["format"]);
+67 |       // this.config.set("outputFile", options["output"]);
+68 |       // this.config.set("ignoreHiddenFiles", options["ignoreHidden"]);
+69 |       // this.config.set("additionalIgnoreFiles", options["additionalIgnore"]);
 70 |     } catch (error) {
 71 |       this.handleCLIError(error);
 72 |     }
@@ -716,15 +719,15 @@ codewrangler
 
 ## File: ProgramBuilder.ts
 - Path: `/root/git/codewrangler/src/cli/program/mainCLI/ProgramBuilder.ts`
-- Size: 1.88 KB
+- Size: 1.97 KB
 - Extension: .ts
-- Lines of code: 67
+- Lines of code: 71
 - Content:
 
 ```ts
  1 | import { Command } from "commander";
  2 | 
- 3 | import { Config } from "../../../utils/config/Config";
+ 3 | import { Config } from "../../../utils/config";
  4 | 
  5 | export class ProgramBuilder {
  6 |   private program: Command;
@@ -762,42 +765,46 @@ codewrangler
 38 |   // eslint-disable-next-line max-lines-per-function
 39 |   private buildOptions(): ProgramBuilder {
 40 |     this.program
-41 |       .option("-d, --dir <dir>", "Directory to search", this.config.get("dir"))
-42 |       .option(
-43 |         "-c, --config <config>",
-44 |         "Config file",
-45 |         this.config.get("codeConfigFile")
-46 |       )
-47 |       .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
-48 |       .option(
-49 |         "-f, --format <format>",
-50 |         "Output format",
-51 |         this.config.get("outputFormat")
-52 |       )
-53 |       .option(
-54 |         "-o, --output <output>",
-55 |         "Output file",
-56 |         this.config.get("outputFile")
-57 |       )
-58 |       .option(
-59 |         "-e, --exclude <exclude>",
-60 |         "Exclude patterns",
-61 |         this.config.get("excludePatterns")
-62 |       )
-63 |       .option(
-64 |         "-i, --ignore-hidden",
-65 |         "Ignore hidden files",
-66 |         this.config.get("ignoreHiddenFiles")
-67 |       )
-68 |       .option(
-69 |         "-a, --additional-ignore <additional-ignore>",
-70 |         "Additional ignore patterns",
-71 |         this.config.get("additionalIgnoreFiles")
-72 |       );
-73 |     return this;
-74 |   }
-75 | }
-76 | 
+41 |       .option(
+42 |         "-d, --dir <dir>",
+43 |         "Directory to search",
+44 |         this.config.defaultJob.get("rootDir")
+45 |       )
+46 |       .option(
+47 |         "-c, --config <config>",
+48 |         "Config file",
+49 |         this.config.get("codeConfigFile")
+50 |       )
+51 |       .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
+52 |       .option(
+53 |         "-f, --format <format>",
+54 |         "Output format",
+55 |         this.config.defaultJob.get("outputFormat")
+56 |       )
+57 |       .option(
+58 |         "-o, --output <output>",
+59 |         "Output file",
+60 |         this.config.defaultJob.get("outputFile")
+61 |       )
+62 |       .option(
+63 |         "-e, --exclude <exclude>",
+64 |         "Exclude patterns",
+65 |         this.config.defaultJob.get("excludePatterns")
+66 |       )
+67 |       .option(
+68 |         "-i, --ignore-hidden",
+69 |         "Ignore hidden files",
+70 |         this.config.defaultJob.get("ignoreHiddenFiles")
+71 |       )
+72 |       .option(
+73 |         "-a, --additional-ignore <additional-ignore>",
+74 |         "Additional ignore patterns",
+75 |         this.config.defaultJob.get("additionalIgnoreFiles")
+76 |       );
+77 |     return this;
+78 |   }
+79 | }
+80 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -1781,7 +1788,7 @@ codewrangler
 
 ## File: TemplateEngine.ts
 - Path: `/root/git/codewrangler/src/infrastructure/templates/TemplateEngine.ts`
-- Size: 4.27 KB
+- Size: 4.28 KB
 - Extension: .ts
 - Lines of code: 135
 - Content:
@@ -1790,7 +1797,7 @@ codewrangler
   1 | import { ZodObject, z } from "zod";
   2 | 
   3 | import { TemplateType } from "../../types/template";
-  4 | import { Config } from "../../utils/config";
+  4 | import { JobConfig } from "../../utils/config";
   5 | import { logger } from "../../utils/logger";
   6 | import { documentFactory } from "../filesystem/DocumentFactory";
   7 | 
@@ -1827,10 +1834,10 @@ codewrangler
  38 |     this.validate();
  39 |   }
  40 | 
- 41 |   public static getTemplateDir(config: Config): string {
+ 41 |   public static getTemplateDir(config: JobConfig): string {
  42 |     const dir = documentFactory.join(
  43 |       config.get("rootDir") as string,
- 44 |       config.get("templatesDir") as string
+ 44 |       config.global.get("templatesDir") as string
  45 |     );
  46 |     if (!documentFactory.exists(dir)) {
  47 |       throw new Error(`Templates directory not found: ${dir}`);
@@ -2006,7 +2013,7 @@ codewrangler
 
 ## File: DocumentOrchestrator.ts
 - Path: `/root/git/codewrangler/src/orchestration/DocumentOrchestrator.ts`
-- Size: 2.72 KB
+- Size: 2.71 KB
 - Extension: .ts
 - Lines of code: 78
 - Content:
@@ -2017,7 +2024,7 @@ codewrangler
  3 | import { NodeFile } from "../core/entities/NodeFile";
  4 | import { documentFactory } from "../infrastructure/filesystem/DocumentFactory";
  5 | import { IRenderStrategy } from "../services/renderer/RenderStrategy";
- 6 | import { Config } from "../utils/config/Config";
+ 6 | import { Config } from "../utils/config";
  7 | import { OUTPUT_FORMATS, OutputFormat } from "../utils/config/schema";
  8 | import { logger } from "../utils/logger/Logger";
  9 | 
@@ -2122,7 +2129,7 @@ codewrangler
  2 | import { NodeDirectory } from "../core/entities/NodeDirectory";
  3 | import { NodeFile } from "../core/entities/NodeFile";
  4 | import { IRenderStrategy } from "../services/renderer/RenderStrategy";
- 5 | import { Config } from "../utils/config/Config";
+ 5 | import { Config } from "../utils/config";
  6 | import { logger } from "../utils/logger/Logger";
  7 | 
  8 | export class DocumentOrchestratorBuilder {
@@ -2200,13 +2207,14 @@ codewrangler
 
 ## File: index.ts
 - Path: `/root/git/codewrangler/src/orchestration/index.ts`
-- Size: 0.00 B
+- Size: 68.00 B
 - Extension: .ts
-- Lines of code: 0
+- Lines of code: 2
 - Content:
 
 ```ts
-1 | 
+1 | export * from "./DocumentOrchestrator";
+2 | export * from "./interfaces"
 ```
 
 ---------------------------------------------------------------------------
@@ -2257,13 +2265,15 @@ codewrangler
 
 ## File: index.ts
 - Path: `/root/git/codewrangler/src/orchestration/interfaces/index.ts`
-- Size: 0.00 B
+- Size: 78.00 B
 - Extension: .ts
-- Lines of code: 0
+- Lines of code: 2
 - Content:
 
 ```ts
-1 | 
+1 | export * from "./IDocumentMetadata";
+2 | export * from "./IDocumentOrchestrator";
+3 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2271,7 +2281,7 @@ codewrangler
 
 ## File: DocumentTreeBuilder.ts
 - Path: `/root/git/codewrangler/src/services/builder/DocumentTreeBuilder.ts`
-- Size: 1.73 KB
+- Size: 1.74 KB
 - Extension: .ts
 - Lines of code: 46
 - Content:
@@ -2281,13 +2291,13 @@ codewrangler
  2 | import { RenderableDirectory } from "../../core/entities/NodeDirectory";
  3 | import { RenderableFile } from "../../core/entities/NodeFile";
  4 | import { FILE_TYPE } from "../../types/type";
- 5 | import { Config } from "../../utils/config";
+ 5 | import { JobConfig } from "../../utils/config";
  6 | import { logger } from "../../utils/logger";
  7 | 
  8 | export class DocumentTreeBuilder {
  9 |   private root: RenderableDirectory | RenderableFile | undefined;
 10 |   private builder: NodeTreeBuilder;
-11 |   public constructor(config: Config) {
+11 |   public constructor(config: JobConfig) {
 12 |     this.builder = new NodeTreeBuilder(config);
 13 |   }
 14 | 
@@ -2341,7 +2351,7 @@ codewrangler
 
 ## File: FileHidden.ts
 - Path: `/root/git/codewrangler/src/services/builder/FileHidden.ts`
-- Size: 893.00 B
+- Size: 899.00 B
 - Extension: .ts
 - Lines of code: 25
 - Content:
@@ -2349,14 +2359,14 @@ codewrangler
 ```ts
  1 | import { minimatch } from "minimatch";
  2 | 
- 3 | import { Config } from "../../utils/config";
+ 3 | import { JobConfig } from "../../utils/config";
  4 | 
  5 | export default class FileHidden {
  6 |   private ignoreHiddenFiles: boolean;
  7 |   private patterns: string[];
  8 |   private additionalIgnoreFiles: string[];
  9 | 
-10 |   public constructor(config: Config) {
+10 |   public constructor(config: JobConfig) {
 11 |     this.ignoreHiddenFiles = config.get("ignoreHiddenFiles") as boolean;
 12 |     this.patterns = [...config.get("excludePatterns")];
 13 |     this.additionalIgnoreFiles = config.get("additionalIgnoreFiles");
@@ -2387,7 +2397,7 @@ codewrangler
 
 ## File: NodeTreeBuilder.ts
 - Path: `/root/git/codewrangler/src/services/builder/NodeTreeBuilder.ts`
-- Size: 3.14 KB
+- Size: 3.16 KB
 - Extension: .ts
 - Lines of code: 101
 - Content:
@@ -2397,7 +2407,7 @@ codewrangler
   2 | import { documentFactory } from "../../infrastructure/filesystem/DocumentFactory";
   3 | import { fileStatsService } from "../../infrastructure/filesystem/FileStats";
   4 | import { FILE_TYPE, FileType } from "../../types/type";
-  5 | import { Config, ConfigOptions } from "../../utils/config";
+  5 | import { IJobConfig, JobConfig } from "../../utils/config";
   6 | 
   7 | export interface INodeTree {
   8 |   name: string;
@@ -2408,11 +2418,11 @@ codewrangler
  13 | 
  14 | export interface INodeTreeBuilderOptions
  15 |   extends Pick<
- 16 |     ConfigOptions,
+ 16 |     IJobConfig,
  17 |     | "additionalIgnoreFiles"
  18 |     | "maxDepth"
  19 |     | "excludePatterns"
- 20 |     | "dir"
+ 20 |     | "rootDir"
  21 |     | "followSymlinks"
  22 |   > {
  23 |   pattern: RegExp;
@@ -2420,18 +2430,18 @@ codewrangler
  25 | }
  26 | 
  27 | export class NodeTreeBuilder {
- 28 |   private config: Config;
+ 28 |   private config: JobConfig;
  29 |   private options: INodeTreeBuilderOptions;
  30 |   private fileHidden: FileHidden;
  31 | 
- 32 |   public constructor(config: Config) {
+ 32 |   public constructor(config: JobConfig) {
  33 |     this.config = config;
  34 |     this.options = this.initializeOptions();
  35 |     this.fileHidden = new FileHidden(config);
  36 |   }
  37 | 
  38 |   public async build(): Promise<INodeTree> {
- 39 |     const rootDir = this.options.dir;
+ 39 |     const rootDir = this.options.rootDir;
  40 |     if (!documentFactory.exists(rootDir)) {
  41 |       throw new Error(`Directory ${rootDir} does not exist`);
  42 |     }
@@ -2440,7 +2450,7 @@ codewrangler
  45 | 
  46 |   private initializeOptions(): INodeTreeBuilderOptions {
  47 |     return {
- 48 |       dir: this.config.get("dir"),
+ 48 |       rootDir: this.config.get("rootDir"),
  49 |       pattern: new RegExp(this.config.get("pattern")),
  50 |       maxDepth: this.config.get("maxDepth"),
  51 |       excludePatterns: this.config.get("excludePatterns"),
@@ -2519,9 +2529,9 @@ codewrangler
 
 ## File: RenderStrategy.ts
 - Path: `/root/git/codewrangler/src/services/renderer/RenderStrategy.ts`
-- Size: 3.31 KB
+- Size: 3.42 KB
 - Extension: .ts
-- Lines of code: 92
+- Lines of code: 94
 - Content:
 
 ```ts
@@ -2533,7 +2543,7 @@ codewrangler
   6 |   DirectoryTemplate,
   7 |   FileTemplate
   8 | } from "../../infrastructure/templates/zod";
-  9 | import { Config, OutputFormat } from "../../utils/config";
+  9 | import { JobConfig, OutputFormat } from "../../utils/config";
  10 | 
  11 | interface IContentRenderer {
  12 |   renderFile: (file: NodeFile) => string;
@@ -2555,7 +2565,7 @@ codewrangler
  28 |   protected templateFile: Template;
  29 | 
  30 |   protected constructor(
- 31 |     private readonly config: Config,
+ 31 |     private readonly config: JobConfig,
  32 |     public readonly name: OutputFormat,
  33 |     templatePage: Template,
  34 |     templateDirectory: Template,
@@ -2601,39 +2611,42 @@ codewrangler
  74 |     const rootContent = this.renderNode(rootDirectory);
  75 | 
  76 |     const templateConfig = {
- 77 |       PROJECT_NAME:
- 78 |         this.config.get("projectName") || rootDirectory.name || "Project",
- 79 |       GENERATION_DATE: new Date().toISOString(),
- 80 |       TOTAL_SIZE: rootDirectory.size,
- 81 |       CONTENT: rootContent
- 82 |     } as BaseTemplate & Record<string, string>;
- 83 | 
- 84 |     if (rootDirectory.type === "directory") {
- 85 |       templateConfig["TOTAL_FILES"] = rootDirectory.length;
- 86 |       templateConfig["TOTAL_DIRECTORIES"] = rootDirectory.deepLength;
- 87 |     }
- 88 | 
- 89 |     return this.templatePage.render(templateConfig);
- 90 |   }
- 91 | 
- 92 |   public dispose(): void {
- 93 |     this.templatePage.dispose();
- 94 |     this.templateDirectory.dispose();
- 95 |     this.templateFile.dispose();
- 96 |   }
- 97 | 
- 98 |   protected renderNode(node: NodeFile | NodeDirectory): string {
- 99 |     return node.type === "file"
-100 |       ? this.renderFile(node)
-101 |       : this.renderDirectory(node);
-102 |   }
-103 | 
-104 |   protected renderChildren(children: (NodeFile | NodeDirectory)[]): string {
-105 |     if (!children) return "";
-106 |     return children.map(child => this.renderNode(child)).join("");
-107 |   }
-108 | }
-109 | 
+ 77 |       PROJECT_NAME: this.getProjectName(rootDirectory.name),
+ 78 |       GENERATION_DATE: new Date().toISOString(),
+ 79 |       TOTAL_SIZE: rootDirectory.size,
+ 80 |       CONTENT: rootContent
+ 81 |     } as BaseTemplate & Record<string, string>;
+ 82 | 
+ 83 |     if (rootDirectory.type === "directory") {
+ 84 |       templateConfig["TOTAL_FILES"] = rootDirectory.length;
+ 85 |       templateConfig["TOTAL_DIRECTORIES"] = rootDirectory.deepLength;
+ 86 |     }
+ 87 | 
+ 88 |     return this.templatePage.render(templateConfig);
+ 89 |   }
+ 90 | 
+ 91 |   public dispose(): void {
+ 92 |     this.templatePage.dispose();
+ 93 |     this.templateDirectory.dispose();
+ 94 |     this.templateFile.dispose();
+ 95 |   }
+ 96 | 
+ 97 |   protected getProjectName(otherName?: string): string {
+ 98 |     return this.config.global.get("projectName") || otherName || "Project";
+ 99 |   }
+100 | 
+101 |   protected renderNode(node: NodeFile | NodeDirectory): string {
+102 |     return node.type === "file"
+103 |       ? this.renderFile(node)
+104 |       : this.renderDirectory(node);
+105 |   }
+106 | 
+107 |   protected renderChildren(children: (NodeFile | NodeDirectory)[]): string {
+108 |     if (!children) return "";
+109 |     return children.map(child => this.renderNode(child)).join("");
+110 |   }
+111 | }
+112 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2641,9 +2654,9 @@ codewrangler
 
 ## File: RenderStrategyBuilder.ts
 - Path: `/root/git/codewrangler/src/services/renderer/RenderStrategyBuilder.ts`
-- Size: 3.04 KB
+- Size: 4.20 KB
 - Extension: .ts
-- Lines of code: 88
+- Lines of code: 139
 - Content:
 
 ```ts
@@ -2657,101 +2670,153 @@ codewrangler
   8 |   directoryTemplateSchema,
   9 |   fileTemplateSchema
  10 | } from "../../infrastructure/templates/zod";
- 11 | import { Config, OutputFormatExtension } from "../../utils/config";
- 12 | 
- 13 | export class RenderStrategyBuilder {
- 14 |   private config: Config | null = null;
- 15 |   private extension: OutputFormatExtension | null = null;
- 16 |   private name: string | null = null;
- 17 |   private templatePage: Template | null = null;
- 18 |   private templateDirectory: Template | null = null;
- 19 |   private templateFile: Template | null = null;
- 20 | 
- 21 |   public setConfig(config: Config): RenderStrategyBuilder {
- 22 |     this.config = config;
- 23 |     return this;
- 24 |   }
- 25 | 
- 26 |   public setExtension(extension: OutputFormatExtension): RenderStrategyBuilder {
- 27 |     this.extension = extension;
- 28 |     return this;
- 29 |   }
- 30 | 
- 31 |   public setName(name: string): RenderStrategyBuilder {
- 32 |     this.name = name;
- 33 |     return this;
- 34 |   }
- 35 | 
- 36 |   public async loadTemplates(): Promise<RenderStrategyBuilder> {
- 37 |     if (!this.config) {
- 38 |       throw new Error("Config is required");
- 39 |     }
- 40 | 
- 41 |     const templateDir = Template.getTemplateDir(this.config);
+ 11 | import {
+ 12 |   JobConfig,
+ 13 |   OutputFormat,
+ 14 |   OutputFormatExtension
+ 15 | } from "../../utils/config";
+ 16 | 
+ 17 | export class RenderStrategyBuilder {
+ 18 |   private config: JobConfig | null = null;
+ 19 |   private extension: OutputFormatExtension | null = null;
+ 20 |   private name: OutputFormat | null = null;
+ 21 |   private templatePage: Template | null = null;
+ 22 |   private templateDirectory: Template | null = null;
+ 23 |   private templateFile: Template | null = null;
+ 24 | 
+ 25 |   /**
+ 26 |    * @param config - The configuration to use for the strategy.
+ 27 |    * @returns The builder instance.
+ 28 |    */
+ 29 |   public setConfig(config: JobConfig): RenderStrategyBuilder {
+ 30 |     this.config = config;
+ 31 |     return this;
+ 32 |   }
+ 33 | 
+ 34 |   /**
+ 35 |    * @param extension - The extension to use for the strategy.
+ 36 |    * @returns The builder instance.
+ 37 |    */
+ 38 |   public setExtension(extension: OutputFormatExtension): RenderStrategyBuilder {
+ 39 |     this.extension = extension;
+ 40 |     return this;
+ 41 |   }
  42 | 
- 43 |     this.templatePage = await this.loadTemplatePage(templateDir);
- 44 |     this.templateDirectory = await this.loadTemplateDirectory(templateDir);
- 45 |     this.templateFile = await this.loadTemplateFile(templateDir);
- 46 | 
- 47 |     return this;
- 48 |   }
- 49 | 
- 50 |   public build(): RenderBaseStrategy {
- 51 |     this.validate();
- 52 | 
- 53 |     const concreteRenderStrategy =
- 54 |       this.name === "Markdown" ? RenderMarkdownStrategy : RenderHTMLStrategy;
- 55 | 
- 56 |     return new concreteRenderStrategy(
- 57 |       this.config as Config,
- 58 |       this.templatePage as Template,
- 59 |       this.templateDirectory as Template,
- 60 |       this.templateFile as Template
- 61 |     );
- 62 |   }
- 63 | 
- 64 |   private validate(): boolean {
- 65 |     if (!this.config) {
- 66 |       throw new Error("Config is required");
- 67 |     }
- 68 |     if (!this.extension) {
- 69 |       throw new Error("Extension is required");
- 70 |     }
- 71 |     if (!this.name) {
- 72 |       throw new Error("Name is required");
- 73 |     }
- 74 |     if (!this.templatePage || !this.templateDirectory || !this.templateFile) {
- 75 |       throw new Error("Templates must be loaded before building");
- 76 |     }
- 77 | 
- 78 |     return true;
- 79 |   }
- 80 | 
- 81 |   private loadTemplateFile(templateDir: string): Promise<Template> {
- 82 |     return Template.create(
- 83 |       "file",
- 84 |       fileTemplateSchema,
- 85 |       documentFactory.join(templateDir, `file.${this.extension}`)
- 86 |     );
- 87 |   }
- 88 | 
- 89 |   private loadTemplateDirectory(templateDir: string): Promise<Template> {
- 90 |     return Template.create(
- 91 |       "directory",
- 92 |       directoryTemplateSchema,
- 93 |       documentFactory.join(templateDir, `directory.${this.extension}`)
- 94 |     );
- 95 |   }
- 96 | 
- 97 |   private loadTemplatePage(templateDir: string): Promise<Template> {
- 98 |     return Template.create(
- 99 |       "page",
-100 |       baseTemplateSchema,
-101 |       documentFactory.join(templateDir, `page.${this.extension}`)
-102 |     );
-103 |   }
-104 | }
-105 | 
+ 43 |   /**
+ 44 |    * @param name - The name to use for the strategy.
+ 45 |    * @returns The builder instance.
+ 46 |    */
+ 47 |   public setName(name: OutputFormat): RenderStrategyBuilder {
+ 48 |     this.name = name;
+ 49 |     return this;
+ 50 |   }
+ 51 | 
+ 52 |   /**
+ 53 |    * @returns The builder instance.
+ 54 |    */
+ 55 |   public async loadTemplates(): Promise<RenderStrategyBuilder> {
+ 56 |     if (!this.config) {
+ 57 |       throw new Error("Config is required");
+ 58 |     }
+ 59 | 
+ 60 |     const templateDir = Template.getTemplateDir(this.config);
+ 61 | 
+ 62 |     this.templatePage = await this.loadTemplatePage(templateDir);
+ 63 |     this.templateDirectory = await this.loadTemplateDirectory(templateDir);
+ 64 |     this.templateFile = await this.loadTemplateFile(templateDir);
+ 65 | 
+ 66 |     return this;
+ 67 |   }
+ 68 | 
+ 69 |   /**
+ 70 |    * @returns The built strategy.
+ 71 |    */
+ 72 |   public build(): RenderBaseStrategy {
+ 73 |     this.validate();
+ 74 | 
+ 75 |     const concreteRenderStrategy = this.getRenderStrategy();
+ 76 | 
+ 77 |     return new concreteRenderStrategy(
+ 78 |       this.config as JobConfig,
+ 79 |       this.templatePage as Template,
+ 80 |       this.templateDirectory as Template,
+ 81 |       this.templateFile as Template
+ 82 |     );
+ 83 |   }
+ 84 | 
+ 85 |   /**
+ 86 |    * @returns The render strategy.
+ 87 |    */
+ 88 |   private getRenderStrategy():
+ 89 |     | typeof RenderMarkdownStrategy
+ 90 |     | typeof RenderHTMLStrategy {
+ 91 |     switch (this.name) {
+ 92 |       case "markdown":
+ 93 |         return RenderMarkdownStrategy;
+ 94 |       case "html":
+ 95 |         return RenderHTMLStrategy;
+ 96 |       default:
+ 97 |         throw new Error(`Unsupported output format: ${this.name}`);
+ 98 |     }
+ 99 |   }
+100 | 
+101 |   /**
+102 |    * @returns Whether the builder is valid.
+103 |    */
+104 |   private validate(): boolean {
+105 |     if (!this.config) {
+106 |       throw new Error("Config is required");
+107 |     }
+108 |     if (!this.extension) {
+109 |       throw new Error("Extension is required");
+110 |     }
+111 |     if (!this.name) {
+112 |       throw new Error("Name is required");
+113 |     }
+114 |     if (!this.templatePage || !this.templateDirectory || !this.templateFile) {
+115 |       throw new Error("Templates must be loaded before building");
+116 |     }
+117 | 
+118 |     return true;
+119 |   }
+120 | 
+121 |   /**
+122 |    * @param templateDir - The directory to load the template from.
+123 |    * @returns The loaded template.
+124 |    */
+125 |   private loadTemplateFile(templateDir: string): Promise<Template> {
+126 |     return Template.create(
+127 |       "file",
+128 |       fileTemplateSchema,
+129 |       documentFactory.join(templateDir, `file.${this.extension}`)
+130 |     );
+131 |   }
+132 | 
+133 |   /**
+134 |    * @param templateDir - The directory to load the template from.
+135 |    * @returns The loaded template.
+136 |    */
+137 |   private loadTemplateDirectory(templateDir: string): Promise<Template> {
+138 |     return Template.create(
+139 |       "directory",
+140 |       directoryTemplateSchema,
+141 |       documentFactory.join(templateDir, `directory.${this.extension}`)
+142 |     );
+143 |   }
+144 | 
+145 |   /**
+146 |    * @param templateDir - The directory to load the template from.
+147 |    * @returns The loaded template.
+148 |    */
+149 |   private loadTemplatePage(templateDir: string): Promise<Template> {
+150 |     return Template.create(
+151 |       "page",
+152 |       baseTemplateSchema,
+153 |       documentFactory.join(templateDir, `page.${this.extension}`)
+154 |     );
+155 |   }
+156 | }
+157 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2759,7 +2824,7 @@ codewrangler
 
 ## File: RenderStrategyFactory.ts
 - Path: `/root/git/codewrangler/src/services/renderer/RenderStrategyFactory.ts`
-- Size: 1.33 KB
+- Size: 1.34 KB
 - Extension: .ts
 - Lines of code: 42
 - Content:
@@ -2767,31 +2832,31 @@ codewrangler
 ```ts
  1 | import { RenderBaseStrategy } from "./RenderStrategy";
  2 | import { RenderStrategyBuilder } from "./RenderStrategyBuilder";
- 3 | import { Config } from "../../utils/config/Config";
+ 3 | import { JobConfig } from "../../utils/config";
  4 | import { OutputFormat } from "../../utils/config/schema";
  5 | 
  6 | // Factory function for common render strategies
  7 | export const renderStrategyFactory = {
- 8 |   async createMarkdownStrategy(config: Config): Promise<RenderBaseStrategy> {
+ 8 |   async createMarkdownStrategy(config: JobConfig): Promise<RenderBaseStrategy> {
  9 |     return await new RenderStrategyBuilder()
 10 |       .setConfig(config)
 11 |       .setExtension("md")
-12 |       .setName("Markdown")
+12 |       .setName("markdown")
 13 |       .loadTemplates()
 14 |       .then(builder => builder.build());
 15 |   },
 16 | 
-17 |   async createHTMLStrategy(config: Config): Promise<RenderBaseStrategy> {
+17 |   async createHTMLStrategy(config: JobConfig): Promise<RenderBaseStrategy> {
 18 |     return await new RenderStrategyBuilder()
 19 |       .setConfig(config)
 20 |       .setExtension("html")
-21 |       .setName("HTML")
+21 |       .setName("html")
 22 |       .loadTemplates()
 23 |       .then(builder => builder.build());
 24 |   },
 25 | 
 26 |   async createStrategies(
-27 |     config: Config,
+27 |     config: JobConfig,
 28 |     formats: OutputFormat[]
 29 |   ): Promise<RenderBaseStrategy[]> {
 30 |     return await Promise.all(
@@ -2800,7 +2865,7 @@ codewrangler
 33 |   },
 34 | 
 35 |   async createStrategy(
-36 |     config: Config,
+36 |     config: JobConfig,
 37 |     format: OutputFormat
 38 |   ): Promise<RenderBaseStrategy> {
 39 |     switch (format) {
@@ -2819,19 +2884,19 @@ codewrangler
 
 ## File: HTMLStrategy.ts
 - Path: `/root/git/codewrangler/src/services/renderer/strategies/HTMLStrategy.ts`
-- Size: 459.00 B
+- Size: 465.00 B
 - Extension: .ts
 - Lines of code: 13
 - Content:
 
 ```ts
  1 | import { Template } from "../../../infrastructure/templates/TemplateEngine";
- 2 | import { Config } from "../../../utils/config";
+ 2 | import { JobConfig } from "../../../utils/config";
  3 | import { RenderBaseStrategy } from "../RenderStrategy";
  4 | 
  5 | export class RenderHTMLStrategy extends RenderBaseStrategy {
  6 |   public constructor(
- 7 |     config: Config,
+ 7 |     config: JobConfig,
  8 |     templatePage: Template,
  9 |     templateDirectory: Template,
 10 |     templateFile: Template
@@ -2847,20 +2912,20 @@ codewrangler
 
 ## File: MarkdownStrategy.ts
 - Path: `/root/git/codewrangler/src/services/renderer/strategies/MarkdownStrategy.ts`
-- Size: 467.00 B
+- Size: 476.00 B
 - Extension: .ts
 - Lines of code: 13
 - Content:
 
 ```ts
  1 | import { Template } from "../../../infrastructure/templates/TemplateEngine";
- 2 | import { Config } from "../../../utils/config";
+ 2 | import { JobConfig } from "../../../utils/config";
  3 | import { RenderBaseStrategy } from "../RenderStrategy";
  4 | 
  5 | export class RenderMarkdownStrategy extends RenderBaseStrategy {
  6 |   public constructor(
- 7 |     config: Config,
- 8 |     templatePage: Template,
+ 7 |     config: JobConfig,
+ 8 |     templatePage: Template,   
  9 |     templateDirectory: Template,
 10 |     templateFile: Template
 11 |   ) {
@@ -3041,127 +3106,357 @@ codewrangler
 
 ## File: Config.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/Config.ts`
-- Size: 3.17 KB
+- Size: 4.58 KB
 - Extension: .ts
-- Lines of code: 104
+- Lines of code: 156
 - Content:
 
 ```ts
   1 | import { z } from "zod";
   2 | 
-  3 | import {
-  4 |   ConfigKeys,
-  5 |   ConfigOptions,
-  6 |   DEFAULT_CONFIG,
-  7 |   configSchema
-  8 | } from "../schema";
-  9 | import { logger } from "../../logger";
- 10 | import { IConfigurationSource } from "../sources/interfaces/IConfigurationSource";
- 11 | 
- 12 | export class Config {
- 13 |   private static instance: Config | undefined;
- 14 |   private config: ConfigOptions;
- 15 |   private sources: IConfigurationSource<Partial<ConfigOptions>>[] = [];
- 16 | 
- 17 | 
- 18 |   private constructor() {
- 19 |     this.config = configSchema.parse(DEFAULT_CONFIG);
- 20 |     logger.setConfig(Config.getInstance());
- 21 |   }
- 22 | 
- 23 |   public static async load(): Promise<Config> {
- 24 |     if (!Config.instance) {
- 25 |       Config.instance = new Config();
- 26 |       await Config.instance.loadSources();
- 27 |     }
- 28 |     return Config.instance;
- 29 |   }
- 30 | 
- 31 |   public get<T extends ConfigKeys>(key: T): ConfigOptions[T] {
- 32 |     return this.config[key] as ConfigOptions[T];
- 33 |   }
- 34 | 
- 35 |   public set(
- 36 |     key: keyof ConfigOptions,
- 37 |     value: ConfigOptions[keyof ConfigOptions] | undefined
- 38 |   ): void {
- 39 |     if (value === undefined) {
- 40 |       return;
- 41 |     }
- 42 |     const updatedConfig = { ...this.config, [key]: value };
- 43 |     try {
- 44 |       configSchema.parse(updatedConfig);
- 45 |       this.config = updatedConfig;
- 46 |     } catch (error) {
- 47 |       this.handleConfigError(error);
- 48 |     }
- 49 |   }
- 50 |   public getAll(): ConfigOptions {
- 51 |     return this.config;
- 52 |   }
- 53 |   public reset(): void {
- 54 |     logger.info("Resetting config to default");
- 55 |     this.config = DEFAULT_CONFIG;
- 56 |   }
- 57 | 
- 58 |   public addSource(source: IConfigurationSource<Partial<ConfigOptions>>): void {
- 59 |     this.sources.push(source);
- 60 |     this.sources.sort((a, b) => a.priority - b.priority);
- 61 |     this.loadSources().catch(error => {
- 62 |       logger.error("Failed to reload configuration sources", error);
- 63 |     });
- 64 |   }
- 65 |   public static destroy(): void {
- 66 |     Config.instance = undefined;
- 67 |   }
- 68 |   public static getInstance(): Config {
- 69 |     if (!Config.instance) {
- 70 |       throw new Error("Config must be initialized before use");
- 71 |     }
- 72 |     return Config.instance;
- 73 |   }
- 74 |   public override(config: Partial<ConfigOptions>): void {
- 75 |     const newOverrideConfig = { ...this.config, ...config };
- 76 |     try {
- 77 |       configSchema.parse(newOverrideConfig);
- 78 |       this.config = newOverrideConfig;
- 79 |     } catch (error) {
- 80 |       if (error instanceof z.ZodError) {
- 81 |         logger.error(`Invalid configuration value: ${error.errors}`);
- 82 |       }
- 83 |       throw error;
- 84 |     }
- 85 |   }
- 86 |   private async loadSources(): Promise<void> {
- 87 |     let mergedConfig = { ...DEFAULT_CONFIG };
- 88 | 
- 89 |     for (const source of this.sources) {
- 90 |       try {
- 91 |         const sourceConfig = await source.load();
- 92 |         mergedConfig = { ...mergedConfig, ...sourceConfig };
- 93 |       } catch (error) {
- 94 |         logger.error(`Failed to load configuration from source: ${error instanceof Error ? error.message : String(error)}`);
+  3 | import { ConfigManager } from "./ConfigManager";
+  4 | import { JobConfig } from "./JobConfig";
+  5 | import { JobManager } from "./JobManager";
+  6 | import { logger } from "../../logger";
+  7 | import {
+  8 |   ConfigOptions,
+  9 |   DEFAULT_CONFIG,
+ 10 |   DEFAULT_JOB_CONFIG,
+ 11 |   IConfig,
+ 12 |   configSchema
+ 13 | } from "../schema";
+ 14 | import { IConfigurationSource } from "../sources/interfaces/IConfigurationSource";
+ 15 | 
+ 16 | export class Config extends ConfigManager<IConfig> {
+ 17 |   private static instance: Config | undefined;
+ 18 |   public defaultJob: JobConfig = new JobConfig(DEFAULT_JOB_CONFIG, this);
+ 19 |   private sources: IConfigurationSource<Partial<ConfigOptions>>[] = [];
+ 20 |   private jobManager: JobManager;
+ 21 | 
+ 22 |   /**
+ 23 |    * Constructor for the Config class.
+ 24 |    */
+ 25 |   private constructor() {
+ 26 |     super(DEFAULT_CONFIG);
+ 27 |     this.validate(this.config);
+ 28 |     this.jobManager = new JobManager(this);
+ 29 |     logger.setConfig(Config.getInstance());
+ 30 |   }
+ 31 | 
+ 32 |   /**
+ 33 |    * Loads the configuration.
+ 34 |    * @returns The Config instance.
+ 35 |    */
+ 36 |   public static async load(): Promise<Config> {
+ 37 |     if (!Config.instance) {
+ 38 |       Config.instance = new Config();
+ 39 |       await Config.instance.loadSources();
+ 40 |     }
+ 41 |     return Config.instance;
+ 42 |   }
+ 43 | 
+ 44 |   /**
+ 45 |    * Resets the configuration to the default values.
+ 46 |    */
+ 47 |   public reset(): void {
+ 48 |     logger.info("Resetting config to default");
+ 49 |     this.config = DEFAULT_CONFIG;
+ 50 |   }
+ 51 | 
+ 52 |   /**
+ 53 |    * Adds a new configuration source.
+ 54 |    * @param source - The configuration source to add.
+ 55 |    */
+ 56 |   public addSource(source: IConfigurationSource<Partial<ConfigOptions>>): void {
+ 57 |     this.sources.push(source);
+ 58 |     this.sources.sort((a, b) => a.priority - b.priority);
+ 59 |     this.loadSources().catch(error => {
+ 60 |       logger.error("Failed to reload configuration sources", error);
+ 61 |     });
+ 62 |   }
+ 63 | 
+ 64 |   /**
+ 65 |    * Destroys the Config instance.
+ 66 |    */
+ 67 |   public static destroy(): void {
+ 68 |     Config.instance = undefined;
+ 69 |   }
+ 70 | 
+ 71 |   /**
+ 72 |    * Returns the Config instance.
+ 73 |    * @returns The Config instance.
+ 74 |    * @throws An error if the Config instance is not initialized.
+ 75 |    */
+ 76 |   public static getInstance(): Config {
+ 77 |     if (!Config.instance) {
+ 78 |       throw new Error("Config must be initialized before use");
+ 79 |     }
+ 80 |     return Config.instance;
+ 81 |   }
+ 82 | 
+ 83 |   /**
+ 84 |    * Overrides the configuration with a new set of values.
+ 85 |    * @param config - The new configuration values.
+ 86 |    */
+ 87 |   public override(config: Partial<ConfigOptions>): void {
+ 88 |     const newOverrideConfig = { ...this.config, ...config };
+ 89 |     try {
+ 90 |       configSchema.parse(newOverrideConfig);
+ 91 |       this.config = newOverrideConfig;
+ 92 |     } catch (error) {
+ 93 |       if (error instanceof z.ZodError) {
+ 94 |         logger.error(`Invalid configuration value: ${error.errors}`);
  95 |       }
- 96 |     }
- 97 | 
- 98 |     try {
- 99 |       this.config = configSchema.parse(mergedConfig);
-100 |     } catch (error) {
-101 |       this.handleConfigError(error);
-102 |     }
-103 |   }
-104 |   private handleConfigError(error: unknown): void {
-105 |     if (error instanceof z.ZodError) {
-106 |       const details = error.errors
-107 |         .map(err => `${err.path.join(".")}: ${err.message}`)
-108 |         .join(", ");
-109 |       logger.error(`Configuration validation failed: ${details}`);
-110 |       throw new Error("Configuration validation failed");
-111 |     }
-112 |     throw error;
-113 |   }
-114 | }
-115 | 
+ 96 |       throw error;
+ 97 |     }
+ 98 |   }
+ 99 | 
+100 |   /**
+101 |    * Loads the configuration sources.
+102 |    */
+103 |   public async loadSources(): Promise<void> {
+104 |     let mergedConfig = { ...DEFAULT_CONFIG };
+105 | 
+106 |     await this.navigateSource(async source => {
+107 |       const sourceConfig = await source.load();
+108 |       // Merge jobs separately
+109 |       if (sourceConfig.jobs) {
+110 |         this.jobManager.mergeJobs(sourceConfig.jobs);
+111 |       }
+112 |       // Merge other config properties
+113 |       mergedConfig = {
+114 |         ...mergedConfig,
+115 |         ...sourceConfig,
+116 |         jobs: this.jobManager.getJobs().map(job => job.getAll())
+117 |       };
+118 |     });
+119 | 
+120 |     this.validate(mergedConfig);
+121 |   }
+122 | 
+123 |   /**
+124 |    * Validates the configuration.
+125 |    * @param config - The configuration to validate.
+126 |    */
+127 |   protected validate(config: IConfig): IConfig {
+128 |     try {
+129 |       return configSchema.parse(config);
+130 |     } catch (error) {
+131 |       this.handleConfigError(error);
+132 |       throw error; // Re-throw the error to be handled by the caller
+133 |     }
+134 |   }
+135 | 
+136 |   /**
+137 |    * Handles configuration validation errors.
+138 |    * @param error - The error to handle.
+139 |    * @throws An error if the configuration is invalid.
+140 |    */
+141 |   protected handleConfigError(error: unknown): void {
+142 |     if (error instanceof z.ZodError) {
+143 |       const details = error.errors
+144 |         .map(err => `${err.path.join(".")}: ${err.message}`)
+145 |         .join(", ");
+146 |       logger.error(`Configuration validation failed: ${details}`);
+147 |       throw new Error("Configuration validation failed");
+148 |     }
+149 |     throw error;
+150 |   }
+151 | 
+152 |   /**
+153 |    * Navigates through the configuration sources.
+154 |    * @param callback - The callback to execute for each source.
+155 |    */
+156 |   private async navigateSource(
+157 |     callback: (
+158 |       source: IConfigurationSource<Partial<ConfigOptions>>
+159 |     ) => Promise<void>
+160 |   ): Promise<void> {
+161 |     for (const source of this.sources) {
+162 |       try {
+163 |         await callback(source);
+164 |       } catch (error) {
+165 |         logger.error(
+166 |           `Failed to navigate configuration source: ${error instanceof Error ? error.message : String(error)}`
+167 |         );
+168 |       }
+169 |     }
+170 |   }
+171 | }
+172 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: ConfigManager.ts
+- Path: `/root/git/codewrangler/src/utils/config/core/ConfigManager.ts`
+- Size: 712.00 B
+- Extension: .ts
+- Lines of code: 26
+- Content:
+
+```ts
+ 1 | export abstract class ConfigManager<T> {
+ 2 |   protected config: T;
+ 3 | 
+ 4 |   public constructor(defaultConfig: T) {
+ 5 |     this.config = defaultConfig;
+ 6 |   }
+ 7 | 
+ 8 |   public get<K extends keyof T>(key: K): T[K] {
+ 9 |     return this.config[key] as T[K];
+10 |   }
+11 | 
+12 |   public set(key: keyof T, value: T[keyof T]): void {
+13 |     if (value === undefined) {
+14 |       return;
+15 |     }
+16 |     const updatedConfig = { ...this.config, [key]: value };
+17 |     try {
+18 |       this.validate(updatedConfig);
+19 |       this.config = updatedConfig;
+20 |     } catch (error) {
+21 |       this.handleConfigError(error);
+22 |     }
+23 |   }
+24 | 
+25 |   public getAll(): T {
+26 |     return this.config;
+27 |   }
+28 | 
+29 |   protected abstract validate(config: T): T;
+30 | 
+31 |   protected abstract handleConfigError(error: unknown): void;
+32 | }
+33 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: JobConfig.ts
+- Path: `/root/git/codewrangler/src/utils/config/core/JobConfig.ts`
+- Size: 840.00 B
+- Extension: .ts
+- Lines of code: 26
+- Content:
+
+```ts
+ 1 | import { z } from "zod";
+ 2 | 
+ 3 | import { Config } from "./Config";
+ 4 | import { ConfigManager } from "./ConfigManager";
+ 5 | import { logger } from "../../logger";
+ 6 | import { IJobConfig, jobConfigSchema } from "../schema";
+ 7 | 
+ 8 | export class JobConfig extends ConfigManager<IJobConfig> {
+ 9 |   public constructor(
+10 |     jobConfig: IJobConfig,
+11 |     public global: Config
+12 |   ) {
+13 |     super(jobConfig);
+14 |   }
+15 | 
+16 |   protected validate(config: IJobConfig): IJobConfig {
+17 |     return jobConfigSchema.parse(config);
+18 |   }
+19 | 
+20 |   protected handleConfigError(error: unknown): void {
+21 |     if (error instanceof z.ZodError) {
+22 |       const details = error.errors
+23 |         .map(err => `${err.path.join(".")}: ${err.message}`)
+24 |         .join(", ");
+25 |       logger.error(`Configuration validation failed: ${details}`);
+26 |       throw new Error("Configuration validation failed");
+27 |     }
+28 |     throw error;
+29 |   }
+30 | }
+31 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: JobManager.ts
+- Path: `/root/git/codewrangler/src/utils/config/core/JobManager.ts`
+- Size: 1.78 KB
+- Extension: .ts
+- Lines of code: 62
+- Content:
+
+```ts
+ 1 | import { DEFAULT_JOB_CONFIG, IJobConfig } from "../schema";
+ 2 | import { Config } from "./Config";
+ 3 | import { JobConfig } from "./JobConfig";
+ 4 | 
+ 5 | export interface IJobManager {
+ 6 |   registerJob: (jobConfig: IJobConfig) => void;
+ 7 |   mergeJobs: (newJobs: IJobConfig[]) => void;
+ 8 |   getJobs: () => JobConfig[];
+ 9 | }
+10 | 
+11 | export class JobManager implements IJobManager {
+12 |   private jobs: Map<string, JobConfig> = new Map();
+13 |   private global: Config;
+14 | 
+15 |   /**
+16 |    * Initializes a new JobManager instance.
+17 |    * @param config - The main configuration.
+18 |    */
+19 |   public constructor(global: Config) {
+20 |     this.global = global;
+21 |   }
+22 | 
+23 |   /**
+24 |    * Registers a new job.
+25 |    * @param jobConfig - The job config to register.
+26 |    */
+27 |   public registerJob(jobConfig: IJobConfig): void {
+28 |     const mergedConfig = this.mergeWithDefaults(jobConfig);
+29 |     this.jobs.set(jobConfig.name, new JobConfig(mergedConfig, this.global));
+30 |   }
+31 | 
+32 |   /**
+33 |    * Merges new jobs with existing jobs.
+34 |    * @param newJobs - The new jobs to merge.
+35 |    */
+36 |   public mergeJobs(newJobs: IJobConfig[]): void {
+37 |     for (const job of newJobs) {
+38 |       const existing = this.jobs.get(job.name);
+39 |       if (existing) {
+40 |         this.jobs.set(
+41 |           job.name,
+42 |           new JobConfig({ ...existing.getAll(), ...job }, this.global)
+43 |         );
+44 |       } else {
+45 |         this.jobs.set(job.name, new JobConfig(job, this.global));
+46 |       }
+47 |     }
+48 |   }
+49 | 
+50 |   /**
+51 |    * Returns all registered jobs.
+52 |    * @returns An array of JobConfig instances.
+53 |    */
+54 |   public getJobs(): JobConfig[] {
+55 |     return Array.from(this.jobs.values());
+56 |   }
+57 | 
+58 |   /**
+59 |    * Merges the job config with the default job config.
+60 |    * @param jobConfig - The job config to merge.
+61 |    * @returns The merged job config.
+62 |    */
+63 |   private mergeWithDefaults(jobConfig: IJobConfig): IJobConfig {
+64 |     return {
+65 |       ...DEFAULT_JOB_CONFIG,
+66 |       ...jobConfig
+67 |     };
+68 |   }
+69 | }
+70 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3169,13 +3464,16 @@ codewrangler
 
 ## File: index.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/index.ts`
-- Size: 25.00 B
+- Size: 85.00 B
 - Extension: .ts
-- Lines of code: 1
+- Lines of code: 3
 - Content:
 
 ```ts
 1 | export * from "./Config";
+2 | export * from "./JobManager";
+3 | export * from "./JobConfig";
+4 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3201,54 +3499,39 @@ codewrangler
 
 ## File: defaults.ts
 - Path: `/root/git/codewrangler/src/utils/config/schema/defaults.ts`
-- Size: 1021.00 B
+- Size: 715.00 B
 - Extension: .ts
-- Lines of code: 35
+- Lines of code: 24
 - Content:
 
 ```ts
- 1 | import { IConfig, OutputFormat } from "./types";
+ 1 | import { IConfig, IJobConfig, OutputFormat } from "./types";
  2 | import { LogLevelString } from "../../logger/Logger";
  3 | 
- 4 | const DEFAULT_CONFIG_IGNORE = {
- 5 |   ignoreHiddenFiles: true, // Default value
- 6 |   additionalIgnoreFiles: [],
- 7 |   excludePatterns: ["node_modules/**", "**/*.test.ts", "dist/**"]
- 8 | };
- 9 | 
-10 | const DEFAULT_CONFIG_LOG = {
-11 |   logLevel: "INFO" as LogLevelString,
-12 |   verbose: false
-13 | };
-14 | 
-15 | const DEFAULT_CONFIG_LIMITS = {
-16 |   maxFileSize: 1048576,
-17 |   maxDepth: 100
-18 | };
-19 | 
-20 | const DEFAULT_CONFIG_PATHS = {
-21 |   templatesDir: "public/templates",
-22 |   codeConfigFile: "public/codewrangler.json"
-23 | };
-24 | 
-25 | const DEFAULT_CONFIG_OUTPUT = {
-26 |   outputFormat: ["markdown"] as OutputFormat[],
-27 |   outputFile: "output"
-28 | };
-29 | 
-30 | export const DEFAULT_CONFIG: IConfig = {
-31 |   dir: process.cwd(), // current working directory, where the command is run
-32 |   rootDir: process.cwd(),
-33 |   projectName: "CodeWrangler",
-34 |   pattern: ".*",
-35 |   followSymlinks: false,
-36 |   ...DEFAULT_CONFIG_PATHS,
-37 |   ...DEFAULT_CONFIG_LIMITS,
-38 |   ...DEFAULT_CONFIG_IGNORE,
-39 |   ...DEFAULT_CONFIG_LOG,
-40 |   ...DEFAULT_CONFIG_OUTPUT
-41 | };
-42 | 
+ 4 | export const DEFAULT_JOB_CONFIG: IJobConfig = {
+ 5 |   name: "default",
+ 6 |   description: "Default job",
+ 7 |   rootDir: process.cwd(),
+ 8 |   outputFormat: ["markdown"] as OutputFormat[],
+ 9 |   excludePatterns: [],
+10 |   maxFileSize: 1048576,
+11 |   maxDepth: 100,
+12 |   ignoreHiddenFiles: true,
+13 |   additionalIgnoreFiles: [],
+14 |   followSymlinks: false,
+15 |   pattern: "**/*",
+16 |   outputFile: "output.md"
+17 | };
+18 | 
+19 | export const DEFAULT_CONFIG: IConfig = {
+20 |   projectName: "CodeWrangler",
+21 |   templatesDir: "public/templates", // TODO: 
+22 |   codeConfigFile: "public/codewrangler.json",
+23 |   logLevel: "INFO" as LogLevelString,
+24 |   verbose: false,
+25 |   jobs: []
+26 | };
+27 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3272,66 +3555,53 @@ codewrangler
 
 ## File: types.ts
 - Path: `/root/git/codewrangler/src/utils/config/schema/types.ts`
-- Size: 1.10 KB
+- Size: 1000.00 B
 - Extension: .ts
-- Lines of code: 40
+- Lines of code: 35
 - Content:
 
 ```ts
  1 | import { LogLevelString } from "../../logger/Logger";
  2 | 
- 3 | 
- 4 | export const OUTPUT_FORMATS = {
- 5 |     markdown: "md",
- 6 |     html: "html"
- 7 |   } as const;
- 8 | 
- 9 | export type OutputFormats = typeof OUTPUT_FORMATS;
-10 | export type OutputFormat = keyof typeof OUTPUT_FORMATS;
-11 | export type OutputFormatName = keyof OutputFormats;
-12 | export type OutputFormatExtension = OutputFormats[OutputFormatName];
-13 | export type ConfigKeys = keyof IConfig;
-14 | 
-15 | 
-16 | 
-17 | 
-18 | interface IConfigIgnore {
-19 |   ignoreHiddenFiles: boolean;
-20 |   additionalIgnoreFiles: string[];
-21 |   excludePatterns: string[];
-22 | }
-23 | 
-24 | interface IConfigLimits {
-25 |   maxFileSize: number;
-26 |   maxDepth: number;
+ 3 | export const OUTPUT_FORMATS = {
+ 4 |   markdown: "md",
+ 5 |   html: "html"
+ 6 | } as const;
+ 7 | 
+ 8 | export type OutputFormats = typeof OUTPUT_FORMATS;
+ 9 | export type OutputFormat = keyof typeof OUTPUT_FORMATS;
+10 | export type OutputFormatName = keyof OutputFormats;
+11 | export type OutputFormatExtension = OutputFormats[OutputFormatName];
+12 | export type ConfigKeys = keyof IConfig;
+13 | 
+14 | export interface IJobConfig {
+15 |   name: string;
+16 |   description: string;
+17 |   pattern: string;
+18 |   outputFile: string;
+19 |   rootDir: string;
+20 |   excludePatterns: string[];
+21 |   maxFileSize: number;
+22 |   maxDepth: number;
+23 |   ignoreHiddenFiles: boolean;
+24 |   outputFormat: OutputFormatName[];
+25 |   followSymlinks: boolean;
+26 |   additionalIgnoreFiles: string[];
 27 | }
 28 | 
-29 | interface IConfigPaths {
-30 |   dir: string;
-31 |   rootDir: string;
-32 |   templatesDir: string;
-33 |   outputFile: string;
-34 | }
-35 | 
-36 | interface IConfigOutput {
-37 |   outputFormat: OutputFormatName[];
-38 |   outputFile: string;
+29 | interface IConfigBase {
+30 |   projectName: string;
+31 |   templatesDir: string;
+32 |   codeConfigFile: string;
+33 |   logLevel: LogLevelString;
+34 |   verbose: boolean;
+35 | }
+36 | 
+37 | export interface IConfig extends IConfigBase {
+38 |   jobs?: IJobConfig[];
 39 | }
 40 | 
-41 | interface IConfigLog {
-42 |   logLevel: LogLevelString;
-43 |   verbose: boolean;
-44 | }
-45 | 
-46 | export interface IConfig extends IConfigIgnore, IConfigLimits, IConfigPaths, IConfigOutput, IConfigLog {
-47 |   pattern: string;
-48 |   projectName: string;
-49 |   followSymlinks: boolean;
-50 |   codeConfigFile: string;
-51 | }
-52 | 
-53 | 
-54 | export type ConfigOptions = Partial<IConfig>;
+41 | export type ConfigOptions = Partial<IConfig>;
 ```
 
 ---------------------------------------------------------------------------
@@ -3339,9 +3609,9 @@ codewrangler
 
 ## File: validation.ts
 - Path: `/root/git/codewrangler/src/utils/config/schema/validation.ts`
-- Size: 1.15 KB
+- Size: 1.34 KB
 - Extension: .ts
-- Lines of code: 31
+- Lines of code: 38
 - Content:
 
 ```ts
@@ -3357,33 +3627,42 @@ codewrangler
 10 |   LOG_VALUES as [LogLevelString, ...LogLevelString[]]
 11 | );
 12 | 
-13 | export const configSchema = z
+13 | export const jobConfigSchema = z
 14 |   .object({
-15 |     dir: z.string(),
-16 |     rootDir: z.string(),
-17 |     templatesDir: z.string(),
-18 |     pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
-19 |     outputFile: z.string(),
-20 |     logLevel: logLevelSchema,
-21 |     outputFormat: z.array(outputFormatSchema),
+15 |     name: z.string(),
+16 |     description: z.string(),
+17 |     pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
+18 |     outputFile: z.string(),
+19 |     outputFormat: z.array(outputFormatSchema),
+20 |     rootDir: z.string(),
+21 |     excludePatterns: z.array(z.string()),
 22 |     maxFileSize: z.number().positive(),
 23 |     maxDepth: z.number(),
-24 |     excludePatterns: z.array(z.string()),
-25 |     ignoreHiddenFiles: z.boolean(),
-26 |     additionalIgnoreFiles: z.array(z.string()),
-27 |     projectName: z.string(),
-28 |     verbose: z.boolean(),
-29 |     followSymlinks: z.boolean(),
-30 |     codeConfigFile: z
-31 |       .string()
-32 |       .regex(/\.json$/, "Config file must end with .json")
-33 |   })
-34 |   .strict();
-35 | 
-36 | // Propose me a new zod parser based on the configSchema, but with all the fields optional.
-37 | 
-38 | export const optionalConfigSchema = configSchema.partial();
-39 | 
+24 |     ignoreHiddenFiles: z.boolean(),
+25 |     additionalIgnoreFiles: z.array(z.string()),
+26 |     followSymlinks: z.boolean()
+27 |   })
+28 |   .strict();
+29 | 
+30 | export const optionalJobConfigSchema = jobConfigSchema.partial();
+31 | 
+32 | export const configSchema = z
+33 |   .object({
+34 |     projectName: z.string(),
+35 |     templatesDir: z.string(),
+36 |     codeConfigFile: z
+37 |       .string()
+38 |       .regex(/\.json$/, "Config file must end with .json"),
+39 |     logLevel: logLevelSchema,
+40 |     verbose: z.boolean(),
+41 |     jobs: z.array(jobConfigSchema)
+42 |   })
+43 |   .strict();
+44 | 
+45 | // Propose me a new zod parser based on the configSchema, but with all the fields optional.
+46 | 
+47 | export const optionalConfigSchema = configSchema.partial();
+48 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3391,7 +3670,7 @@ codewrangler
 
 ## File: CLIConfigSource.ts
 - Path: `/root/git/codewrangler/src/utils/config/sources/CLIConfigSource.ts`
-- Size: 362.00 B
+- Size: 366.00 B
 - Extension: .ts
 - Lines of code: 12
 - Content:
@@ -3405,8 +3684,8 @@ codewrangler
  6 |   public readonly priority = 2;
  7 | 
  8 |   public constructor(
- 9 |     private readonly args: string[],
-10 |     private readonly options: T
+ 9 |     protected readonly args: string[],
+10 |     protected readonly options: T
 11 |   ) {
 12 |   }
 13 | 
@@ -3459,17 +3738,16 @@ codewrangler
 
 ## File: index.ts
 - Path: `/root/git/codewrangler/src/utils/config/sources/index.ts`
-- Size: 161.00 B
+- Size: 122.00 B
 - Extension: .ts
-- Lines of code: 4
+- Lines of code: 3
 - Content:
 
 ```ts
 1 | export * from "./FileConfigSource";
 2 | export * from "./CLIConfigSource";
-3 | export * from "./DefaultConfigSource";
-4 | export * from "./interfaces/IConfigurationSource";
-5 | 
+3 | export * from "./interfaces/IConfigurationSource";
+4 | 
 ```
 
 ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { ZodObject, z } from "zod";
 
 import { TemplateType } from "../../types/template";
-import { Config } from "../../utils/config";
+import { JobConfig } from "../../utils/config";
 import { logger } from "../../utils/logger";
 import { documentFactory } from "../filesystem/DocumentFactory";
 
@@ -38,10 +38,10 @@ export class Template<
     this.validate();
   }
 
-  public static getTemplateDir(config: Config): string {
+  public static getTemplateDir(config: JobConfig): string {
     const dir = documentFactory.join(
       config.get("rootDir") as string,
-      config.get("templatesDir") as string
+      config.global.get("templatesDir") as string
     );
     if (!documentFactory.exists(dir)) {
       throw new Error(`Templates directory not found: ${dir}`);

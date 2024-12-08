@@ -1,11 +1,13 @@
 import { z } from "zod";
 
 import { ConfigManager } from "./ConfigManager";
+import { JobConfig } from "./JobConfig";
 import { JobManager } from "./JobManager";
 import { logger } from "../../logger";
 import {
   ConfigOptions,
   DEFAULT_CONFIG,
+  DEFAULT_JOB_CONFIG,
   IConfig,
   configSchema
 } from "../schema";
@@ -13,8 +15,9 @@ import { IConfigurationSource } from "../sources/interfaces/IConfigurationSource
 
 export class Config extends ConfigManager<IConfig> {
   private static instance: Config | undefined;
+  public defaultJob: JobConfig = new JobConfig(DEFAULT_JOB_CONFIG, this);
+  public jobManager: JobManager;
   private sources: IConfigurationSource<Partial<ConfigOptions>>[] = [];
-  private jobManager: JobManager;
 
   /**
    * Constructor for the Config class.
@@ -22,7 +25,7 @@ export class Config extends ConfigManager<IConfig> {
   private constructor() {
     super(DEFAULT_CONFIG);
     this.validate(this.config);
-    this.jobManager = new JobManager();
+    this.jobManager = new JobManager(this);
     logger.setConfig(Config.getInstance());
   }
 

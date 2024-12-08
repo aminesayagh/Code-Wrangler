@@ -1,30 +1,32 @@
 import { RenderBaseStrategy } from "./RenderStrategy";
 import { RenderStrategyBuilder } from "./RenderStrategyBuilder";
-import { Config } from "../../utils/config";
+import { JobConfig } from "../../utils/config";
 import { OutputFormat } from "../../utils/config/schema";
 
 // Factory function for common render strategies
 export const renderStrategyFactory = {
-  async createMarkdownStrategy(config: Config): Promise<RenderBaseStrategy> {
+  cache: new Map<string, RenderBaseStrategy>(),
+
+  async createMarkdownStrategy(config: JobConfig): Promise<RenderBaseStrategy> {
     return await new RenderStrategyBuilder()
       .setConfig(config)
       .setExtension("md")
-      .setName("Markdown")
+      .setName("markdown")
       .loadTemplates()
       .then(builder => builder.build());
   },
 
-  async createHTMLStrategy(config: Config): Promise<RenderBaseStrategy> {
+  async createHTMLStrategy(config: JobConfig): Promise<RenderBaseStrategy> {
     return await new RenderStrategyBuilder()
       .setConfig(config)
       .setExtension("html")
-      .setName("HTML")
+      .setName("html")
       .loadTemplates()
       .then(builder => builder.build());
   },
 
   async createStrategies(
-    config: Config,
+    config: JobConfig,
     formats: OutputFormat[]
   ): Promise<RenderBaseStrategy[]> {
     return await Promise.all(
@@ -32,15 +34,29 @@ export const renderStrategyFactory = {
     );
   },
 
+  /**
+   * Creates a strategy for the given config and format.
+   * @param config - The job config.
+   * @param format - The output format.
+   * @returns The strategy.
+   */
   async createStrategy(
-    config: Config,
+    config: JobConfig,
     format: OutputFormat
   ): Promise<RenderBaseStrategy> {
-    switch (format) {
-      case "markdown":
-        return await this.createMarkdownStrategy(config);
-      case "html":
-        return await this.createHTMLStrategy(config);
+    const key = `${config.get("name")}-${format}`;
+    if (this.cache.has(key)) return this.cache.get(key) as RenderBaseStrategy;
+
+    let strategy: RenderBaseStrategy;
+    if (format === "markdown") {
+      strategy = await this.createMarkdownStrategy(config);
+    } else if (format === "html") {
+      strategy = await this.createHTMLStrategy(config);
+    } else {
+      throw new Error(`Unknown format: ${format}`);
     }
+
+    this.cache.set(key, strategy);
+    return strategy;
   }
 };

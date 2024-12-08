@@ -10,20 +10,22 @@ export const logLevelSchema = z.enum(
   LOG_VALUES as [LogLevelString, ...LogLevelString[]]
 );
 
-export const jobConfigSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
-  outputFile: z.string(),
-  outputFormat: z.array(outputFormatSchema),
-  rootDir: z.string(),
-  excludePatterns: z.array(z.string()),
-  maxFileSize: z.number().positive(),
-  maxDepth: z.number(),
-  ignoreHiddenFiles: z.boolean(),
-  additionalIgnoreFiles: z.array(z.string()),
-  followSymlinks: z.boolean()
-});
+export const jobConfigSchema = z
+  .object({
+    name: z.string(),
+    description: z.string(),
+    pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
+    outputFile: z.string(),
+    outputFormat: z.array(outputFormatSchema),
+    rootDir: z.string(),
+    excludePatterns: z.array(z.string()),
+    maxFileSize: z.number().positive(),
+    maxDepth: z.number(),
+    ignoreHiddenFiles: z.boolean(),
+    additionalIgnoreFiles: z.array(z.string()),
+    followSymlinks: z.boolean()
+  })
+  .strict();
 
 export const optionalJobConfigSchema = jobConfigSchema.partial();
 

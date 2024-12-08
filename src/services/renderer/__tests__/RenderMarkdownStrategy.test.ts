@@ -1,6 +1,6 @@
 import { NodeFile } from "../../../core/entities/NodeFile";
 import { Template } from "../../../infrastructure/templates/TemplateEngine";
-import { Config } from "../../../utils/config";
+import { Config, JobConfig } from "../../../utils/config";
 import { RenderMarkdownStrategy } from "../strategies/MarkdownStrategy";
 
 jest.mock("../../../core/entities/NodeFile");
@@ -9,7 +9,7 @@ jest.mock("../../../utils/config");
 
 describe("RenderMarkdownStrategy", () => {
   let strategy: RenderMarkdownStrategy;
-  let mockConfig: jest.Mocked<Config>;
+  let mockConfig: jest.Mocked<JobConfig>;
   let mockTemplatePage: jest.Mocked<Template>;
   let mockTemplateDirectory: jest.Mocked<Template>;
   let mockTemplateFile: jest.Mocked<Template>;
@@ -19,8 +19,9 @@ describe("RenderMarkdownStrategy", () => {
     jest.clearAllMocks();
 
     mockConfig = {
-      get: jest.fn()
-    } as unknown as jest.Mocked<Config>;
+      get: jest.fn(),
+      global: {} as unknown as Config
+    } as unknown as jest.Mocked<JobConfig>;
 
     mockTemplatePage = {
       content: "# {{PROJECT_NAME}}\n{{CONTENT}}",

@@ -176,7 +176,7 @@ export default [
         }
       ],
       "max-lines-per-function": ["error", {
-        max: 15,
+        max: 20,
         skipBlankLines: true,
         skipComments: true
       }],
