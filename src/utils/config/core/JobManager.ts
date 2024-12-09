@@ -63,6 +63,13 @@ export class JobManager implements IJobManager {
     return Array.from(this.jobs.values());
   }
 
+  /**
+   * Resets the job manager.
+   */
+  public reset(): void {
+    this.jobs.clear();
+  }
+
   public async executeJobs<T>(
     callback: (job: JobConfig) => Promise<T>
   ): Promise<(T | undefined)[]> {

@@ -20,7 +20,7 @@ export class Config extends ConfigManager<IConfig> {
     this
   );
   public jobManager: JobManager;
-  private sources: IConfigurationSource<Partial<ConfigOptions>>[] = [];
+  private sources: IConfigurationSource<ConfigOptions>[] = [];
 
   /**
    * Constructor for the Config class.
@@ -50,6 +50,7 @@ export class Config extends ConfigManager<IConfig> {
   public reset(): void {
     logger.info("Resetting config to default");
     this.config = { ...DEFAULT_CONFIG, name: this.generateName() } as IConfig;
+    this.jobManager.reset();
   }
 
   /**
@@ -107,16 +108,16 @@ export class Config extends ConfigManager<IConfig> {
     let mergedConfig = { ...DEFAULT_CONFIG, ...this.config };
 
     await this.navigateSource(async source => {
-      const sourceConfig = await source.load();
+      const { config, jobConfig } = await source.load();
       // Merge jobs separately
-      if (sourceConfig.jobs) {
-        this.jobManager.mergeJobs(sourceConfig.jobs);
+      if (jobConfig) {
+        this.jobManager.mergeJobs(jobConfig);
       }
 
       // Merge other config properties
       mergedConfig = {
         ...mergedConfig,
-        ...sourceConfig
+        ...config
       };
     });
     this.override(mergedConfig);
@@ -156,9 +157,7 @@ export class Config extends ConfigManager<IConfig> {
    * @param callback - The callback to execute for each source.
    */
   private async navigateSource(
-    callback: (
-      source: IConfigurationSource<Partial<ConfigOptions>>
-    ) => Promise<void>
+    callback: (source: IConfigurationSource<ConfigOptions>) => Promise<void>
   ): Promise<void> {
     for (const source of this.sources) {
       try {

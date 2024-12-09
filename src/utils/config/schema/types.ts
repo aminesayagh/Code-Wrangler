@@ -41,3 +41,9 @@ export interface IConfig extends IConfigBase {
 }
 
 export type ConfigOptions = Partial<IConfig>;
+
+export interface ILoadConfigResult<T extends object> {
+  config: Partial<IConfig>;
+  jobConfig: Partial<IJobConfig>[];
+  input: T;
+}

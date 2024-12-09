@@ -3,7 +3,7 @@ import { z } from "zod";
 import { documentConfigSchema } from "./schema";
 import { IDocumentCommandOptions } from "./types";
 import { documentFactory } from "../../../../infrastructure/filesystem/DocumentFactory";
-import { CLIConfigSource } from "../../../../utils/config";
+import { CLIConfigSource, ILoadConfigResult } from "../../../../utils/config";
 import { normalizePattern } from "../../../../utils/pattern";
 
 type IDocumentCommandInputOptions = Partial<IDocumentCommandOptions>;
@@ -17,16 +17,21 @@ export class DocumentConfigSource extends CLIConfigSource<IDocumentCommandOption
     );
   }
 
-  public load(): Promise<IDocumentCommandOptions> {
-    const rawConfig = this.parseArgs();
-    const validConfig = this.validate(rawConfig);
-    return Promise.resolve(this.transform(validConfig));
+  public async load(): Promise<ILoadConfigResult<IDocumentCommandOptions>> {
+    const rawConfig = this.parseArgs(); // parse to a raw config of key value pairs
+    const validConfig = this.validate(rawConfig); // validate the raw config
+    const transformedConfig = this.transform(validConfig); // transform the valid config to the final config
+    return await Promise.resolve({
+      config: transformedConfig,
+      jobConfig: [],
+      input: transformedConfig
+    });
   }
 
   public static create(
     args: string,
     options: IDocumentCommandInputOptions
-  ): Promise<IDocumentCommandOptions> {
+  ): Promise<ILoadConfigResult<IDocumentCommandOptions>> {
     return new DocumentConfigSource(args, options).load();
   }
 

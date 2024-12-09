@@ -1,6 +1,8 @@
+import { z } from "zod";
+
 import { logger } from "../../../logger";
 import { DEFAULT_CONFIG, DEFAULT_JOB_CONFIG } from "../../schema/defaults";
-import { IConfig } from "../../schema/types";
+import { IConfig, ILoadConfigResult } from "../../schema/types";
 import { optionalConfigSchema } from "../../schema/validation";
 import { IConfigurationSource } from "../../sources/interfaces/IConfigurationSource";
 import { Config } from "../Config";
@@ -22,8 +24,12 @@ class MockConfigSource implements IConfigurationSource<Partial<IConfig>> {
 
   public constructor(private mockConfig: Partial<IConfig> = {}) {}
 
-  public async load(): Promise<Partial<typeof DEFAULT_CONFIG>> {
-    return await Promise.resolve(this.mockConfig);
+  public async load(): Promise<ILoadConfigResult<Partial<IConfig>>> {
+    return await Promise.resolve({
+      config: this.mockConfig,
+      jobConfig: [],
+      input: this.mockConfig
+    });
   }
 }
 
@@ -121,6 +127,41 @@ describe("Config", () => {
     it("should initialize logger with config instance", async () => {
       await Config.load();
       expect(logger.setConfig).toHaveBeenCalled();
+    });
+  });
+
+  describe("Configuration Loading", () => {
+    it("should properly initialize default configuration", async () => {
+      const config = await Config.load();
+      expect(config.get("name")).toBeDefined();
+      expect(config.defaultJob).toBeDefined();
+    });
+
+    it("should handle validation errors during source loading", async () => {
+      const config = await Config.load();
+      const invalidSource = new MockConfigSource({
+        invalidField: "test"
+      } as unknown as Partial<IConfig>);
+
+      config.addSource(invalidSource);
+      await expect(config.loadSources()).rejects.toThrow();
+    });
+  });
+
+  describe("Source Navigation", () => {
+    it("should handle errors during source navigation", async () => {
+      const config = await Config.load();
+      const errorSource = {
+        priority: 1,
+        schema: z.object({}),
+        load: jest.fn().mockRejectedValue(new Error("Navigation error"))
+      };
+
+      config.addSource(errorSource);
+      await config.loadSources();
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to navigate configuration source")
+      );
     });
   });
 });
