@@ -2,13 +2,13 @@ import { z } from "zod";
 
 import { documentConfigSchema } from "./schema";
 import { IDocumentCommandOptions } from "./types";
-import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
-import { CLIConfigSource } from "../../../utils/config";
-import { normalizePattern } from "../../../utils/pattern";
+import { documentFactory } from "../../../../infrastructure/filesystem/DocumentFactory";
+import { CLIConfigSource } from "../../../../utils/config";
+import { normalizePattern } from "../../../../utils/pattern";
 
 type IDocumentCommandInputOptions = Partial<IDocumentCommandOptions>;
 
-export class DocumentCLIConfig extends CLIConfigSource<IDocumentCommandOptions> {
+export class DocumentConfigSource extends CLIConfigSource<IDocumentCommandOptions> {
   public constructor(args: string, options: IDocumentCommandInputOptions) {
     super(
       [args],
@@ -27,7 +27,7 @@ export class DocumentCLIConfig extends CLIConfigSource<IDocumentCommandOptions> 
     args: string,
     options: IDocumentCommandInputOptions
   ): Promise<IDocumentCommandOptions> {
-    return new DocumentCLIConfig(args, options).load();
+    return new DocumentConfigSource(args, options).load();
   }
 
   private transform(config: IDocumentCommandOptions): IDocumentCommandOptions {

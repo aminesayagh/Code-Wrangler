@@ -1,10 +1,12 @@
 import { Command } from "commander";
 
-import { DocumentCLI } from "./DocumentCli";
-import { DocumentCLIConfig } from "./DocumentCLIConfig";
 import { ProgramBuilder } from "./ProgramBuilder";
-import { IDocumentCommandOptions } from "./types";
 import { Config, ConfigBuilder } from "../../../utils/config";
+import {
+  DocumentCommand,
+  DocumentConfigSource,
+  IDocumentCommandOptions
+} from "../../commands/document";
 
 export class DocumentCLIBuilder {
   private static instance: DocumentCLIBuilder | undefined;
@@ -26,16 +28,22 @@ export class DocumentCLIBuilder {
 
   private async init(): Promise<void> {
     const configBuilder = await ConfigBuilder.create();
-    this.program = new ProgramBuilder(this.config, this.VERSION).build();
+    this.program = new ProgramBuilder(this.config)
+      .withVersion(this.VERSION)
+      .withDescription()
+      .withArguments()
+      .withOptions()
+      .build();
 
-    this.program.action((pattern: string, options: IDocumentCommandOptions) => {
-      const documentCLIConfig = new DocumentCLIConfig(pattern, options);
-      configBuilder.withCLIConfig(documentCLIConfig);
-    });
+    this.program.action(
+      async (pattern: string, options: IDocumentCommandOptions) => {
+        const documentConfigSource = new DocumentConfigSource(pattern, options);
+        configBuilder.withCLIConfig(documentConfigSource);
+        this.config = configBuilder.build();
 
-    this.config = configBuilder.build();
-
-    const documentCLI = new DocumentCLI(this.config);
-    await documentCLI.create();
+        const documentCLI = new DocumentCommand(this.config, options);
+        await documentCLI.execute();
+      }
+    );
   }
 }
