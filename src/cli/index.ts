@@ -1,3 +1,4 @@
+import { ConfigBuilder } from "../utils/config";
 import { DocumentCLIBuilder } from "./program/singleJob/SingleJobProgram";
 
 function errorHandler(error: unknown): void {
@@ -7,6 +8,7 @@ function errorHandler(error: unknown): void {
 
 async function main(): Promise<void> {
   try {
+    await ConfigBuilder.create();
     await DocumentCLIBuilder.create();
   } catch (error) {
     errorHandler(error);

@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "build": "node build.js",
+    "build:start": "node build.js && node dist/index.js",
     "dev": "esbuild src/cli/index.ts --bundle --platform=node --outfile=dist/index.js --sourcemap --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

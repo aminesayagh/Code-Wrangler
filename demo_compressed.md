@@ -1,7 +1,7 @@
 
 # Code Documentation
-Generated on: 2024-12-08T20:21:17.722Z
-Total files: 57
+Generated on: 2024-12-09T09:14:50.865Z
+Total files: 61
 
 ## Project Structure
 
@@ -16,16 +16,22 @@ codewrangler
     │   ├── commands
     │   │   ├── base
     │   │   │   ├── BaseCommand.ts
-    │   │   │   └── index.ts
-    │   │   ├── document
-    │   │   │   ├── DocumentCLIBuilder.ts
-    │   │   │   ├── DocumentCLIConfig.ts
-    │   │   │   ├── DocumentCli.ts
-    │   │   │   ├── ProgramBuilder.ts
-    │   │   │   ├── schema.ts
-    │   │   │   └── types.ts
-    │   │   └── index.ts
+    │   │   │   ├── index.ts
+    │   │   │   └── type.ts
+    │   │   └── document
+    │   │       ├── DocumentCommand.ts
+    │   │       ├── config
+    │   │       │   ├── DocumentConfigSource.ts
+    │   │       │   ├── schema.ts
+    │   │       │   └── types.ts
+    │   │       └── index.ts
+    │   ├── index.ts
     │   └── program
+    │       ├── index.ts
+    │       └── singleJob
+    │           ├── ProgramBuilder.ts
+    │           ├── SingleJobProgram.ts
+    │           └── index.ts
     ├── core
     │   ├── entities
     │   │   ├── NodeBase.ts
@@ -101,46 +107,50 @@ codewrangler
 
 ## File: BaseCommand.ts
 - Path: `/root/git/codewrangler/src/cli/commands/base/BaseCommand.ts`
-- Size: 855.00 B
+- Size: 1001.00 B
 - Extension: .ts
-- Lines of code: 26
+- Lines of code: 32
 - Content:
 
 ```ts
- 1 | import { Config } from "../../../utils/config";
- 2 | import { logger } from "../../../utils/logger";
- 3 | 
- 4 | export abstract class BaseCommand {
- 5 |   public constructor(protected readonly config: Config) {}
- 6 | 
- 7 |   public async create(): Promise<void> {
- 8 |     try {
- 9 |       await this.beforeExecution();
-10 |       await this.processExecution();
-11 |       await this.afterExecution();
-12 |     } catch (error) {
-13 |       this.handleError(error);
-14 |       throw error;
-15 |     }
-16 |   }
-17 | 
-18 |   protected abstract processExecution(): Promise<void>;
-19 | 
-20 |   protected async beforeExecution(): Promise<void> {
-21 |     if (this.config.get("verbose")) {
-22 |       await Promise.resolve(this.logVerbose());
-23 |     }
-24 |   }
-25 | 
-26 |   protected abstract afterExecution(): Promise<void>;
-27 | 
-28 |   protected abstract logVerbose(): void;
-29 | 
-30 |   protected handleError(error: unknown): void {
-31 |     logger.error("Command execution failed", error as Error);
-32 |   }
-33 | }
-34 | 
+ 1 | import { ICommand, ICommandOptions } from "./type";
+ 2 | import { Config } from "../../../utils/config";
+ 3 | import { logger } from "../../../utils/logger";
+ 4 | 
+ 5 | export abstract class BaseCommand<T extends ICommandOptions>
+ 6 |   implements ICommand<T>
+ 7 | {
+ 8 |   public constructor(
+ 9 |     protected readonly config: Config,
+10 |     protected readonly options: T
+11 |   ) {}
+12 | 
+13 |   public async execute(): Promise<void> {
+14 |     try {
+15 |       await this.beforeExecution();
+16 |       await this.processExecution();
+17 |       await this.afterExecution();
+18 |     } catch (error) {
+19 |       this.handleError(error);
+20 |       throw error;
+21 |     }
+22 |   }
+23 | 
+24 |   protected abstract processExecution(): Promise<void>;
+25 |   protected abstract logVerbose(): void;
+26 | 
+27 |   protected async beforeExecution(): Promise<void> {
+28 |     if (this.config.get("verbose")) {
+29 |       await Promise.resolve(this.logVerbose());
+30 |     }
+31 |   }
+32 |   protected abstract afterExecution(): Promise<void>;
+33 | 
+34 |   protected handleError(error: unknown): void {
+35 |     logger.error("Command execution failed", error as Error);
+36 |   }
+37 | }
+38 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -148,77 +158,106 @@ codewrangler
 
 ## File: index.ts
 - Path: `/root/git/codewrangler/src/cli/commands/base/index.ts`
-- Size: 31.00 B
+- Size: 55.00 B
 - Extension: .ts
-- Lines of code: 1
+- Lines of code: 2
 - Content:
 
 ```ts
 1 | export * from "./BaseCommand";
-2 | 
+2 | export * from "./type";
+3 | 
 ```
 
 ---------------------------------------------------------------------------
 
 
-## File: DocumentCLIBuilder.ts
-- Path: `/root/git/codewrangler/src/cli/commands/document/DocumentCLIBuilder.ts`
-- Size: 1.31 KB
+## File: type.ts
+- Path: `/root/git/codewrangler/src/cli/commands/base/type.ts`
+- Size: 206.00 B
 - Extension: .ts
-- Lines of code: 33
+- Lines of code: 7
 - Content:
 
 ```ts
- 1 | import { Command } from "commander";
- 2 | 
- 3 | import { DocumentCLI } from "./DocumentCli";
- 4 | import { DocumentCLIConfig } from "./DocumentCLIConfig";
- 5 | import { ProgramBuilder } from "./ProgramBuilder";
- 6 | import { IDocumentCommandOptions } from "./types";
- 7 | import { Config, ConfigBuilder } from "../../../utils/config";
- 8 | 
- 9 | export class DocumentCLIBuilder {
-10 |   private static instance: DocumentCLIBuilder | undefined;
-11 |   private config: Config;
-12 |   private program!: Command;
-13 |   private VERSION = "1.0.0";
-14 | 
-15 |   private constructor() {
-16 |     this.config = Config.getInstance();
-17 |   }
-18 | 
-19 |   public static async create(): Promise<DocumentCLIBuilder> {
-20 |     if (!DocumentCLIBuilder.instance) {
-21 |       DocumentCLIBuilder.instance = new DocumentCLIBuilder();
-22 |       await DocumentCLIBuilder.instance.init();
-23 |     }
-24 |     return DocumentCLIBuilder.instance;
-25 |   }
-26 | 
-27 |   private async init(): Promise<void> {
-28 |     const configBuilder = await ConfigBuilder.create();
-29 |     this.program = new ProgramBuilder(this.config, this.VERSION).build();
-30 | 
-31 |     this.program.action((pattern: string, options: IDocumentCommandOptions) => {
-32 |       const documentCLIConfig = new DocumentCLIConfig(pattern, options);
-33 |       configBuilder.withCLIConfig(documentCLIConfig);
-34 |     });
-35 | 
-36 |     this.config = configBuilder.build();
-37 | 
-38 |     const documentCLI = new DocumentCLI(this.config);
-39 |     await documentCLI.create();
-40 |   }
-41 | }
-42 | 
+1 | // Command command interfaces
+2 | export interface ICommandOptions {
+3 |   verbose?: boolean;
+4 | }
+5 | 
+6 | export interface ICommand<T extends ICommandOptions = ICommandOptions> {
+7 |   execute: (options: T) => Promise<void>;
+8 | }
+9 | 
 ```
 
 ---------------------------------------------------------------------------
 
 
-## File: DocumentCLIConfig.ts
-- Path: `/root/git/codewrangler/src/cli/commands/document/DocumentCLIConfig.ts`
-- Size: 2.07 KB
+## File: DocumentCommand.ts
+- Path: `/root/git/codewrangler/src/cli/commands/document/DocumentCommand.ts`
+- Size: 1.63 KB
+- Extension: .ts
+- Lines of code: 40
+- Content:
+
+```ts
+ 1 | import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrchestratorBuilder";
+ 2 | import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
+ 3 | import { logger } from "../../../utils/logger";
+ 4 | import { BaseCommand } from "../base";
+ 5 | import { IDocumentCommandOptions } from "./config/types";
+ 6 | 
+ 7 | export class DocumentCommand extends BaseCommand<IDocumentCommandOptions> {
+ 8 |   protected override async beforeExecution(): Promise<void> {
+ 9 |     this.logVerbose();
+10 |     await super.beforeExecution();
+11 |   }
+12 | 
+13 |   protected override async processExecution(): Promise<void> {
+14 |     await this.config.jobManager.executeJobs(async job => {
+15 |       const builder = new DocumentTreeBuilder(job);
+16 |       const root = await builder.build();
+17 | 
+18 |       const orchestrator = new DocumentOrchestratorBuilder()
+19 |         .setRoot(root)
+20 |         .setConfig(this.config)
+21 |         .setJobs([job]);
+22 | 
+23 |       const orchestrators = await orchestrator.buildAndExecute();
+24 | 
+25 |       logger.info(`Generated ${orchestrators.length} documents`);
+26 |     });
+27 |   }
+28 | 
+29 |   protected override logVerbose(): void {
+30 |     logger.debug(
+31 |       `Searching for file matching pattern: ${this.config.defaultJob.get("pattern")}`
+32 |     );
+33 |     logger.debug(
+34 |       `Excluding patterns: ${(this.config.defaultJob.get("excludePatterns") as string[]).join(", ")}`
+35 |     );
+36 |     logger.debug(
+37 |       `Ignoring hidden files: ${this.config.defaultJob.get("ignoreHiddenFiles")}`
+38 |     );
+39 |     logger.debug(
+40 |       `Max file size: ${this.config.defaultJob.get("maxFileSize")} bytes`
+41 |     );
+42 |   }
+43 | 
+44 |   protected override async afterExecution(): Promise<void> {
+45 |     await Promise.resolve(logger.info("Document generation completed"));
+46 |   }
+47 | }
+48 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: DocumentConfigSource.ts
+- Path: `/root/git/codewrangler/src/cli/commands/document/config/DocumentConfigSource.ts`
+- Size: 2.08 KB
 - Extension: .ts
 - Lines of code: 57
 - Content:
@@ -228,13 +267,13 @@ codewrangler
  2 | 
  3 | import { documentConfigSchema } from "./schema";
  4 | import { IDocumentCommandOptions } from "./types";
- 5 | import { documentFactory } from "../../../infrastructure/filesystem/DocumentFactory";
- 6 | import { CLIConfigSource } from "../../../utils/config";
- 7 | import { normalizePattern } from "../../../utils/pattern";
+ 5 | import { documentFactory } from "../../../../infrastructure/filesystem/DocumentFactory";
+ 6 | import { CLIConfigSource } from "../../../../utils/config";
+ 7 | import { normalizePattern } from "../../../../utils/pattern";
  8 | 
  9 | type IDocumentCommandInputOptions = Partial<IDocumentCommandOptions>;
 10 | 
-11 | export class DocumentCLIConfig extends CLIConfigSource<IDocumentCommandOptions> {
+11 | export class DocumentConfigSource extends CLIConfigSource<IDocumentCommandOptions> {
 12 |   public constructor(args: string, options: IDocumentCommandInputOptions) {
 13 |     super(
 14 |       [args],
@@ -253,7 +292,7 @@ codewrangler
 27 |     args: string,
 28 |     options: IDocumentCommandInputOptions
 29 |   ): Promise<IDocumentCommandOptions> {
-30 |     return new DocumentCLIConfig(args, options).load();
+30 |     return new DocumentConfigSource(args, options).load();
 31 |   }
 32 | 
 33 |   private transform(config: IDocumentCommandOptions): IDocumentCommandOptions {
@@ -296,161 +335,8 @@ codewrangler
 ---------------------------------------------------------------------------
 
 
-## File: DocumentCli.ts
-- Path: `/root/git/codewrangler/src/cli/commands/document/DocumentCli.ts`
-- Size: 1.54 KB
-- Extension: .ts
-- Lines of code: 39
-- Content:
-
-```ts
- 1 | import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrchestratorBuilder";
- 2 | import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
- 3 | import { logger } from "../../../utils/logger";
- 4 | import { BaseCommand } from "../base";
- 5 | 
- 6 | export class DocumentCLI extends BaseCommand {
- 7 |   protected override async beforeExecution(): Promise<void> {
- 8 |     this.logVerbose();
- 9 |     await super.beforeExecution();
-10 |   }
-11 | 
-12 |   protected override async processExecution(): Promise<void> {
-13 |     await this.config.jobManager.executeJobs(async job => {
-14 |       const builder = new DocumentTreeBuilder(job);
-15 |       const root = await builder.build();
-16 | 
-17 |       const orchestrator = new DocumentOrchestratorBuilder()
-18 |         .setRoot(root)
-19 |         .setConfig(this.config)
-20 |         .setJobs([job]);
-21 | 
-22 |       const orchestrators = await orchestrator.buildAndExecute();
-23 | 
-24 |       logger.info(`Generated ${orchestrators.length} documents`);
-25 |     });
-26 |   }
-27 | 
-28 |   protected override logVerbose(): void {
-29 |     logger.debug(
-30 |       `Searching for file matching pattern: ${this.config.defaultJob.get("pattern")}`
-31 |     );
-32 |     logger.debug(
-33 |       `Excluding patterns: ${(this.config.defaultJob.get("excludePatterns") as string[]).join(", ")}`
-34 |     );
-35 |     logger.debug(
-36 |       `Ignoring hidden files: ${this.config.defaultJob.get("ignoreHiddenFiles")}`
-37 |     );
-38 |     logger.debug(
-39 |       `Max file size: ${this.config.defaultJob.get("maxFileSize")} bytes`
-40 |     );
-41 |   }
-42 | 
-43 |   protected override async afterExecution(): Promise<void> {
-44 |     await Promise.resolve(logger.info("Document generation completed"));
-45 |   }
-46 | }
-47 | 
-```
-
----------------------------------------------------------------------------
-
-
-## File: ProgramBuilder.ts
-- Path: `/root/git/codewrangler/src/cli/commands/document/ProgramBuilder.ts`
-- Size: 1.97 KB
-- Extension: .ts
-- Lines of code: 71
-- Content:
-
-```ts
- 1 | import { Command } from "commander";
- 2 | 
- 3 | import { Config } from "../../../utils/config";
- 4 | 
- 5 | export class ProgramBuilder {
- 6 |   private program: Command;
- 7 | 
- 8 |   public constructor(
- 9 |     private config: Config,
-10 |     private version: string
-11 |   ) {
-12 |     this.program = new Command();
-13 |   }
-14 | 
-15 |   public build(): Command {
-16 |     this.buildVersion().buildDescription().buildArguments().buildOptions();
-17 |     return this.program;
-18 |   }
-19 | 
-20 |   private buildVersion(): ProgramBuilder {
-21 |     this.program.version(this.version);
-22 |     return this;
-23 |   }
-24 | 
-25 |   private buildDescription(): ProgramBuilder {
-26 |     this.program.description("CodeWrangler is a tool for generating code");
-27 |     return this;
-28 |   }
-29 | 
-30 |   private buildArguments(): ProgramBuilder {
-31 |     this.program.argument(
-32 |       "<pattern>",
-33 |       'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
-34 |     );
-35 |     return this;
-36 |   }
-37 | 
-38 |   // eslint-disable-next-line max-lines-per-function
-39 |   private buildOptions(): ProgramBuilder {
-40 |     this.program
-41 |       .option(
-42 |         "-d, --dir <dir>",
-43 |         "Directory to search",
-44 |         this.config.defaultJob.get("rootDir")
-45 |       )
-46 |       .option(
-47 |         "-c, --config <config>",
-48 |         "Config file",
-49 |         this.config.get("codeConfigFile")
-50 |       )
-51 |       .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
-52 |       .option(
-53 |         "-f, --format <format>",
-54 |         "Output format",
-55 |         this.config.defaultJob.get("outputFormat")
-56 |       )
-57 |       .option(
-58 |         "-o, --output <output>",
-59 |         "Output file",
-60 |         this.config.defaultJob.get("outputFile")
-61 |       )
-62 |       .option(
-63 |         "-e, --exclude <exclude>",
-64 |         "Exclude patterns",
-65 |         this.config.defaultJob.get("excludePatterns")
-66 |       )
-67 |       .option(
-68 |         "-i, --ignore-hidden",
-69 |         "Ignore hidden files",
-70 |         this.config.defaultJob.get("ignoreHiddenFiles")
-71 |       )
-72 |       .option(
-73 |         "-a, --additional-ignore <additional-ignore>",
-74 |         "Additional ignore patterns",
-75 |         this.config.defaultJob.get("additionalIgnoreFiles")
-76 |       );
-77 |     return this;
-78 |   }
-79 | }
-80 | 
-```
-
----------------------------------------------------------------------------
-
-
 ## File: schema.ts
-- Path: `/root/git/codewrangler/src/cli/commands/document/schema.ts`
+- Path: `/root/git/codewrangler/src/cli/commands/document/config/schema.ts`
 - Size: 555.00 B
 - Extension: .ts
 - Lines of code: 15
@@ -480,59 +366,267 @@ codewrangler
 
 
 ## File: types.ts
-- Path: `/root/git/codewrangler/src/cli/commands/document/types.ts`
-- Size: 279.00 B
+- Path: `/root/git/codewrangler/src/cli/commands/document/config/types.ts`
+- Size: 350.00 B
 - Extension: .ts
-- Lines of code: 12
+- Lines of code: 13
 - Content:
 
 ```ts
- 1 | export interface IDocumentCommandOptions {
- 2 |   name: string;
- 3 |   pattern: string;
- 4 |   outputFormat: string;
- 5 |   rootDir: string;
- 6 |   outputFile?: string;
- 7 |   excludePatterns?: string[];
- 8 |   ignoreHidden: boolean;
- 9 |   additionalIgnore?: string[];
-10 |   followSymlinks: boolean;
-11 |   verbose: boolean;
-12 | }
-13 | 
+ 1 | import { ICommandOptions } from "../../base";
+ 2 | 
+ 3 | export interface IDocumentCommandOptions extends ICommandOptions {
+ 4 |   name: string;
+ 5 |   pattern: string;
+ 6 |   outputFormat: string;
+ 7 |   rootDir: string;
+ 8 |   outputFile?: string;
+ 9 |   excludePatterns?: string[];
+10 |   ignoreHidden: boolean;
+11 |   additionalIgnore?: string[];
+12 |   followSymlinks: boolean;
+13 |   verbose: boolean;
+14 | }
+15 | 
 ```
 
 ---------------------------------------------------------------------------
 
 
 ## File: index.ts
-- Path: `/root/git/codewrangler/src/cli/commands/index.ts`
-- Size: 441.00 B
+- Path: `/root/git/codewrangler/src/cli/commands/document/index.ts`
+- Size: 114.00 B
+- Extension: .ts
+- Lines of code: 3
+- Content:
+
+```ts
+1 | export * from "./DocumentCommand";
+2 | export * from "./config/DocumentConfigSource";
+3 | export * from "./config/types";
+4 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: index.ts
+- Path: `/root/git/codewrangler/src/cli/index.ts`
+- Size: 433.00 B
 - Extension: .ts
 - Lines of code: 17
 - Content:
 
 ```ts
- 1 | import { DocumentCLIBuilder } from "./document/DocumentCLIBuilder";
- 2 | import { logger } from "../../utils/logger";
+ 1 | import { ConfigBuilder } from "../utils/config";
+ 2 | import { DocumentCLIBuilder } from "./program/singleJob/SingleJobProgram";
  3 | 
  4 | function errorHandler(error: unknown): void {
- 5 |   if (error instanceof Error) {
- 6 |     logger.error(error.message);
- 7 |   } else {
- 8 |     logger.error("An unknown error occurred");
- 9 |   }
-10 | }
-11 | async function main(): Promise<void> {
-12 |   await DocumentCLIBuilder.create();
-13 | }
-14 | 
-15 | main()
-16 |   .then(() => {
-17 |     process.exit(0);
-18 |   })
-19 |   .catch(errorHandler);
+ 5 |   console.error(error);
+ 6 |   process.exit(1);
+ 7 | }
+ 8 | 
+ 9 | async function main(): Promise<void> {
+10 |   try {
+11 |     await ConfigBuilder.create();
+12 |     await DocumentCLIBuilder.create();
+13 |   } catch (error) {
+14 |     errorHandler(error);
+15 |   }
+16 | }
+17 | 
+18 | main().catch(() => {
+19 |   process.exit(1);
+20 | });
+21 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: index.ts
+- Path: `/root/git/codewrangler/src/cli/program/index.ts`
+- Size: 42.00 B
+- Extension: .ts
+- Lines of code: 1
+- Content:
+
+```ts
+1 | export * as singleJob from "./singleJob";
+2 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: ProgramBuilder.ts
+- Path: `/root/git/codewrangler/src/cli/program/singleJob/ProgramBuilder.ts`
+- Size: 1.86 KB
+- Extension: .ts
+- Lines of code: 67
+- Content:
+
+```ts
+ 1 | import { Command } from "commander";
+ 2 | 
+ 3 | import { Config } from "../../../utils/config";
+ 4 | 
+ 5 | export class ProgramBuilder {
+ 6 |   private program: Command;
+ 7 | 
+ 8 |   public constructor(private config: Config) {
+ 9 |     this.program = new Command();
+10 |   }
+11 | 
+12 |   public build(): Command {
+13 |     return this.program;
+14 |   }
+15 | 
+16 |   public withVersion(version: string): ProgramBuilder {
+17 |     this.program.version(version);
+18 |     return this;
+19 |   }
 20 | 
+21 |   public withDescription(): ProgramBuilder {
+22 |     this.program.description("CodeWrangler is a tool for generating code");
+23 |     return this;
+24 |   }
+25 | 
+26 |   public withArguments(): ProgramBuilder {
+27 |     this.program.argument(
+28 |       "<pattern>",
+29 |       'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
+30 |     );
+31 |     return this;
+32 |   }
+33 | 
+34 |   // eslint-disable-next-line max-lines-per-function
+35 |   public withOptions(): ProgramBuilder {
+36 |     this.program
+37 |       .option(
+38 |         "-d, --dir <dir>",
+39 |         "Directory to search",
+40 |         this.config.defaultJob.get("rootDir")
+41 |       )
+42 |       .option(
+43 |         "-c, --config <config>",
+44 |         "Config file",
+45 |         this.config.get("codeConfigFile")
+46 |       )
+47 |       .option("-v, --verbose", "Verbose mode", this.config.get("logLevel"))
+48 |       .option(
+49 |         "-f, --format <format>",
+50 |         "Output format",
+51 |         this.config.defaultJob.get("outputFormat")
+52 |       )
+53 |       .option(
+54 |         "-o, --output <output>",
+55 |         "Output file",
+56 |         this.config.defaultJob.get("outputFile")
+57 |       )
+58 |       .option(
+59 |         "-e, --exclude <exclude>",
+60 |         "Exclude patterns",
+61 |         this.config.defaultJob.get("excludePatterns")
+62 |       )
+63 |       .option(
+64 |         "-i, --ignore-hidden",
+65 |         "Ignore hidden files",
+66 |         this.config.defaultJob.get("ignoreHiddenFiles")
+67 |       )
+68 |       .option(
+69 |         "-a, --additional-ignore <additional-ignore>",
+70 |         "Additional ignore patterns",
+71 |         this.config.defaultJob.get("additionalIgnoreFiles")
+72 |       );
+73 |     return this;
+74 |   }
+75 | }
+76 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: SingleJobProgram.ts
+- Path: `/root/git/codewrangler/src/cli/program/singleJob/SingleJobProgram.ts`
+- Size: 1.51 KB
+- Extension: .ts
+- Lines of code: 46
+- Content:
+
+```ts
+ 1 | import { Command } from "commander";
+ 2 | 
+ 3 | import { ProgramBuilder } from "./ProgramBuilder";
+ 4 | import { Config, ConfigBuilder } from "../../../utils/config";
+ 5 | import {
+ 6 |   DocumentCommand,
+ 7 |   DocumentConfigSource,
+ 8 |   IDocumentCommandOptions
+ 9 | } from "../../commands/document";
+10 | 
+11 | export class DocumentCLIBuilder {
+12 |   private static instance: DocumentCLIBuilder | undefined;
+13 |   private config: Config;
+14 |   private program!: Command;
+15 |   private VERSION = "1.0.0";
+16 | 
+17 |   private constructor() {
+18 |     this.config = Config.getInstance();
+19 |   }
+20 | 
+21 |   public static async create(): Promise<DocumentCLIBuilder> {
+22 |     if (!DocumentCLIBuilder.instance) {
+23 |       DocumentCLIBuilder.instance = new DocumentCLIBuilder();
+24 |       DocumentCLIBuilder.instance.init();
+25 |       await DocumentCLIBuilder.instance.build();
+26 |     }
+27 |     return DocumentCLIBuilder.instance;
+28 |   }
+29 | 
+30 |   private init(): this {
+31 |     this.program = new ProgramBuilder(this.config)
+32 |       .withVersion(this.VERSION)
+33 |       .withDescription()
+34 |       .withArguments()
+35 |       .withOptions()
+36 |       .build();
+37 | 
+38 |     return this;
+39 |   }
+40 | 
+41 |   private async build(): Promise<void> {
+42 |     const configBuilder = await ConfigBuilder.create();
+43 |     this.program.action(
+44 |       async (pattern: string, options: IDocumentCommandOptions) => {
+45 |         const documentConfigSource = new DocumentConfigSource(pattern, options);
+46 |         configBuilder.withCLIConfig(documentConfigSource);
+47 |         this.config = configBuilder.build();
+48 | 
+49 |         const documentCLI = new DocumentCommand(this.config, options);
+50 |         await documentCLI.execute();
+51 |       }
+52 |     );
+53 |   }
+54 | }
+55 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: index.ts
+- Path: `/root/git/codewrangler/src/cli/program/singleJob/index.ts`
+- Size: 70.00 B
+- Extension: .ts
+- Lines of code: 2
+- Content:
+
+```ts
+1 | export * from "./SingleJobProgram";
+2 | export * from "./ProgramBuilder";
+3 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3117,7 +3211,7 @@ codewrangler
 
 ## File: ConfigBuilder.ts
 - Path: `/root/git/codewrangler/src/utils/config/builders/ConfigBuilder.ts`
-- Size: 1.23 KB
+- Size: 1.24 KB
 - Extension: .ts
 - Lines of code: 39
 - Content:
@@ -3139,8 +3233,8 @@ codewrangler
 14 | 
 15 |   public static async create(): Promise<ConfigBuilder> {
 16 |     if (!ConfigBuilder.instance) {
-17 |       await Config.load();
-18 |       ConfigBuilder.instance = new ConfigBuilder(Config.getInstance());
+17 |       ConfigBuilder.instance = new ConfigBuilder(await Config.load());
+18 |       logger.info("ConfigBuilder created");
 19 |     }
 20 |     return ConfigBuilder.instance;
 21 |   }
@@ -3226,16 +3320,16 @@ codewrangler
  26 |     super(DEFAULT_CONFIG);
  27 |     this.validate(this.config);
  28 |     this.jobManager = new JobManager(this);
- 29 |     logger.setConfig(Config.getInstance());
- 30 |   }
- 31 | 
- 32 |   /**
- 33 |    * Loads the configuration.
- 34 |    * @returns The Config instance.
- 35 |    */
- 36 |   public static async load(): Promise<Config> {
- 37 |     if (!Config.instance) {
- 38 |       Config.instance = new Config();
+ 29 |   }
+ 30 | 
+ 31 |   /**
+ 32 |    * Loads the configuration.
+ 33 |    * @returns The Config instance.
+ 34 |    */
+ 35 |   public static async load(): Promise<Config> {
+ 36 |     if (!Config.instance) {
+ 37 |       Config.instance = new Config();
+ 38 |       logger.setConfig(Config.getInstance());
  39 |       await Config.instance.loadSources();
  40 |     }
  41 |     return Config.instance;

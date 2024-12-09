@@ -1,6 +1,6 @@
 
 # Code Documentation
-Generated on: 2024-12-08T20:21:17.612Z
+Generated on: 2024-12-09T09:14:50.789Z
 Total files: 13
 
 ## Project Structure
@@ -10,7 +10,7 @@ codewrangler
 ├── LICENCE.md
 ├── README.md
 ├── documentation
-│   ├── CLI_DOCUMENTATION.md
+│   ├── CLI.md
 │   ├── CONFIG.md
 │   ├── CONFIGURATION_GUIDE.md
 │   ├── CONTRIBUTING.md
@@ -617,15 +617,191 @@ codewrangler
 ---------------------------------------------------------------------------
 
 
-## File: CLI_DOCUMENTATION.md
-- Path: `/root/git/codewrangler/documentation/CLI_DOCUMENTATION.md`
-- Size: 0.00 B
+## File: CLI.md
+- Path: `/root/git/codewrangler/documentation/CLI.md`
+- Size: 4.27 KB
 - Extension: .md
-- Lines of code: 0
+- Lines of code: 125
 - Content:
 
 ```md
-1 | 
+  1 | # CodeWrangler CLI Documentation
+  2 | 
+  3 | ## Overview
+  4 | 
+  5 | CodeWrangler is a powerful documentation generator that creates comprehensive documentation from your codebase using pattern matching. It supports multiple output formats and provides flexible configuration options.
+  6 | 
+  7 | ## Installation
+  8 | 
+  9 | ```bash
+ 10 | npm install -g codewrangler
+ 11 | ```
+ 12 | 
+ 13 | ## Basic Usage
+ 14 | 
+ 15 | Generate documentation for your codebase using:
+ 16 | 
+ 17 | ```bash
+ 18 | codewrangler document "<pattern>" [options]
+ 19 | ```
+ 20 | 
+ 21 | ### Quick Start Examples
+ 22 | 
+ 23 | ```bash
+ 24 | # Document all TypeScript files
+ 25 | codewrangler document "**/*.ts"
+ 26 | 
+ 27 | # Document specific directories with markdown output
+ 28 | codewrangler document "src/**/*.{ts,js}" -f markdown -o docs/documentation.md
+ 29 | 
+ 30 | # Generate both HTML and Markdown documentation
+ 31 | codewrangler document "lib/**/*.js" -f markdown html -o docs/output
+ 32 | ```
+ 33 | 
+ 34 | ## Command: `document`
+ 35 | 
+ 36 | The `document` command analyzes your codebase and generates documentation based on the specified pattern.
+ 37 | 
+ 38 | ### Pattern Syntax
+ 39 | 
+ 40 | The pattern uses glob syntax to match files:
+ 41 | - `**/*.ts` - all TypeScript files in any subdirectory
+ 42 | - `src/**/*.{js,ts}` - all JavaScript and TypeScript files in src directory
+ 43 | - `lib/*.js` - JavaScript files in the lib directory only
+ 44 | 
+ 45 | ### Options
+ 46 | 
+ 47 | | Option | Alias | Description | Default |
+ 48 | |--------|-------|-------------|---------|
+ 49 | | `--format <formats...>` | `-f` | Output formats (markdown, html) | `markdown` |
+ 50 | | `--dir <directory>` | `-d` | Root directory to start search | Current directory |
+ 51 | | `--output <file>` | `-o` | Output file or directory | `documentation.md` |
+ 52 | | `--exclude <patterns...>` | `-e` | Patterns to exclude | `[]` |
+ 53 | | `--ignore-hidden` | | Ignore hidden files and directories | `true` |
+ 54 | | `--additional-ignore <patterns...>` | `-a` | Additional patterns to ignore | `[]` |
+ 55 | | `--verbose` | `-v` | Enable verbose output | `false` |
+ 56 | 
+ 57 | ### Output Formats
+ 58 | 
+ 59 | CodeWrangler supports the following output formats:
+ 60 | 
+ 61 | 1. **Markdown** (`.md`)
+ 62 |    - Clean, readable documentation
+ 63 |    - Compatible with GitHub and other markdown viewers
+ 64 |    - Includes code syntax highlighting
+ 65 | 
+ 66 | 2. **HTML** (`.html`)
+ 67 |    - Interactive documentation
+ 68 |    - Syntax highlighted code blocks
+ 69 |    - Collapsible sections
+ 70 |    - Easy navigation
+ 71 | 
+ 72 | ## Configuration
+ 73 | 
+ 74 | ### Using a Configuration File
+ 75 | 
+ 76 | Create a `codewrangler.json` in your project root:
+ 77 | 
+ 78 | ```json
+ 79 | {
+ 80 |   "projectName": "My Project",
+ 81 |   "templatesDir": "templates",
+ 82 |   "logLevel": "INFO",
+ 83 |   "verbose": false,
+ 84 |   "jobs": [
+ 85 |     {
+ 86 |       "name": "typescript",
+ 87 |       "pattern": "**/*.ts",
+ 88 |       "outputFormat": ["markdown"],
+ 89 |       "excludePatterns": ["**/*.test.ts", "node_modules/**"],
+ 90 |       "ignoreHiddenFiles": true
+ 91 |     }
+ 92 |   ]
+ 93 | }
+ 94 | ```
+ 95 | 
+ 96 | ### Default Exclusions
+ 97 | 
+ 98 | The following patterns are excluded by default:
+ 99 | - `node_modules/**`
+100 | - `**/dist/**`
+101 | - `**/*.test.ts`
+102 | - Hidden files (when `ignoreHidden` is true)
+103 | 
+104 | ## Examples
+105 | 
+106 | ### Basic Documentation
+107 | 
+108 | Generate markdown documentation for TypeScript files:
+109 | 
+110 | ```bash
+111 | codewrangler document "**/*.ts" -o docs/typescript.md
+112 | ```
+113 | 
+114 | ### Multiple Output Formats
+115 | 
+116 | Generate both HTML and Markdown documentation:
+117 | 
+118 | ```bash
+119 | codewrangler document "src/**/*.{js,ts}" -f markdown html -o docs/output
+120 | ```
+121 | 
+122 | ### Custom Exclusions
+123 | 
+124 | Exclude test files and specific directories:
+125 | 
+126 | ```bash
+127 | codewrangler document "**/*.ts" \
+128 |   -e "**/*.test.ts" "**/__tests__/**" \
+129 |   -o docs/code.md
+130 | ```
+131 | 
+132 | ### Verbose Output
+133 | 
+134 | Enable detailed logging for troubleshooting:
+135 | 
+136 | ```bash
+137 | codewrangler document "src/**/*.ts" -v
+138 | ```
+139 | 
+140 | ## Best Practices
+141 | 
+142 | 1. **Pattern Specificity**
+143 |    - Use specific patterns to target relevant files
+144 |    - Exclude test files and build artifacts
+145 | 
+146 | 2. **Output Organization**
+147 |    - Use meaningful output file names
+148 |    - Create separate documentation for different parts of your codebase
+149 | 
+150 | 3. **Performance**
+151 |    - Exclude unnecessary directories
+152 |    - Use specific patterns to reduce file scanning
+153 | 
+154 | ## Troubleshooting
+155 | 
+156 | Common issues and solutions:
+157 | 
+158 | 1. **No Files Found**
+159 |    - Check if the pattern matches your files
+160 |    - Use verbose mode to see which files are being processed
+161 |    - Verify excluded patterns aren't too broad
+162 | 
+163 | 2. **Output Files Not Generated**
+164 |    - Ensure output directory exists
+165 |    - Check write permissions
+166 |    - Verify output path is valid
+167 | 
+168 | 3. **Missing Content**
+169 |    - Check file size limits
+170 |    - Verify file permissions
+171 |    - Enable verbose mode for detailed logging
+172 | 
+173 | ## Support
+174 | 
+175 | For issues and feature requests, please visit:
+176 | https://github.com/aminesayagh/Code-Wrangler/issues
+177 | 
 ```
 
 ---------------------------------------------------------------------------

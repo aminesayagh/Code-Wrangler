@@ -21,13 +21,13 @@ export class DocumentCLIBuilder {
   public static async create(): Promise<DocumentCLIBuilder> {
     if (!DocumentCLIBuilder.instance) {
       DocumentCLIBuilder.instance = new DocumentCLIBuilder();
-      await DocumentCLIBuilder.instance.init();
+      DocumentCLIBuilder.instance.init();
+      await DocumentCLIBuilder.instance.build();
     }
     return DocumentCLIBuilder.instance;
   }
 
-  private async init(): Promise<void> {
-    const configBuilder = await ConfigBuilder.create();
+  private init(): this {
     this.program = new ProgramBuilder(this.config)
       .withVersion(this.VERSION)
       .withDescription()
@@ -35,6 +35,11 @@ export class DocumentCLIBuilder {
       .withOptions()
       .build();
 
+    return this;
+  }
+
+  private async build(): Promise<void> {
+    const configBuilder = await ConfigBuilder.create();
     this.program.action(
       async (pattern: string, options: IDocumentCommandOptions) => {
         const documentConfigSource = new DocumentConfigSource(pattern, options);
