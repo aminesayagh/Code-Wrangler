@@ -1,4 +1,6 @@
-export interface IDocumentCommandOptions {
+import { ICommandOptions } from "../../base";
+
+export interface IDocumentCommandOptions extends ICommandOptions {
   name: string;
   pattern: string;
   outputFormat: string;

@@ -5,29 +5,25 @@ import { Config } from "../../../utils/config";
 export class ProgramBuilder {
   private program: Command;
 
-  public constructor(
-    private config: Config,
-    private version: string
-  ) {
+  public constructor(private config: Config) {
     this.program = new Command();
   }
 
   public build(): Command {
-    this.buildVersion().buildDescription().buildArguments().buildOptions();
     return this.program;
   }
 
-  private buildVersion(): ProgramBuilder {
-    this.program.version(this.version);
+  public withVersion(version: string): ProgramBuilder {
+    this.program.version(version);
     return this;
   }
 
-  private buildDescription(): ProgramBuilder {
+  public withDescription(): ProgramBuilder {
     this.program.description("CodeWrangler is a tool for generating code");
     return this;
   }
 
-  private buildArguments(): ProgramBuilder {
+  public withArguments(): ProgramBuilder {
     this.program.argument(
       "<pattern>",
       'File pattern to match (e.g., "\\.ts$" for TypeScript files)'
@@ -36,7 +32,7 @@ export class ProgramBuilder {
   }
 
   // eslint-disable-next-line max-lines-per-function
-  private buildOptions(): ProgramBuilder {
+  public withOptions(): ProgramBuilder {
     this.program
       .option(
         "-d, --dir <dir>",

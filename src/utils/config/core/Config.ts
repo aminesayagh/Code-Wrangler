@@ -26,7 +26,6 @@ export class Config extends ConfigManager<IConfig> {
     super(DEFAULT_CONFIG);
     this.validate(this.config);
     this.jobManager = new JobManager(this);
-    logger.setConfig(Config.getInstance());
   }
 
   /**
@@ -36,6 +35,7 @@ export class Config extends ConfigManager<IConfig> {
   public static async load(): Promise<Config> {
     if (!Config.instance) {
       Config.instance = new Config();
+      logger.setConfig(Config.getInstance());
       await Config.instance.loadSources();
     }
     return Config.instance;

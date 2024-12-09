@@ -14,8 +14,8 @@ export class ConfigBuilder {
 
   public static async create(): Promise<ConfigBuilder> {
     if (!ConfigBuilder.instance) {
-      await Config.load();
-      ConfigBuilder.instance = new ConfigBuilder(Config.getInstance());
+      ConfigBuilder.instance = new ConfigBuilder(await Config.load());
+      logger.info("ConfigBuilder created");
     }
     return ConfigBuilder.instance;
   }
