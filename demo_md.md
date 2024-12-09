@@ -1,6 +1,6 @@
 
 # Code Documentation
-Generated on: 2024-12-08T08:56:11.533Z
+Generated on: 2024-12-08T20:21:17.612Z
 Total files: 13
 
 ## Project Structure
@@ -633,13 +633,198 @@ codewrangler
 
 ## File: CONFIG.md
 - Path: `/root/git/codewrangler/documentation/CONFIG.md`
-- Size: 0.00 B
+- Size: 5.07 KB
 - Extension: .md
-- Lines of code: 0
+- Lines of code: 151
 - Content:
 
 ```md
-1 | 
+  1 | # Configuration Guide
+  2 | 
+  3 | This guide explains how to configure CodeWrangler to suit your documentation needs. CodeWrangler supports multiple configuration methods and allows you to define multiple documentation jobs.
+  4 | 
+  5 | ## Configuration Methods
+  6 | 
+  7 | Configuration can be specified in three ways, listed in order of precedence (highest to lowest):
+  8 | 
+  9 | 1. Command Line Interface (CLI) arguments
+ 10 | 2. Configuration file (`codewrangler.json`)
+ 11 | 3. Default settings
+ 12 | 
+ 13 | ## Global Configuration
+ 14 | 
+ 15 | Global settings affect the overall behavior of CodeWrangler:
+ 16 | 
+ 17 | ```json
+ 18 | {
+ 19 |   "projectName": "MyProject",
+ 20 |   "templatesDir": "public/templates",
+ 21 |   "codeConfigFile": "codewrangler.json",
+ 22 |   "logLevel": "INFO",
+ 23 |   "verbose": false
+ 24 | }
+ 25 | ```
+ 26 | 
+ 27 | | Field | Type | Default | Description |
+ 28 | |-------|------|---------|-------------|
+ 29 | | `projectName` | string | "CodeWrangler" | Name of your project |
+ 30 | | `templatesDir` | string | "public/templates" | Directory containing documentation templates |
+ 31 | | `codeConfigFile` | string | "codewrangler.json" | Path to configuration file |
+ 32 | | `logLevel` | string | "INFO" | Log level (ERROR, WARN, INFO, DEBUG) |
+ 33 | | `verbose` | boolean | false | Enable verbose logging |
+ 34 | 
+ 35 | ## Jobs Configuration
+ 36 | 
+ 37 | Documentation tasks are defined as jobs. Each job specifies what files to process and how to process them:
+ 38 | 
+ 39 | ```json
+ 40 | {
+ 41 |   "jobs": [
+ 42 |     {
+ 43 |       "name": "typescript-docs",
+ 44 |       "pattern": "\\.ts$",
+ 45 |       "rootDir": "./src",
+ 46 |       "outputFile": "docs/typescript",
+ 47 |       "outputFormat": ["markdown"],
+ 48 |       "excludePatterns": ["**/*.test.ts"],
+ 49 |       "maxFileSize": 1048576,
+ 50 |       "maxDepth": 100,
+ 51 |       "ignoreHiddenFiles": true,
+ 52 |       "additionalIgnoreFiles": [],
+ 53 |       "followSymlinks": false
+ 54 |     }
+ 55 |   ]
+ 56 | }
+ 57 | ```
+ 58 | 
+ 59 | ### Job Fields
+ 60 | 
+ 61 | | Field | Type | Default | Description |
+ 62 | |-------|------|---------|-------------|
+ 63 | | `name` | string | Required | Unique identifier for the job |
+ 64 | | `pattern` | string | Required | Regex pattern for matching files |
+ 65 | | `rootDir` | string | Current directory | Root directory to start file scanning |
+ 66 | | `outputFile` | string | Required | Output file path (extension will be added based on format) |
+ 67 | | `outputFormat` | string[] | ["markdown"] | Output formats ("markdown" and/or "html") |
+ 68 | | `excludePatterns` | string[] | ["node_modules/**", "**/*.test.ts", "dist/**"] | Glob patterns for files to exclude |
+ 69 | | `maxFileSize` | number | 1048576 (1MB) | Maximum file size in bytes to process |
+ 70 | | `maxDepth` | number | 100 | Maximum directory depth to traverse |
+ 71 | | `ignoreHiddenFiles` | boolean | true | Whether to ignore hidden files (starting with .) |
+ 72 | | `additionalIgnoreFiles` | string[] | [] | Additional files/patterns to ignore |
+ 73 | | `followSymlinks` | boolean | false | Whether to follow symbolic links |
+ 74 | 
+ 75 | ## Usage Examples
+ 76 | 
+ 77 | ### Command Line
+ 78 | 
+ 79 | Create documentation for TypeScript files:
+ 80 | ```bash
+ 81 | codewrangler "\\.ts$" --dir ./src --output docs/typescript
+ 82 | ```
+ 83 | 
+ 84 | This will create a new job with the specified settings.
+ 85 | 
+ 86 | ### Configuration File
+ 87 | 
+ 88 | Create a `codewrangler.json` file in your project root:
+ 89 | 
+ 90 | ```json
+ 91 | {
+ 92 |   "projectName": "MyProject",
+ 93 |   "logLevel": "INFO",
+ 94 |   "jobs": [
+ 95 |     {
+ 96 |       "name": "typescript-docs",
+ 97 |       "pattern": "\\.ts$",
+ 98 |       "rootDir": "./src",
+ 99 |       "outputFile": "docs/typescript",
+100 |       "excludePatterns": ["**/*.test.ts"]
+101 |     },
+102 |     {
+103 |       "name": "test-docs",
+104 |       "pattern": "\\.test.ts$",
+105 |       "rootDir": "./tests",
+106 |       "outputFile": "docs/tests",
+107 |       "maxDepth": 3
+108 |     }
+109 |   ]
+110 | }
+111 | ```
+112 | 
+113 | This configuration:
+114 | - Sets up two documentation jobs
+115 | - First job documents TypeScript source files, excluding tests
+116 | - Second job specifically documents test files
+117 | - Uses default values for unspecified settings
+118 | 
+119 | ### Multiple Output Formats
+120 | 
+121 | Generate documentation in both Markdown and HTML:
+122 | 
+123 | ```json
+124 | {
+125 |   "jobs": [
+126 |     {
+127 |       "name": "full-docs",
+128 |       "pattern": "\\.ts$",
+129 |       "outputFile": "docs/typescript",
+130 |       "outputFormat": ["markdown", "html"]
+131 |     }
+132 |   ]
+133 | }
+134 | ```
+135 | 
+136 | ### Advanced Pattern Matching
+137 | 
+138 | Use regex patterns to match specific files:
+139 | 
+140 | ```json
+141 | {
+142 |   "jobs": [
+143 |     {
+144 |       "name": "component-docs",
+145 |       "pattern": "components/.+\\.tsx?$",
+146 |       "outputFile": "docs/components",
+147 |       "excludePatterns": [
+148 |         "**/__tests__/**",
+149 |         "**/*.stories.tsx"
+150 |       ]
+151 |     }
+152 |   ]
+153 | }
+154 | ```
+155 | 
+156 | ## Best Practices
+157 | 
+158 | 1. **Job Names**: Use descriptive names for jobs to easily identify their purpose
+159 | 2. **Patterns**: Test regex patterns to ensure they match intended files
+160 | 3. **Output Files**: Use descriptive paths that reflect the documentation content
+161 | 4. **Exclusions**: Start with default exclusions and add project-specific patterns
+162 | 5. **File Size**: Adjust `maxFileSize` based on your largest expected source files
+163 | 6. **Depth**: Set `maxDepth` to avoid processing unnecessarily deep directories
+164 | 
+165 | ## Troubleshooting
+166 | 
+167 | If documentation is not generating as expected:
+168 | 
+169 | 1. Enable verbose logging:
+170 |    ```json
+171 |    {
+172 |      "verbose": true,
+173 |      "logLevel": "DEBUG"
+174 |    }
+175 |    ```
+176 | 
+177 | 2. Check file patterns are matching:
+178 |    - Ensure regex patterns are properly escaped
+179 |    - Test patterns against your file structure
+180 |    - Check `excludePatterns` aren't too broad
+181 | 
+182 | 3. Verify output location:
+183 |    - Ensure output directory exists
+184 |    - Check write permissions
+185 |    - Confirm no conflicts between jobs
+186 | 
 ```
 
 ---------------------------------------------------------------------------
