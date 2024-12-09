@@ -1,6 +1,6 @@
 
 # Code Documentation
-Generated on: 2024-12-09T09:14:50.865Z
+Generated on: 2024-12-09T10:15:35.547Z
 Total files: 61
 
 ## Project Structure
@@ -1064,9 +1064,9 @@ codewrangler
 
 ## File: demo.ts
 - Path: `/root/git/codewrangler/src/demo/demo.ts`
-- Size: 7.91 KB
+- Size: 7.99 KB
 - Extension: .ts
-- Lines of code: 298
+- Lines of code: 307
 - Content:
 
 ```ts
@@ -1409,11 +1409,20 @@ codewrangler
 337 |     pattern: /\.md$/,
 338 |     outputPath: "demo_md.md",
 339 |     ignoreHidden: true,
-340 |     excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"],
-341 |     compress: false
-342 |   }).catch(console.error);
-343 | }
-344 | 
+340 |     excludePatterns: [
+341 |       "node_modules",
+342 |       "dist",
+343 |       "coverage",
+344 |       "*demo*",
+345 |       "src",
+346 |       "demo*",
+347 |       "demo",
+348 |       "LICENCE.md"
+349 |     ],
+350 |     compress: false
+351 |   }).catch(console.error);
+352 | }
+353 | 
 ```
 
 ---------------------------------------------------------------------------

@@ -3,14 +3,19 @@ import { z } from "zod";
 import { Config } from "./Config";
 import { ConfigManager } from "./ConfigManager";
 import { logger } from "../../logger";
-import { IJobConfig, jobConfigSchema } from "../schema";
+import {
+  DEFAULT_JOB_CONFIG,
+  IJobConfig,
+  JobConfigOptions,
+  jobConfigSchema
+} from "../schema";
 
 export class JobConfig extends ConfigManager<IJobConfig> {
   public constructor(
-    jobConfig: IJobConfig,
+    jobConfig: JobConfigOptions,
     public global: Config
   ) {
-    super(jobConfig);
+    super({ ...DEFAULT_JOB_CONFIG, ...jobConfig });
   }
 
   protected validate(config: IJobConfig): IJobConfig {

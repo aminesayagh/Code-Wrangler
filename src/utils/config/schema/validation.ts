@@ -20,7 +20,7 @@ export const jobConfigSchema = z
     rootDir: z.string(),
     excludePatterns: z.array(z.string()),
     maxFileSize: z.number().positive(),
-    maxDepth: z.number(),
+    maxDepth: z.number().min(0),
     ignoreHiddenFiles: z.boolean(),
     additionalIgnoreFiles: z.array(z.string()),
     followSymlinks: z.boolean()
@@ -31,7 +31,7 @@ export const optionalJobConfigSchema = jobConfigSchema.partial();
 
 export const configSchema = z
   .object({
-    projectName: z.string(),
+    name: z.string(),
     templatesDir: z.string(),
     codeConfigFile: z
       .string()

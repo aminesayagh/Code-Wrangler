@@ -337,7 +337,16 @@ if (require.main === module) {
     pattern: /\.md$/,
     outputPath: "demo_md.md",
     ignoreHidden: true,
-    excludePatterns: ["node_modules", "dist", "coverage", "*demo*", "src"],
+    excludePatterns: [
+      "node_modules",
+      "dist",
+      "coverage",
+      "*demo*",
+      "src",
+      "demo*",
+      "demo",
+      "LICENCE.md"
+    ],
     compress: false
   }).catch(console.error);
 }

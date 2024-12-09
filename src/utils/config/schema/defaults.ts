@@ -1,8 +1,7 @@
 import { IConfig, IJobConfig, OutputFormat } from "./types";
 import { LogLevelString } from "../../logger/Logger";
 
-export const DEFAULT_JOB_CONFIG: IJobConfig = {
-  name: "default",
+export const DEFAULT_JOB_CONFIG: Omit<IJobConfig, "name"> = {
   description: "Default job",
   rootDir: process.cwd(),
   outputFormat: ["markdown"] as OutputFormat[],
@@ -16,8 +15,7 @@ export const DEFAULT_JOB_CONFIG: IJobConfig = {
   outputFile: "output.md"
 };
 
-export const DEFAULT_CONFIG: IConfig = {
-  projectName: "CodeWrangler",
+export const DEFAULT_CONFIG: Omit<IConfig, "name"> = {
   templatesDir: "public/templates", // TODO:
   codeConfigFile: "public/codewrangler.json",
   logLevel: "INFO" as LogLevelString,

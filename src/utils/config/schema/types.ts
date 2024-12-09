@@ -26,8 +26,10 @@ export interface IJobConfig {
   additionalIgnoreFiles: string[];
 }
 
+export type JobConfigOptions = Partial<IJobConfig> & { name?: string };
+
 interface IConfigBase {
-  projectName: string;
+  name: string;
   templatesDir: string;
   codeConfigFile: string;
   logLevel: LogLevelString;

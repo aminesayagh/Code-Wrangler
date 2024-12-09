@@ -95,7 +95,7 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
   }
 
   protected getProjectName(otherName?: string): string {
-    return this.config.global.get("projectName") || otherName || "Project";
+    return this.config.global.get("name") || otherName || "Project";
   }
 
   protected renderNode(node: NodeFile | NodeDirectory): string {

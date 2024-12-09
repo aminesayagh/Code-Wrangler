@@ -152,7 +152,7 @@ export class EnvironmentConfigSource implements IConfigurationSource<ConfigOptio
 
   public async load(): Promise<ConfigOptions> {
     return {
-      projectName: process.env.PROJECT_NAME,
+      name: process.env.PROJECT_NAME,
       logLevel: process.env.LOG_LEVEL as LogLevelString,
       // ... other environment mappings
     };
@@ -265,7 +265,7 @@ describe('ConfigBuilder Integration', () => {
       .withFileConfig('test-config.json')
       .build();
       
-    expect(config.get('projectName')).toBe('TestProject');
+    expect(config.get('name')).toBe('TestProject');
   });
 });
 ```

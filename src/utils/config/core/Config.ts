@@ -15,7 +15,10 @@ import { IConfigurationSource } from "../sources/interfaces/IConfigurationSource
 
 export class Config extends ConfigManager<IConfig> {
   private static instance: Config | undefined;
-  public defaultJob: JobConfig = new JobConfig(DEFAULT_JOB_CONFIG, this);
+  public defaultJob: JobConfig = new JobConfig(
+    { ...DEFAULT_JOB_CONFIG, name: "default" },
+    this
+  );
   public jobManager: JobManager;
   private sources: IConfigurationSource<Partial<ConfigOptions>>[] = [];
 
@@ -46,7 +49,7 @@ export class Config extends ConfigManager<IConfig> {
    */
   public reset(): void {
     logger.info("Resetting config to default");
-    this.config = DEFAULT_CONFIG;
+    this.config = { ...DEFAULT_CONFIG, name: this.generateName() } as IConfig;
   }
 
   /**
@@ -87,7 +90,7 @@ export class Config extends ConfigManager<IConfig> {
   public override(config: Partial<ConfigOptions>): void {
     const newOverrideConfig = { ...this.config, ...config };
     try {
-      configSchema.parse(newOverrideConfig);
+      this.validate(newOverrideConfig);
       this.config = newOverrideConfig;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -101,7 +104,7 @@ export class Config extends ConfigManager<IConfig> {
    * Loads the configuration sources.
    */
   public async loadSources(): Promise<void> {
-    let mergedConfig = { ...DEFAULT_CONFIG };
+    let mergedConfig = { ...DEFAULT_CONFIG, ...this.config };
 
     await this.navigateSource(async source => {
       const sourceConfig = await source.load();
@@ -109,15 +112,14 @@ export class Config extends ConfigManager<IConfig> {
       if (sourceConfig.jobs) {
         this.jobManager.mergeJobs(sourceConfig.jobs);
       }
+
       // Merge other config properties
       mergedConfig = {
         ...mergedConfig,
-        ...sourceConfig,
-        jobs: this.jobManager.getJobs().map(job => job.getAll())
+        ...sourceConfig
       };
     });
-
-    this.validate(mergedConfig);
+    this.override(mergedConfig);
   }
 
   /**
