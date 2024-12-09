@@ -1,9 +1,9 @@
-# Configuration System Documentation
-> Developer Guide for Contributors
+# Configuration System
+
+The configuration system in CodeWrangler follows a modular design based on several design patterns to ensure flexibility, maintainability, and extensibility. This document outlines the core architecture, design patterns, and extension points.
 
 ## Table of Contents
 
-- [Introduction](#introduction)
 - [Architecture Overview](#architecture-overview)
 - [Design Patterns](#design-patterns)
 - [Class Diagram](#class-diagram)
@@ -11,10 +11,6 @@
 - [Implementation Guidelines](#implementation-guidelines)
 - [Testing Strategies](#testing-strategies)
 - [Contributing](#contributing)
-
-## Introduction
-
-The configuration system in CodeWrangler follows a modular design based on several design patterns to ensure flexibility, maintainability, and extensibility. This document outlines the core architecture, design patterns, and extension points.
 
 ## Architecture Overview
 
