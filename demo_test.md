@@ -1,6 +1,6 @@
 
 # Code Documentation
-Generated on: 2024-12-09T09:14:50.830Z
+Generated on: 2024-12-09T10:15:35.501Z
 Total files: 16
 
 ## Project Structure
@@ -604,7 +604,7 @@ codewrangler
 
 ## File: DocumentFactory.test.ts
 - Path: `/root/git/codewrangler/src/infrastructure/filesystem/__tests__/DocumentFactory.test.ts`
-- Size: 20.17 KB
+- Size: 20.09 KB
 - Extension: .ts
 - Lines of code: 502
 - Content:
@@ -709,7 +709,7 @@ codewrangler
  97 | 
  98 |     it("should throw an error if the path doesn't exist on readFile method", async () => {
  99 |       await expect(documentFactory.readFile("nonexistent")).rejects.toThrow(
-100 |         "Document error at nonexistent: Error: ENOENT: no such file or directory, open 'nonexistent'"
+100 |         expect.any(Error)
 101 |       );
 102 |     });
 103 | 

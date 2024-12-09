@@ -1,5 +1,5 @@
 import { logger } from "../../logger";
-import { DEFAULT_JOB_CONFIG, IJobConfig } from "../schema";
+import { DEFAULT_JOB_CONFIG, IJobConfig, JobConfigOptions } from "../schema";
 import { Config } from "./Config";
 import { JobConfig } from "./JobConfig";
 
@@ -25,7 +25,7 @@ export class JobManager implements IJobManager {
    * Registers a new job.
    * @param jobConfig - The job config to register.
    */
-  public registerJob(jobConfig: Partial<IJobConfig>): void {
+  public registerJob(jobConfig: JobConfigOptions): void {
     const mergedConfig = this.mergeWithDefaults(jobConfig);
     this.jobs.set(mergedConfig.name, new JobConfig(mergedConfig, this.global));
   }
@@ -34,16 +34,23 @@ export class JobManager implements IJobManager {
    * Merges new jobs with existing jobs.
    * @param newJobs - The new jobs to merge.
    */
-  public mergeJobs(newJobs: IJobConfig[]): void {
+  public mergeJobs(newJobs: JobConfigOptions[]): void {
     for (const job of newJobs) {
-      const existing = this.jobs.get(job.name);
-      if (existing) {
+      const existing = job?.name ? this.jobs.get(job.name) : undefined;
+      if (existing && typeof job.name === "string") {
         this.jobs.set(
           job.name,
           new JobConfig({ ...existing.getAll(), ...job }, this.global)
         );
       } else {
-        this.jobs.set(job.name, new JobConfig(job, this.global));
+        if (typeof job.name === "string") {
+          this.jobs.set(job.name, new JobConfig(job, this.global));
+        } else {
+          this.jobs.set(
+            this.global.generateName(),
+            new JobConfig(job, this.global)
+          );
+        }
       }
     }
   }
@@ -76,11 +83,11 @@ export class JobManager implements IJobManager {
    * @param jobConfig - The job config to merge.
    * @returns The merged job config.
    */
-  private mergeWithDefaults(jobConfig: Partial<IJobConfig>): IJobConfig {
+  private mergeWithDefaults(jobConfig: JobConfigOptions): IJobConfig {
     return {
       ...DEFAULT_JOB_CONFIG,
       ...jobConfig
-    };
+    } as IJobConfig;
   }
 
   private handleError(error: unknown, job: JobConfig): void {
