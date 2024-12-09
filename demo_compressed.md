@@ -1,6 +1,6 @@
 
 # Code Documentation
-Generated on: 2024-12-09T10:15:35.547Z
+Generated on: 2024-12-09T19:09:57.564Z
 Total files: 61
 
 ## Project Structure
@@ -257,9 +257,9 @@ codewrangler
 
 ## File: DocumentConfigSource.ts
 - Path: `/root/git/codewrangler/src/cli/commands/document/config/DocumentConfigSource.ts`
-- Size: 2.08 KB
+- Size: 2.39 KB
 - Extension: .ts
-- Lines of code: 57
+- Lines of code: 62
 - Content:
 
 ```ts
@@ -268,7 +268,7 @@ codewrangler
  3 | import { documentConfigSchema } from "./schema";
  4 | import { IDocumentCommandOptions } from "./types";
  5 | import { documentFactory } from "../../../../infrastructure/filesystem/DocumentFactory";
- 6 | import { CLIConfigSource } from "../../../../utils/config";
+ 6 | import { CLIConfigSource, ILoadConfigResult } from "../../../../utils/config";
  7 | import { normalizePattern } from "../../../../utils/pattern";
  8 | 
  9 | type IDocumentCommandInputOptions = Partial<IDocumentCommandOptions>;
@@ -282,54 +282,59 @@ codewrangler
 17 |     );
 18 |   }
 19 | 
-20 |   public load(): Promise<IDocumentCommandOptions> {
-21 |     const rawConfig = this.parseArgs();
-22 |     const validConfig = this.validate(rawConfig);
-23 |     return Promise.resolve(this.transform(validConfig));
-24 |   }
-25 | 
-26 |   public static create(
-27 |     args: string,
-28 |     options: IDocumentCommandInputOptions
-29 |   ): Promise<IDocumentCommandOptions> {
-30 |     return new DocumentConfigSource(args, options).load();
-31 |   }
-32 | 
-33 |   private transform(config: IDocumentCommandOptions): IDocumentCommandOptions {
-34 |     return {
-35 |       ...config,
-36 |       pattern: normalizePattern(config.pattern),
-37 |       rootDir: documentFactory.resolve(config.rootDir ?? "."),
-38 |       outputFile: this.normalizeOutputFile(config.outputFile ?? "")
-39 |     };
-40 |   }
-41 | 
-42 |   private validate(
-43 |     config: IDocumentCommandInputOptions
-44 |   ): IDocumentCommandOptions {
-45 |     return this.schema.parse(config);
-46 |   }
-47 | 
-48 |   private parseArgs(): IDocumentCommandInputOptions {
-49 |     return {
-50 |       pattern: this.args[0],
-51 |       verbose: this.options.verbose,
-52 |       outputFormat: this.options.outputFormat,
-53 |       rootDir: this.options.rootDir,
-54 |       outputFile: this.options.outputFile,
-55 |       excludePatterns: this.options.excludePatterns,
-56 |       ignoreHidden: this.options.ignoreHidden,
-57 |       additionalIgnore: this.options.additionalIgnore
-58 |     };
-59 |   }
-60 | 
-61 |   private normalizeOutputFile(outputFile: string): string {
-62 |     return documentFactory.isAbsolute(outputFile)
-63 |       ? outputFile
-64 |       : documentFactory.resolve(outputFile ?? "");
-65 |   }
-66 | }
-67 | 
+20 |   public async load(): Promise<ILoadConfigResult<IDocumentCommandOptions>> {
+21 |     const rawConfig = this.parseArgs(); // parse to a raw config of key value pairs
+22 |     const validConfig = this.validate(rawConfig); // validate the raw config
+23 |     const transformedConfig = this.transform(validConfig); // transform the valid config to the final config
+24 |     return await Promise.resolve({
+25 |       config: transformedConfig,
+26 |       jobConfig: [],
+27 |       input: transformedConfig
+28 |     });
+29 |   }
+30 | 
+31 |   public static create(
+32 |     args: string,
+33 |     options: IDocumentCommandInputOptions
+34 |   ): Promise<ILoadConfigResult<IDocumentCommandOptions>> {
+35 |     return new DocumentConfigSource(args, options).load();
+36 |   }
+37 | 
+38 |   private transform(config: IDocumentCommandOptions): IDocumentCommandOptions {
+39 |     return {
+40 |       ...config,
+41 |       pattern: normalizePattern(config.pattern),
+42 |       rootDir: documentFactory.resolve(config.rootDir ?? "."),
+43 |       outputFile: this.normalizeOutputFile(config.outputFile ?? "")
+44 |     };
+45 |   }
+46 | 
+47 |   private validate(
+48 |     config: IDocumentCommandInputOptions
+49 |   ): IDocumentCommandOptions {
+50 |     return this.schema.parse(config);
+51 |   }
+52 | 
+53 |   private parseArgs(): IDocumentCommandInputOptions {
+54 |     return {
+55 |       pattern: this.args[0],
+56 |       verbose: this.options.verbose,
+57 |       outputFormat: this.options.outputFormat,
+58 |       rootDir: this.options.rootDir,
+59 |       outputFile: this.options.outputFile,
+60 |       excludePatterns: this.options.excludePatterns,
+61 |       ignoreHidden: this.options.ignoreHidden,
+62 |       additionalIgnore: this.options.additionalIgnore
+63 |     };
+64 |   }
+65 | 
+66 |   private normalizeOutputFile(outputFile: string): string {
+67 |     return documentFactory.isAbsolute(outputFile)
+68 |       ? outputFile
+69 |       : documentFactory.resolve(outputFile ?? "");
+70 |   }
+71 | }
+72 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -2695,7 +2700,7 @@ codewrangler
 
 ## File: RenderStrategy.ts
 - Path: `/root/git/codewrangler/src/services/renderer/RenderStrategy.ts`
-- Size: 3.42 KB
+- Size: 3.41 KB
 - Extension: .ts
 - Lines of code: 94
 - Content:
@@ -2798,7 +2803,7 @@ codewrangler
  95 |   }
  96 | 
  97 |   protected getProjectName(otherName?: string): string {
- 98 |     return this.config.global.get("projectName") || otherName || "Project";
+ 98 |     return this.config.global.get("name") || otherName || "Project";
  99 |   }
 100 | 
 101 |   protected renderNode(node: NodeFile | NodeDirectory): string {
@@ -3295,9 +3300,9 @@ codewrangler
 
 ## File: Config.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/Config.ts`
-- Size: 4.58 KB
+- Size: 4.61 KB
 - Extension: .ts
-- Lines of code: 156
+- Lines of code: 159
 - Content:
 
 ```ts
@@ -3318,161 +3323,164 @@ codewrangler
  15 | 
  16 | export class Config extends ConfigManager<IConfig> {
  17 |   private static instance: Config | undefined;
- 18 |   public defaultJob: JobConfig = new JobConfig(DEFAULT_JOB_CONFIG, this);
- 19 |   public jobManager: JobManager;
- 20 |   private sources: IConfigurationSource<Partial<ConfigOptions>>[] = [];
- 21 | 
- 22 |   /**
- 23 |    * Constructor for the Config class.
- 24 |    */
- 25 |   private constructor() {
- 26 |     super(DEFAULT_CONFIG);
- 27 |     this.validate(this.config);
- 28 |     this.jobManager = new JobManager(this);
- 29 |   }
- 30 | 
- 31 |   /**
- 32 |    * Loads the configuration.
- 33 |    * @returns The Config instance.
- 34 |    */
- 35 |   public static async load(): Promise<Config> {
- 36 |     if (!Config.instance) {
- 37 |       Config.instance = new Config();
- 38 |       logger.setConfig(Config.getInstance());
- 39 |       await Config.instance.loadSources();
- 40 |     }
- 41 |     return Config.instance;
- 42 |   }
- 43 | 
- 44 |   /**
- 45 |    * Resets the configuration to the default values.
- 46 |    */
- 47 |   public reset(): void {
- 48 |     logger.info("Resetting config to default");
- 49 |     this.config = DEFAULT_CONFIG;
- 50 |   }
- 51 | 
- 52 |   /**
- 53 |    * Adds a new configuration source.
- 54 |    * @param source - The configuration source to add.
- 55 |    */
- 56 |   public addSource(source: IConfigurationSource<Partial<ConfigOptions>>): void {
- 57 |     this.sources.push(source);
- 58 |     this.sources.sort((a, b) => a.priority - b.priority);
- 59 |     this.loadSources().catch(error => {
- 60 |       logger.error("Failed to reload configuration sources", error);
- 61 |     });
- 62 |   }
- 63 | 
- 64 |   /**
- 65 |    * Destroys the Config instance.
- 66 |    */
- 67 |   public static destroy(): void {
- 68 |     Config.instance = undefined;
- 69 |   }
- 70 | 
- 71 |   /**
- 72 |    * Returns the Config instance.
- 73 |    * @returns The Config instance.
- 74 |    * @throws An error if the Config instance is not initialized.
- 75 |    */
- 76 |   public static getInstance(): Config {
- 77 |     if (!Config.instance) {
- 78 |       throw new Error("Config must be initialized before use");
- 79 |     }
- 80 |     return Config.instance;
- 81 |   }
- 82 | 
- 83 |   /**
- 84 |    * Overrides the configuration with a new set of values.
- 85 |    * @param config - The new configuration values.
- 86 |    */
- 87 |   public override(config: Partial<ConfigOptions>): void {
- 88 |     const newOverrideConfig = { ...this.config, ...config };
- 89 |     try {
- 90 |       configSchema.parse(newOverrideConfig);
- 91 |       this.config = newOverrideConfig;
- 92 |     } catch (error) {
- 93 |       if (error instanceof z.ZodError) {
- 94 |         logger.error(`Invalid configuration value: ${error.errors}`);
- 95 |       }
- 96 |       throw error;
- 97 |     }
- 98 |   }
- 99 | 
-100 |   /**
-101 |    * Loads the configuration sources.
-102 |    */
-103 |   public async loadSources(): Promise<void> {
-104 |     let mergedConfig = { ...DEFAULT_CONFIG };
-105 | 
-106 |     await this.navigateSource(async source => {
-107 |       const sourceConfig = await source.load();
-108 |       // Merge jobs separately
-109 |       if (sourceConfig.jobs) {
-110 |         this.jobManager.mergeJobs(sourceConfig.jobs);
-111 |       }
-112 |       // Merge other config properties
-113 |       mergedConfig = {
-114 |         ...mergedConfig,
-115 |         ...sourceConfig,
-116 |         jobs: this.jobManager.getJobs().map(job => job.getAll())
-117 |       };
-118 |     });
-119 | 
-120 |     this.validate(mergedConfig);
-121 |   }
-122 | 
-123 |   /**
-124 |    * Validates the configuration.
-125 |    * @param config - The configuration to validate.
-126 |    */
-127 |   protected validate(config: IConfig): IConfig {
-128 |     try {
-129 |       return configSchema.parse(config);
-130 |     } catch (error) {
-131 |       this.handleConfigError(error);
-132 |       throw error; // Re-throw the error to be handled by the caller
-133 |     }
-134 |   }
-135 | 
-136 |   /**
-137 |    * Handles configuration validation errors.
-138 |    * @param error - The error to handle.
-139 |    * @throws An error if the configuration is invalid.
-140 |    */
-141 |   protected handleConfigError(error: unknown): void {
-142 |     if (error instanceof z.ZodError) {
-143 |       const details = error.errors
-144 |         .map(err => `${err.path.join(".")}: ${err.message}`)
-145 |         .join(", ");
-146 |       logger.error(`Configuration validation failed: ${details}`);
-147 |       throw new Error("Configuration validation failed");
-148 |     }
-149 |     throw error;
-150 |   }
-151 | 
-152 |   /**
-153 |    * Navigates through the configuration sources.
-154 |    * @param callback - The callback to execute for each source.
-155 |    */
-156 |   private async navigateSource(
-157 |     callback: (
-158 |       source: IConfigurationSource<Partial<ConfigOptions>>
-159 |     ) => Promise<void>
-160 |   ): Promise<void> {
-161 |     for (const source of this.sources) {
-162 |       try {
-163 |         await callback(source);
-164 |       } catch (error) {
-165 |         logger.error(
-166 |           `Failed to navigate configuration source: ${error instanceof Error ? error.message : String(error)}`
-167 |         );
-168 |       }
-169 |     }
-170 |   }
-171 | }
-172 | 
+ 18 |   public defaultJob: JobConfig = new JobConfig(
+ 19 |     { ...DEFAULT_JOB_CONFIG, name: "default" },
+ 20 |     this
+ 21 |   );
+ 22 |   public jobManager: JobManager;
+ 23 |   private sources: IConfigurationSource<ConfigOptions>[] = [];
+ 24 | 
+ 25 |   /**
+ 26 |    * Constructor for the Config class.
+ 27 |    */
+ 28 |   private constructor() {
+ 29 |     super(DEFAULT_CONFIG);
+ 30 |     this.validate(this.config);
+ 31 |     this.jobManager = new JobManager(this);
+ 32 |   }
+ 33 | 
+ 34 |   /**
+ 35 |    * Loads the configuration.
+ 36 |    * @returns The Config instance.
+ 37 |    */
+ 38 |   public static async load(): Promise<Config> {
+ 39 |     if (!Config.instance) {
+ 40 |       Config.instance = new Config();
+ 41 |       logger.setConfig(Config.getInstance());
+ 42 |       await Config.instance.loadSources();
+ 43 |     }
+ 44 |     return Config.instance;
+ 45 |   }
+ 46 | 
+ 47 |   /**
+ 48 |    * Resets the configuration to the default values.
+ 49 |    */
+ 50 |   public reset(): void {
+ 51 |     logger.info("Resetting config to default");
+ 52 |     this.config = { ...DEFAULT_CONFIG, name: this.generateName() } as IConfig;
+ 53 |     this.jobManager.reset();
+ 54 |   }
+ 55 | 
+ 56 |   /**
+ 57 |    * Adds a new configuration source.
+ 58 |    * @param source - The configuration source to add.
+ 59 |    */
+ 60 |   public addSource(source: IConfigurationSource<Partial<ConfigOptions>>): void {
+ 61 |     this.sources.push(source);
+ 62 |     this.sources.sort((a, b) => a.priority - b.priority);
+ 63 |     this.loadSources().catch(error => {
+ 64 |       logger.error("Failed to reload configuration sources", error);
+ 65 |     });
+ 66 |   }
+ 67 | 
+ 68 |   /**
+ 69 |    * Destroys the Config instance.
+ 70 |    */
+ 71 |   public static destroy(): void {
+ 72 |     Config.instance = undefined;
+ 73 |   }
+ 74 | 
+ 75 |   /**
+ 76 |    * Returns the Config instance.
+ 77 |    * @returns The Config instance.
+ 78 |    * @throws An error if the Config instance is not initialized.
+ 79 |    */
+ 80 |   public static getInstance(): Config {
+ 81 |     if (!Config.instance) {
+ 82 |       throw new Error("Config must be initialized before use");
+ 83 |     }
+ 84 |     return Config.instance;
+ 85 |   }
+ 86 | 
+ 87 |   /**
+ 88 |    * Overrides the configuration with a new set of values.
+ 89 |    * @param config - The new configuration values.
+ 90 |    */
+ 91 |   public override(config: Partial<ConfigOptions>): void {
+ 92 |     const newOverrideConfig = { ...this.config, ...config };
+ 93 |     try {
+ 94 |       this.validate(newOverrideConfig);
+ 95 |       this.config = newOverrideConfig;
+ 96 |     } catch (error) {
+ 97 |       if (error instanceof z.ZodError) {
+ 98 |         logger.error(`Invalid configuration value: ${error.errors}`);
+ 99 |       }
+100 |       throw error;
+101 |     }
+102 |   }
+103 | 
+104 |   /**
+105 |    * Loads the configuration sources.
+106 |    */
+107 |   public async loadSources(): Promise<void> {
+108 |     let mergedConfig = { ...DEFAULT_CONFIG, ...this.config };
+109 | 
+110 |     await this.navigateSource(async source => {
+111 |       const { config, jobConfig } = await source.load();
+112 |       // Merge jobs separately
+113 |       if (jobConfig) {
+114 |         this.jobManager.mergeJobs(jobConfig);
+115 |       }
+116 | 
+117 |       // Merge other config properties
+118 |       mergedConfig = {
+119 |         ...mergedConfig,
+120 |         ...config
+121 |       };
+122 |     });
+123 |     this.override(mergedConfig);
+124 |   }
+125 | 
+126 |   /**
+127 |    * Validates the configuration.
+128 |    * @param config - The configuration to validate.
+129 |    */
+130 |   protected validate(config: IConfig): IConfig {
+131 |     try {
+132 |       return configSchema.parse(config);
+133 |     } catch (error) {
+134 |       this.handleConfigError(error);
+135 |       throw error; // Re-throw the error to be handled by the caller
+136 |     }
+137 |   }
+138 | 
+139 |   /**
+140 |    * Handles configuration validation errors.
+141 |    * @param error - The error to handle.
+142 |    * @throws An error if the configuration is invalid.
+143 |    */
+144 |   protected handleConfigError(error: unknown): void {
+145 |     if (error instanceof z.ZodError) {
+146 |       const details = error.errors
+147 |         .map(err => `${err.path.join(".")}: ${err.message}`)
+148 |         .join(", ");
+149 |       logger.error(`Configuration validation failed: ${details}`);
+150 |       throw new Error("Configuration validation failed");
+151 |     }
+152 |     throw error;
+153 |   }
+154 | 
+155 |   /**
+156 |    * Navigates through the configuration sources.
+157 |    * @param callback - The callback to execute for each source.
+158 |    */
+159 |   private async navigateSource(
+160 |     callback: (
+161 |       source: IConfigurationSource<ConfigOptions>
+162 |     ) => Promise<void>
+163 |   ): Promise<void> {
+164 |     for (const source of this.sources) {
+165 |       try {
+166 |         await callback(source);
+167 |       } catch (error) {
+168 |         logger.error(
+169 |           `Failed to navigate configuration source: ${error instanceof Error ? error.message : String(error)}`
+170 |         );
+171 |       }
+172 |     }
+173 |   }
+174 | }
+175 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3480,45 +3488,56 @@ codewrangler
 
 ## File: ConfigManager.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/ConfigManager.ts`
-- Size: 712.00 B
+- Size: 1.11 KB
 - Extension: .ts
-- Lines of code: 26
+- Lines of code: 36
 - Content:
 
 ```ts
- 1 | export abstract class ConfigManager<T> {
- 2 |   protected config: T;
- 3 | 
- 4 |   public constructor(defaultConfig: T) {
- 5 |     this.config = defaultConfig;
- 6 |   }
- 7 | 
- 8 |   public get<K extends keyof T>(key: K): T[K] {
- 9 |     return this.config[key] as T[K];
-10 |   }
-11 | 
-12 |   public set(key: keyof T, value: T[keyof T]): void {
-13 |     if (value === undefined) {
-14 |       return;
-15 |     }
-16 |     const updatedConfig = { ...this.config, [key]: value };
-17 |     try {
-18 |       this.validate(updatedConfig);
-19 |       this.config = updatedConfig;
-20 |     } catch (error) {
-21 |       this.handleConfigError(error);
-22 |     }
-23 |   }
-24 | 
-25 |   public getAll(): T {
-26 |     return this.config;
-27 |   }
-28 | 
-29 |   protected abstract validate(config: T): T;
-30 | 
-31 |   protected abstract handleConfigError(error: unknown): void;
-32 | }
-33 | 
+ 1 | export abstract class ConfigManager<T extends { name: string }> {
+ 2 |   private static random: number = 0;
+ 3 |   protected config: T;
+ 4 | 
+ 5 |   public constructor(defaultConfig: Omit<T, "name"> & { name?: string }) {
+ 6 |     this.config = { name: this.generateName(), ...defaultConfig } as T;
+ 7 |     this.validate(this.config);
+ 8 |   }
+ 9 | 
+10 |   public get<K extends keyof T>(key: K): T[K] {
+11 |     return this.config[key] as T[K];
+12 |   }
+13 | 
+14 |   public set(key: keyof T, value: T[keyof T]): void {
+15 |     if (value === undefined) {
+16 |       return;
+17 |     }
+18 |     const updatedConfig = { ...this.config, [key]: value };
+19 |     try {
+20 |       this.validate(updatedConfig);
+21 |       this.config = updatedConfig;
+22 |     } catch (error) {
+23 |       this.handleConfigError(error);
+24 |     }
+25 |   }
+26 | 
+27 |   public getAll(): T {
+28 |     // Return a copy of the config object
+29 |     return { ...this.config };
+30 |   }
+31 | 
+32 |   public generateName(): string {
+33 |     if (typeof this.config?.name === "string") {
+34 |       return this.config.name;
+35 |     }
+36 |     ConfigManager.random++;
+37 |     return `config-code-wrangler-${ConfigManager.random}`;
+38 |   }
+39 | 
+40 |   protected abstract validate(config: T): T;
+41 | 
+42 |   protected abstract handleConfigError(error: unknown): void;
+43 | }
+44 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3526,9 +3545,9 @@ codewrangler
 
 ## File: JobConfig.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/JobConfig.ts`
-- Size: 840.00 B
+- Size: 922.00 B
 - Extension: .ts
-- Lines of code: 26
+- Lines of code: 31
 - Content:
 
 ```ts
@@ -3537,32 +3556,37 @@ codewrangler
  3 | import { Config } from "./Config";
  4 | import { ConfigManager } from "./ConfigManager";
  5 | import { logger } from "../../logger";
- 6 | import { IJobConfig, jobConfigSchema } from "../schema";
- 7 | 
- 8 | export class JobConfig extends ConfigManager<IJobConfig> {
- 9 |   public constructor(
-10 |     jobConfig: IJobConfig,
-11 |     public global: Config
-12 |   ) {
-13 |     super(jobConfig);
-14 |   }
-15 | 
-16 |   protected validate(config: IJobConfig): IJobConfig {
-17 |     return jobConfigSchema.parse(config);
-18 |   }
-19 | 
-20 |   protected handleConfigError(error: unknown): void {
-21 |     if (error instanceof z.ZodError) {
-22 |       const details = error.errors
-23 |         .map(err => `${err.path.join(".")}: ${err.message}`)
-24 |         .join(", ");
-25 |       logger.error(`Configuration validation failed: ${details}`);
-26 |       throw new Error("Configuration validation failed");
-27 |     }
-28 |     throw error;
-29 |   }
-30 | }
-31 | 
+ 6 | import {
+ 7 |   DEFAULT_JOB_CONFIG,
+ 8 |   IJobConfig,
+ 9 |   JobConfigOptions,
+10 |   jobConfigSchema
+11 | } from "../schema";
+12 | 
+13 | export class JobConfig extends ConfigManager<IJobConfig> {
+14 |   public constructor(
+15 |     jobConfig: JobConfigOptions,
+16 |     public global: Config
+17 |   ) {
+18 |     super({ ...DEFAULT_JOB_CONFIG, ...jobConfig });
+19 |   }
+20 | 
+21 |   protected validate(config: IJobConfig): IJobConfig {
+22 |     return jobConfigSchema.parse(config);
+23 |   }
+24 | 
+25 |   protected handleConfigError(error: unknown): void {
+26 |     if (error instanceof z.ZodError) {
+27 |       const details = error.errors
+28 |         .map(err => `${err.path.join(".")}: ${err.message}`)
+29 |         .join(", ");
+30 |       logger.error(`Configuration validation failed: ${details}`);
+31 |       throw new Error("Configuration validation failed");
+32 |     }
+33 |     throw error;
+34 |   }
+35 | }
+36 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3570,102 +3594,116 @@ codewrangler
 
 ## File: JobManager.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/JobManager.ts`
-- Size: 2.31 KB
+- Size: 2.68 KB
 - Extension: .ts
-- Lines of code: 80
+- Lines of code: 93
 - Content:
 
 ```ts
- 1 | import { logger } from "../../logger";
- 2 | import { DEFAULT_JOB_CONFIG, IJobConfig } from "../schema";
- 3 | import { Config } from "./Config";
- 4 | import { JobConfig } from "./JobConfig";
- 5 | 
- 6 | export interface IJobManager {
- 7 |   registerJob: (jobConfig: IJobConfig) => void;
- 8 |   mergeJobs: (newJobs: IJobConfig[]) => void;
- 9 |   getJobs: () => JobConfig[];
-10 | }
-11 | 
-12 | export class JobManager implements IJobManager {
-13 |   private jobs: Map<string, JobConfig> = new Map();
-14 |   private global: Config;
-15 | 
-16 |   /**
-17 |    * Initializes a new JobManager instance.
-18 |    * @param config - The main configuration.
-19 |    */
-20 |   public constructor(global: Config) {
-21 |     this.global = global;
-22 |   }
-23 | 
-24 |   /**
-25 |    * Registers a new job.
-26 |    * @param jobConfig - The job config to register.
-27 |    */
-28 |   public registerJob(jobConfig: Partial<IJobConfig>): void {
-29 |     const mergedConfig = this.mergeWithDefaults(jobConfig);
-30 |     this.jobs.set(mergedConfig.name, new JobConfig(mergedConfig, this.global));
-31 |   }
-32 | 
-33 |   /**
-34 |    * Merges new jobs with existing jobs.
-35 |    * @param newJobs - The new jobs to merge.
-36 |    */
-37 |   public mergeJobs(newJobs: IJobConfig[]): void {
-38 |     for (const job of newJobs) {
-39 |       const existing = this.jobs.get(job.name);
-40 |       if (existing) {
-41 |         this.jobs.set(
-42 |           job.name,
-43 |           new JobConfig({ ...existing.getAll(), ...job }, this.global)
-44 |         );
-45 |       } else {
-46 |         this.jobs.set(job.name, new JobConfig(job, this.global));
-47 |       }
-48 |     }
-49 |   }
-50 | 
-51 |   /**
-52 |    * Returns all registered jobs.
-53 |    * @returns An array of JobConfig instances.
-54 |    */
-55 |   public getJobs(): JobConfig[] {
-56 |     return Array.from(this.jobs.values());
-57 |   }
-58 | 
-59 |   public async executeJobs<T>(
-60 |     callback: (job: JobConfig) => Promise<T>
-61 |   ): Promise<(T | undefined)[]> {
-62 |     return await Promise.all(
-63 |       this.getJobs().map(async job => {
-64 |         try {
-65 |           return await callback(job);
-66 |         } catch (error) {
-67 |           this.handleError(error, job);
-68 |           return undefined;
-69 |         }
-70 |       })
-71 |     );
-72 |   }
-73 | 
-74 |   /**
-75 |    * Merges the job config with the default job config.
-76 |    * @param jobConfig - The job config to merge.
-77 |    * @returns The merged job config.
-78 |    */
-79 |   private mergeWithDefaults(jobConfig: Partial<IJobConfig>): IJobConfig {
-80 |     return {
-81 |       ...DEFAULT_JOB_CONFIG,
-82 |       ...jobConfig
-83 |     };
-84 |   }
-85 | 
-86 |   private handleError(error: unknown, job: JobConfig): void {
-87 |     logger.error(`Error in job ${job.get("name")}: ${error}`);
-88 |   }
-89 | }
-90 | 
+  1 | import { logger } from "../../logger";
+  2 | import { DEFAULT_JOB_CONFIG, IJobConfig, JobConfigOptions } from "../schema";
+  3 | import { Config } from "./Config";
+  4 | import { JobConfig } from "./JobConfig";
+  5 | 
+  6 | export interface IJobManager {
+  7 |   registerJob: (jobConfig: IJobConfig) => void;
+  8 |   mergeJobs: (newJobs: IJobConfig[]) => void;
+  9 |   getJobs: () => JobConfig[];
+ 10 | }
+ 11 | 
+ 12 | export class JobManager implements IJobManager {
+ 13 |   private jobs: Map<string, JobConfig> = new Map();
+ 14 |   private global: Config;
+ 15 | 
+ 16 |   /**
+ 17 |    * Initializes a new JobManager instance.
+ 18 |    * @param config - The main configuration.
+ 19 |    */
+ 20 |   public constructor(global: Config) {
+ 21 |     this.global = global;
+ 22 |   }
+ 23 | 
+ 24 |   /**
+ 25 |    * Registers a new job.
+ 26 |    * @param jobConfig - The job config to register.
+ 27 |    */
+ 28 |   public registerJob(jobConfig: JobConfigOptions): void {
+ 29 |     const mergedConfig = this.mergeWithDefaults(jobConfig);
+ 30 |     this.jobs.set(mergedConfig.name, new JobConfig(mergedConfig, this.global));
+ 31 |   }
+ 32 | 
+ 33 |   /**
+ 34 |    * Merges new jobs with existing jobs.
+ 35 |    * @param newJobs - The new jobs to merge.
+ 36 |    */
+ 37 |   public mergeJobs(newJobs: JobConfigOptions[]): void {
+ 38 |     for (const job of newJobs) {
+ 39 |       const existing = job?.name ? this.jobs.get(job.name) : undefined;
+ 40 |       if (existing && typeof job.name === "string") {
+ 41 |         this.jobs.set(
+ 42 |           job.name,
+ 43 |           new JobConfig({ ...existing.getAll(), ...job }, this.global)
+ 44 |         );
+ 45 |       } else {
+ 46 |         if (typeof job.name === "string") {
+ 47 |           this.jobs.set(job.name, new JobConfig(job, this.global));
+ 48 |         } else {
+ 49 |           this.jobs.set(
+ 50 |             this.global.generateName(),
+ 51 |             new JobConfig(job, this.global)
+ 52 |           );
+ 53 |         }
+ 54 |       }
+ 55 |     }
+ 56 |   }
+ 57 | 
+ 58 |   /**
+ 59 |    * Returns all registered jobs.
+ 60 |    * @returns An array of JobConfig instances.
+ 61 |    */
+ 62 |   public getJobs(): JobConfig[] {
+ 63 |     return Array.from(this.jobs.values());
+ 64 |   }
+ 65 | 
+ 66 |   /**
+ 67 |    * Resets the job manager.
+ 68 |    */
+ 69 |   public reset(): void {
+ 70 |     this.jobs.clear();
+ 71 |   }
+ 72 | 
+ 73 |   public async executeJobs<T>(
+ 74 |     callback: (job: JobConfig) => Promise<T>
+ 75 |   ): Promise<(T | undefined)[]> {
+ 76 |     return await Promise.all(
+ 77 |       this.getJobs().map(async job => {
+ 78 |         try {
+ 79 |           return await callback(job);
+ 80 |         } catch (error) {
+ 81 |           this.handleError(error, job);
+ 82 |           return undefined;
+ 83 |         }
+ 84 |       })
+ 85 |     );
+ 86 |   }
+ 87 | 
+ 88 |   /**
+ 89 |    * Merges the job config with the default job config.
+ 90 |    * @param jobConfig - The job config to merge.
+ 91 |    * @returns The merged job config.
+ 92 |    */
+ 93 |   private mergeWithDefaults(jobConfig: JobConfigOptions): IJobConfig {
+ 94 |     return {
+ 95 |       ...DEFAULT_JOB_CONFIG,
+ 96 |       ...jobConfig
+ 97 |     } as IJobConfig;
+ 98 |   }
+ 99 | 
+100 |   private handleError(error: unknown, job: JobConfig): void {
+101 |     logger.error(`Error in job ${job.get("name")}: ${error}`);
+102 |   }
+103 | }
+104 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3708,39 +3746,37 @@ codewrangler
 
 ## File: defaults.ts
 - Path: `/root/git/codewrangler/src/utils/config/schema/defaults.ts`
-- Size: 714.00 B
+- Size: 692.00 B
 - Extension: .ts
-- Lines of code: 24
+- Lines of code: 22
 - Content:
 
 ```ts
  1 | import { IConfig, IJobConfig, OutputFormat } from "./types";
  2 | import { LogLevelString } from "../../logger/Logger";
  3 | 
- 4 | export const DEFAULT_JOB_CONFIG: IJobConfig = {
- 5 |   name: "default",
- 6 |   description: "Default job",
- 7 |   rootDir: process.cwd(),
- 8 |   outputFormat: ["markdown"] as OutputFormat[],
- 9 |   excludePatterns: [],
-10 |   maxFileSize: 1048576,
-11 |   maxDepth: 100,
-12 |   ignoreHiddenFiles: true,
-13 |   additionalIgnoreFiles: [],
-14 |   followSymlinks: false,
-15 |   pattern: "**/*",
-16 |   outputFile: "output.md"
-17 | };
-18 | 
-19 | export const DEFAULT_CONFIG: IConfig = {
-20 |   projectName: "CodeWrangler",
-21 |   templatesDir: "public/templates", // TODO:
-22 |   codeConfigFile: "public/codewrangler.json",
-23 |   logLevel: "INFO" as LogLevelString,
-24 |   verbose: false,
-25 |   jobs: []
-26 | };
-27 | 
+ 4 | export const DEFAULT_JOB_CONFIG: Omit<IJobConfig, "name"> = {
+ 5 |   description: "Default job",
+ 6 |   rootDir: process.cwd(),
+ 7 |   outputFormat: ["markdown"] as OutputFormat[],
+ 8 |   excludePatterns: [],
+ 9 |   maxFileSize: 1048576,
+10 |   maxDepth: 100,
+11 |   ignoreHiddenFiles: true,
+12 |   additionalIgnoreFiles: [],
+13 |   followSymlinks: false,
+14 |   pattern: "**/*",
+15 |   outputFile: "output.md"
+16 | };
+17 | 
+18 | export const DEFAULT_CONFIG: Omit<IConfig, "name"> = {
+19 |   templatesDir: "public/templates", // TODO:
+20 |   codeConfigFile: "public/codewrangler.json",
+21 |   logLevel: "INFO" as LogLevelString,
+22 |   verbose: false,
+23 |   jobs: []
+24 | };
+25 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3765,9 +3801,9 @@ codewrangler
 
 ## File: types.ts
 - Path: `/root/git/codewrangler/src/utils/config/schema/types.ts`
-- Size: 1001.00 B
+- Size: 1.17 KB
 - Extension: .ts
-- Lines of code: 35
+- Lines of code: 41
 - Content:
 
 ```ts
@@ -3799,20 +3835,28 @@ codewrangler
 26 |   additionalIgnoreFiles: string[];
 27 | }
 28 | 
-29 | interface IConfigBase {
-30 |   projectName: string;
-31 |   templatesDir: string;
-32 |   codeConfigFile: string;
-33 |   logLevel: LogLevelString;
-34 |   verbose: boolean;
-35 | }
-36 | 
-37 | export interface IConfig extends IConfigBase {
-38 |   jobs?: IJobConfig[];
-39 | }
-40 | 
-41 | export type ConfigOptions = Partial<IConfig>;
+29 | export type JobConfigOptions = Partial<IJobConfig> & { name?: string };
+30 | 
+31 | interface IConfigBase {
+32 |   name: string;
+33 |   templatesDir: string;
+34 |   codeConfigFile: string;
+35 |   logLevel: LogLevelString;
+36 |   verbose: boolean;
+37 | }
+38 | 
+39 | export interface IConfig extends IConfigBase {
+40 |   jobs?: IJobConfig[];
+41 | }
 42 | 
+43 | export type ConfigOptions = Partial<IConfig>;
+44 | 
+45 | export interface ILoadConfigResult<T extends object> {
+46 |   config: Partial<IConfig>;
+47 |   jobConfig: Partial<IJobConfig>[];
+48 |   input: T;
+49 | }
+50 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3848,7 +3892,7 @@ codewrangler
 20 |     rootDir: z.string(),
 21 |     excludePatterns: z.array(z.string()),
 22 |     maxFileSize: z.number().positive(),
-23 |     maxDepth: z.number(),
+23 |     maxDepth: z.number().min(0),
 24 |     ignoreHiddenFiles: z.boolean(),
 25 |     additionalIgnoreFiles: z.array(z.string()),
 26 |     followSymlinks: z.boolean()
@@ -3859,7 +3903,7 @@ codewrangler
 31 | 
 32 | export const configSchema = z
 33 |   .object({
-34 |     projectName: z.string(),
+34 |     name: z.string(),
 35 |     templatesDir: z.string(),
 36 |     codeConfigFile: z
 37 |       .string()
@@ -3881,33 +3925,34 @@ codewrangler
 
 ## File: CLIConfigSource.ts
 - Path: `/root/git/codewrangler/src/utils/config/sources/CLIConfigSource.ts`
-- Size: 480.00 B
+- Size: 552.00 B
 - Extension: .ts
-- Lines of code: 16
+- Lines of code: 17
 - Content:
 
 ```ts
  1 | import { z } from "zod";
  2 | 
  3 | import { IConfigurationSource } from "./interfaces/IConfigurationSource";
- 4 | 
- 5 | export abstract class CLIConfigSource<T extends object>
- 6 |   implements IConfigurationSource<T>
- 7 | {
- 8 |   public readonly priority = 2;
- 9 |   public readonly schema: z.ZodSchema<T>;
-10 | 
-11 |   public constructor(
-12 |     protected readonly args: string[],
-13 |     protected readonly options: Partial<T>,
-14 |     schema: z.ZodSchema<T>
-15 |   ) {
-16 |     this.schema = schema;
-17 |   }
-18 | 
-19 |   public abstract load(): Promise<T>;
-20 | }
-21 | 
+ 4 | import { ILoadConfigResult } from "../schema/types";
+ 5 | 
+ 6 | export abstract class CLIConfigSource<T extends object>
+ 7 |   implements IConfigurationSource<T>
+ 8 | {
+ 9 |   public readonly priority = 2;
+10 |   public readonly schema: z.ZodSchema<T>;
+11 | 
+12 |   public constructor(
+13 |     protected readonly args: string[],
+14 |     protected readonly options: Partial<T>,
+15 |     schema: z.ZodSchema<T>
+16 |   ) {
+17 |     this.schema = schema;
+18 |   }
+19 | 
+20 |   public abstract load(): Promise<ILoadConfigResult<T>>;
+21 | }
+22 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3915,9 +3960,9 @@ codewrangler
 
 ## File: FileConfigSource.ts
 - Path: `/root/git/codewrangler/src/utils/config/sources/FileConfigSource.ts`
-- Size: 1.15 KB
+- Size: 1.39 KB
 - Extension: .ts
-- Lines of code: 30
+- Lines of code: 40
 - Content:
 
 ```ts
@@ -3928,34 +3973,44 @@ codewrangler
  5 | import { logger } from "../../logger";
  6 | import { IConfig } from "../schema";
  7 | import { DEFAULT_CONFIG } from "../schema/defaults";
- 8 | import { optionalConfigSchema } from "../schema/validation";
- 9 | 
-10 | export class FileConfigSource
-11 |   implements IConfigurationSource<Partial<IConfig>>
-12 | {
-13 |   public readonly priority = 1;
-14 |   public readonly schema: z.ZodSchema<Partial<IConfig>>;
-15 |   public inputFileConfig: object | undefined;
-16 |   private jsonReader: JsonReader;
-17 | 
-18 |   public constructor(private readonly filePath: string) {
-19 |     this.jsonReader = new JsonReader();
-20 |     this.schema = optionalConfigSchema;
-21 |   }
-22 | 
-23 |   public async load(): Promise<Partial<IConfig>> {
-24 |     try {
-25 |       this.inputFileConfig = await this.jsonReader.readJsonSync(this.filePath);
-26 |       return optionalConfigSchema.parse(this.inputFileConfig);
-27 |     } catch (error) {
-28 |       logger.warn(
-29 |         `Failed to load configuration from ${this.filePath}: ${error instanceof Error ? error.message : String(error)}`
-30 |       );
-31 |       return DEFAULT_CONFIG;
-32 |     }
-33 |   }
-34 | }
-35 | 
+ 8 | import { ILoadConfigResult } from "../schema/types";
+ 9 | import { optionalConfigSchema } from "../schema/validation";
+10 | 
+11 | export class FileConfigSource
+12 |   implements IConfigurationSource<Partial<IConfig>>
+13 | {
+14 |   public readonly priority = 1;
+15 |   public readonly schema: z.ZodSchema<Partial<IConfig>>;
+16 |   public inputFileConfig: object | undefined;
+17 |   private jsonReader: JsonReader;
+18 | 
+19 |   public constructor(private readonly filePath: string) {
+20 |     this.jsonReader = new JsonReader();
+21 |     this.schema = optionalConfigSchema;
+22 |   }
+23 | 
+24 |   public async load(): Promise<ILoadConfigResult<Partial<IConfig>>> {
+25 |     try {
+26 |       this.inputFileConfig = await this.jsonReader.readJsonSync(this.filePath);
+27 |       const config = optionalConfigSchema.parse(this.inputFileConfig);
+28 |       return {
+29 |         config,
+30 |         jobConfig: [],
+31 |         input: this.inputFileConfig
+32 |       };
+33 |     } catch (error) {
+34 |       logger.warn(
+35 |         `Failed to load configuration from ${this.filePath}: ${error instanceof Error ? error.message : String(error)}`
+36 |       );
+37 |       return {
+38 |         config: DEFAULT_CONFIG,
+39 |         jobConfig: [],
+40 |         input: {}
+41 |       };
+42 |     }
+43 |   }
+44 | }
+45 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3980,20 +4035,22 @@ codewrangler
 
 ## File: IConfigurationSource.ts
 - Path: `/root/git/codewrangler/src/utils/config/sources/interfaces/IConfigurationSource.ts`
-- Size: 176.00 B
+- Size: 252.00 B
 - Extension: .ts
-- Lines of code: 6
+- Lines of code: 7
 - Content:
 
 ```ts
-1 | import { z } from "zod";
-2 | 
-3 | export interface IConfigurationSource<T extends object> {
-4 |   readonly priority: number;
-5 |   readonly schema: z.ZodSchema<T>;
-6 |   load: () => Promise<T>;
-7 | }
-8 | 
+ 1 | import { z } from "zod";
+ 2 | 
+ 3 | import { ILoadConfigResult } from "../../schema/types";
+ 4 | 
+ 5 | export interface IConfigurationSource<T extends object> {
+ 6 |   readonly priority: number;
+ 7 |   readonly schema: z.ZodSchema<T>;
+ 8 |   load: () => Promise<ILoadConfigResult<T>>;
+ 9 | }
+10 | 
 ```
 
 ---------------------------------------------------------------------------

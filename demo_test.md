@@ -1,7 +1,7 @@
 
 # Code Documentation
-Generated on: 2024-12-09T10:15:35.501Z
-Total files: 16
+Generated on: 2024-12-09T19:09:57.529Z
+Total files: 20
 
 ## Project Structure
 
@@ -59,6 +59,11 @@ codewrangler
         │   ├── __tests__
         │   ├── builders
         │   ├── core
+        │   │   └── __tests__
+        │   │       ├── Config.test.ts
+        │   │       ├── ConfigManager.test.ts
+        │   │       ├── JobConfig.test.ts
+        │   │       └── JobManager.test.ts
         │   ├── schema
         │   └── sources
         │       └── interfaces
@@ -2784,6 +2789,670 @@ codewrangler
 140 |   }
 141 | });
 142 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: Config.test.ts
+- Path: `/root/git/codewrangler/src/utils/config/core/__tests__/Config.test.ts`
+- Size: 4.93 KB
+- Extension: .ts
+- Lines of code: 138
+- Content:
+
+```ts
+  1 | import { z } from "zod";
+  2 | 
+  3 | import { logger } from "../../../logger";
+  4 | import { DEFAULT_CONFIG, DEFAULT_JOB_CONFIG } from "../../schema/defaults";
+  5 | import { IConfig } from "../../schema/types";
+  6 | import { optionalConfigSchema } from "../../schema/validation";
+  7 | import { IConfigurationSource } from "../../sources/interfaces/IConfigurationSource";
+  8 | import { Config } from "../Config";
+  9 | import { JobConfig } from "../JobConfig";
+ 10 | 
+ 11 | jest.mock("../../../logger", () => ({
+ 12 |   logger: {
+ 13 |     info: jest.fn(),
+ 14 |     error: jest.fn(),
+ 15 |     warn: jest.fn(),
+ 16 |     debug: jest.fn(),
+ 17 |     setConfig: jest.fn()
+ 18 |   }
+ 19 | }));
+ 20 | 
+ 21 | class MockConfigSource implements IConfigurationSource<Partial<IConfig>> {
+ 22 |   public readonly priority = 1;
+ 23 |   public readonly schema = optionalConfigSchema;
+ 24 | 
+ 25 |   public constructor(private mockConfig: Partial<IConfig> = {}) {}
+ 26 | 
+ 27 |   public async load(): Promise<Partial<typeof DEFAULT_CONFIG>> {
+ 28 |     return await Promise.resolve(this.mockConfig);
+ 29 |   }
+ 30 | }
+ 31 | 
+ 32 | describe("Config", () => {
+ 33 |   beforeEach(() => {
+ 34 |     Config.destroy();
+ 35 |     jest.clearAllMocks();
+ 36 |   });
+ 37 | 
+ 38 |   describe("Singleton Pattern", () => {
+ 39 |     it("should create only one instance", async () => {
+ 40 |       const instance1 = await Config.load();
+ 41 |       const instance2 = await Config.load();
+ 42 |       expect(instance1).toBe(instance2);
+ 43 |     });
+ 44 | 
+ 45 |     it("should throw error if getInstance called before initialization", () => {
+ 46 |       Config.destroy();
+ 47 |       expect(() => Config.getInstance()).toThrow(
+ 48 |         "Config must be initialized before use"
+ 49 |       );
+ 50 |     });
+ 51 |   });
+ 52 | 
+ 53 |   describe("Configuration Sources", () => {
+ 54 |     it("should load configuration from sources in priority order", async () => {
+ 55 |       const config = await Config.load();
+ 56 |       const source1 = new MockConfigSource({ name: "Source1" });
+ 57 |       const source2 = new MockConfigSource({ name: "Source2" });
+ 58 | 
+ 59 |       config.addSource(source1);
+ 60 |       config.addSource(source2);
+ 61 | 
+ 62 |       await config.loadSources();
+ 63 |       expect(config.get("name")).toBe("Source2");
+ 64 |     });
+ 65 | 
+ 66 |     it("should handle source loading errors gracefully", async () => {
+ 67 |       const config = await Config.load();
+ 68 |       const failingSource = new MockConfigSource();
+ 69 |       jest
+ 70 |         .spyOn(failingSource, "load")
+ 71 |         .mockRejectedValue(new Error("Load failed"));
+ 72 | 
+ 73 |       config.addSource(failingSource);
+ 74 |       await config.loadSources();
+ 75 | 
+ 76 |       expect(logger.error).toHaveBeenCalled();
+ 77 |     });
+ 78 |   });
+ 79 | 
+ 80 |   describe("Default Job", () => {
+ 81 |     it("should initialize with default job config", async () => {
+ 82 |       const config = await Config.load();
+ 83 |       expect(config.defaultJob).toBeInstanceOf(JobConfig);
+ 84 |       expect(config.defaultJob.getAll()).toEqual({
+ 85 |         ...DEFAULT_JOB_CONFIG,
+ 86 |         name: expect.any(String)
+ 87 |       });
+ 88 |     });
+ 89 |   });
+ 90 | 
+ 91 |   describe("Configuration Override", () => {
+ 92 |     it("should allow overriding configuration values", async () => {
+ 93 |       const config = await Config.load();
+ 94 |       const override = { name: "Overridden" };
+ 95 | 
+ 96 |       config.override(override);
+ 97 |       expect(config.get("name")).toBe("Overridden");
+ 98 |     });
+ 99 | 
+100 |     it("should validate overridden values", async () => {
+101 |       const config = await Config.load();
+102 |       const invalidOverride = { name: 123 }; // Invalid type
+103 | 
+104 |       expect(() =>
+105 |         config.override(
+106 |           invalidOverride as unknown as Partial<typeof DEFAULT_CONFIG>
+107 |         )
+108 |       ).toThrow();
+109 |     });
+110 |   });
+111 |   describe("Configuration Validation", () => {
+112 |     it("should validate configuration on load", async () => {
+113 |       const config = await Config.load();
+114 |       const invalidSource = new MockConfigSource({
+115 |         name: 123 as unknown as string
+116 |       });
+117 | 
+118 |       config.addSource(invalidSource);
+119 |       await expect(config.loadSources()).rejects.toThrow();
+120 |     });
+121 |   });
+122 |   describe("Logger Integration", () => {
+123 |     it("should initialize logger with config instance", async () => {
+124 |       await Config.load();
+125 |       expect(logger.setConfig).toHaveBeenCalled();
+126 |     });
+127 |   });
+128 | 
+129 |   describe("Configuration Loading", () => {
+130 |     it("should properly initialize default configuration", async () => {
+131 |       const config = await Config.load();
+132 |       expect(config.get("name")).toBeDefined();
+133 |       expect(config.defaultJob).toBeDefined();
+134 |     });
+135 | 
+136 |     it("should handle validation errors during source loading", async () => {
+137 |       const config = await Config.load();
+138 |       const invalidSource = new MockConfigSource({
+139 |         invalidField: "test"
+140 |       } as unknown as Partial<IConfig>);
+141 | 
+142 |       config.addSource(invalidSource);
+143 |       await expect(config.loadSources()).rejects.toThrow();
+144 |     });
+145 |   });
+146 | 
+147 |   describe("Source Navigation", () => {
+148 |     it("should handle errors during source navigation", async () => {
+149 |       const config = await Config.load();
+150 |       const errorSource = {
+151 |         priority: 1,
+152 |         schema: z.object({}),
+153 |         load: jest.fn().mockRejectedValue(new Error("Navigation error"))
+154 |       };
+155 | 
+156 |       config.addSource(errorSource);
+157 |       await config.loadSources();
+158 |       expect(logger.error).toHaveBeenCalledWith(
+159 |         expect.stringContaining("Failed to navigate configuration source")
+160 |       );
+161 |     });
+162 |   });
+163 | });
+164 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: ConfigManager.test.ts
+- Path: `/root/git/codewrangler/src/utils/config/core/__tests__/ConfigManager.test.ts`
+- Size: 4.50 KB
+- Extension: .ts
+- Lines of code: 141
+- Content:
+
+```ts
+  1 | import { z } from "zod";
+  2 | 
+  3 | import { logger } from "../../../logger";
+  4 | import { Config } from "../Config";
+  5 | import { ConfigManager } from "../ConfigManager";
+  6 | import { JobManager } from "../JobManager";
+  7 | 
+  8 | jest.mock("../../../logger", () => ({
+  9 |   logger: {
+ 10 |     error: jest.fn(),
+ 11 |     warn: jest.fn()
+ 12 |   }
+ 13 | }));
+ 14 | 
+ 15 | interface ITestConfig {
+ 16 |   name: string;
+ 17 |   value: number;
+ 18 |   flag: boolean;
+ 19 | }
+ 20 | 
+ 21 | const testSchema = z.object({
+ 22 |   name: z.string(),
+ 23 |   value: z.number(),
+ 24 |   flag: z.boolean()
+ 25 | });
+ 26 | 
+ 27 | class TestConfigManager extends ConfigManager<ITestConfig> {
+ 28 |   protected validate(config: ITestConfig): ITestConfig {
+ 29 |     return testSchema.parse(config);
+ 30 |   }
+ 31 | 
+ 32 |   protected handleConfigError(error: unknown): void {
+ 33 |     if (error instanceof z.ZodError) {
+ 34 |       const details = error.errors
+ 35 |         .map(err => `${err.path.join(".")}: ${err.message}`)
+ 36 |         .join(", ");
+ 37 |       logger.error(`Configuration validation failed: ${details}`);
+ 38 |       throw new Error("Configuration validation failed");
+ 39 |     }
+ 40 |     throw error;
+ 41 |   }
+ 42 | }
+ 43 | 
+ 44 | describe("ConfigManager", () => {
+ 45 |   let configManager: TestConfigManager;
+ 46 |   const defaultConfig: ITestConfig = {
+ 47 |     name: "test",
+ 48 |     value: 42,
+ 49 |     flag: true
+ 50 |   };
+ 51 | 
+ 52 |   beforeEach(() => {
+ 53 |     jest.clearAllMocks();
+ 54 |     configManager = new TestConfigManager(defaultConfig);
+ 55 |   });
+ 56 | 
+ 57 |   describe("constructor", () => {
+ 58 |     it("should initialize with provided default config", () => {
+ 59 |       expect(configManager.getAll()).toEqual(defaultConfig);
+ 60 |     });
+ 61 | 
+ 62 |     it("should validate default config on initialization", () => {
+ 63 |       const invalidConfig = {
+ 64 |         name: 123,
+ 65 |         value: "invalid",
+ 66 |         flag: "not-boolean"
+ 67 |       };
+ 68 | 
+ 69 |       expect(
+ 70 |         () => new TestConfigManager(invalidConfig as unknown as ITestConfig)
+ 71 |       ).toThrow();
+ 72 |     });
+ 73 |   });
+ 74 | 
+ 75 |   describe("get", () => {
+ 76 |     it("should return correct values for all config keys", () => {
+ 77 |       expect(configManager.get("name")).toBe("test");
+ 78 |       expect(configManager.get("value")).toBe(42);
+ 79 |       expect(configManager.get("flag")).toBe(true);
+ 80 |     });
+ 81 | 
+ 82 |     it("should return undefined for non-existent keys", () => {
+ 83 |       expect(
+ 84 |         configManager.get("nonexistent" as keyof ITestConfig)
+ 85 |       ).toBeUndefined();
+ 86 |     });
+ 87 |   });
+ 88 | 
+ 89 |   describe("set", () => {
+ 90 |     it("should update valid config values", () => {
+ 91 |       configManager.set("name", "updated");
+ 92 |       expect(configManager.get("name")).toBe("updated");
+ 93 |     });
+ 94 | 
+ 95 |     it("should maintain other values when updating single key", () => {
+ 96 |       const originalConfig = configManager.getAll();
+ 97 |       configManager.set("name", "updated");
+ 98 | 
+ 99 |       expect(configManager.getAll()).toEqual({
+100 |         ...originalConfig,
+101 |         name: "updated"
+102 |       });
+103 |     });
+104 | 
+105 |     it("should ignore undefined values", () => {
+106 |       configManager.set("name", undefined as unknown as string);
+107 |       expect(configManager.get("name")).toBe("test");
+108 |     });
+109 | 
+110 |     it("should validate new values", () => {
+111 |       expect(() =>
+112 |         configManager.set("value", "invalid" as unknown as number)
+113 |       ).toThrow();
+114 |       expect(configManager.get("value")).toBe(42);
+115 |     });
+116 | 
+117 |     it("should call handleConfigError for validation failures", () => {
+118 |       expect(() =>
+119 |         configManager.set("flag", "invalid" as unknown as boolean)
+120 |       ).toThrow("Configuration validation failed");
+121 |       expect(logger.error).toHaveBeenCalled();
+122 |     });
+123 |   });
+124 | 
+125 |   describe("getAll", () => {
+126 |     it("should return complete config object", () => {
+127 |       expect(configManager.getAll()).toEqual(defaultConfig);
+128 |     });
+129 | 
+130 |     it("should return updated config after changes", () => {
+131 |       configManager.set("name", "updated");
+132 |       configManager.set("value", 100);
+133 | 
+134 |       expect(configManager.getAll()).toEqual({
+135 |         ...defaultConfig,
+136 |         name: "updated",
+137 |         value: 100
+138 |       });
+139 |     });
+140 | 
+141 |     it("should return a copy of the config object", () => {
+142 |       const config = configManager.getAll();
+143 |       config.name = "modified";
+144 | 
+145 |       expect(configManager.get("name")).toBe("test");
+146 |     });
+147 |   });
+148 | 
+149 |   describe("Job Execution", () => {
+150 |     const mockConfig = {
+151 |       name: "test"
+152 |     };
+153 | 
+154 |     it("should handle errors during job execution callback", async () => {
+155 |       const jobManager = new JobManager(mockConfig as unknown as Config);
+156 |       const mockCallback = jest
+157 |         .fn()
+158 |         .mockRejectedValue(new Error("Execution error"));
+159 | 
+160 |       jobManager.registerJob({ name: "test-job" });
+161 |       const results = await jobManager.executeJobs(mockCallback);
+162 | 
+163 |       expect(results).toContain(undefined);
+164 |       expect(logger.error).toHaveBeenCalledWith(
+165 |         expect.stringContaining("Error in job test-job")
+166 |       );
+167 |     });
+168 |   });
+169 | });
+170 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: JobConfig.test.ts
+- Path: `/root/git/codewrangler/src/utils/config/core/__tests__/JobConfig.test.ts`
+- Size: 4.22 KB
+- Extension: .ts
+- Lines of code: 130
+- Content:
+
+```ts
+  1 | import { z } from "zod";
+  2 | 
+  3 | import { logger } from "../../../logger";
+  4 | import { DEFAULT_JOB_CONFIG } from "../../schema";
+  5 | import { IJobConfig } from "../../schema/types";
+  6 | import { Config } from "../Config";
+  7 | import { JobConfig } from "../JobConfig";
+  8 | 
+  9 | jest.mock("../../../logger", () => ({
+ 10 |   logger: {
+ 11 |     error: jest.fn(),
+ 12 |     warn: jest.fn()
+ 13 |   }
+ 14 | }));
+ 15 | 
+ 16 | describe("JobConfig", () => {
+ 17 |   let jobConfig: JobConfig;
+ 18 |   let mockGlobalConfig: jest.Mocked<Config>;
+ 19 | 
+ 20 |   beforeEach(() => {
+ 21 |     mockGlobalConfig = {
+ 22 |       get: jest.fn(),
+ 23 |       set: jest.fn(),
+ 24 |       defaultJob: {} as JobConfig
+ 25 |     } as unknown as jest.Mocked<Config>;
+ 26 | 
+ 27 |     jobConfig = new JobConfig(
+ 28 |       { ...DEFAULT_JOB_CONFIG, name: "test" },
+ 29 |       mockGlobalConfig
+ 30 |     );
+ 31 |     jest.clearAllMocks();
+ 32 |   });
+ 33 | 
+ 34 |   describe("constructor", () => {
+ 35 |     it("should initialize with default job config", () => {
+ 36 |       expect(jobConfig.getAll()).toEqual({
+ 37 |         ...DEFAULT_JOB_CONFIG,
+ 38 |         name: "test"
+ 39 |       });
+ 40 |     });
+ 41 | 
+ 42 |     it("should maintain reference to global config", () => {
+ 43 |       expect(jobConfig.global).toBe(mockGlobalConfig);
+ 44 |     });
+ 45 | 
+ 46 |     it("should validate initial config", () => {
+ 47 |       const invalidConfig = {
+ 48 |         ...DEFAULT_JOB_CONFIG,
+ 49 |         pattern: 123 // Invalid type
+ 50 |       };
+ 51 | 
+ 52 |       expect(
+ 53 |         () =>
+ 54 |           new JobConfig(
+ 55 |             invalidConfig as unknown as IJobConfig,
+ 56 |             mockGlobalConfig
+ 57 |           )
+ 58 |       ).toThrow();
+ 59 |     });
+ 60 |   });
+ 61 | 
+ 62 |   describe("get", () => {
+ 63 |     it("should return correct values for all job config keys", () => {
+ 64 |       expect(jobConfig.get("name")).toBe("test");
+ 65 |       expect(jobConfig.get("pattern")).toBe(DEFAULT_JOB_CONFIG.pattern);
+ 66 |       expect(jobConfig.get("outputFormat")).toEqual(
+ 67 |         DEFAULT_JOB_CONFIG.outputFormat
+ 68 |       );
+ 69 |     });
+ 70 | 
+ 71 |     it("should return undefined for non-existent keys", () => {
+ 72 |       expect(jobConfig.get("nonexistent" as keyof IJobConfig)).toBeUndefined();
+ 73 |     });
+ 74 |   });
+ 75 | 
+ 76 |   describe("set", () => {
+ 77 |     it("should update valid job config values", () => {
+ 78 |       const newPattern = "**/*.test.ts";
+ 79 |       jobConfig.set("pattern", newPattern);
+ 80 |       expect(jobConfig.get("pattern")).toBe(newPattern);
+ 81 |     });
+ 82 | 
+ 83 |     it("should validate pattern format", () => {
+ 84 |       expect(() =>
+ 85 |         jobConfig.set("pattern", 123 as unknown as string)
+ 86 |       ).toThrow();
+ 87 |       expect(logger.error).toHaveBeenCalled();
+ 88 |     });
+ 89 | 
+ 90 |     it("should validate output format", () => {
+ 91 |       expect(() =>
+ 92 |         jobConfig.set("outputFormat", ["invalid"] as unknown as string[])
+ 93 |       ).toThrow();
+ 94 |     });
+ 95 | 
+ 96 |     it("should handle array properties correctly", () => {
+ 97 |       const newExcludePatterns = ["*.test.ts", "*.spec.ts"];
+ 98 |       jobConfig.set("excludePatterns", newExcludePatterns);
+ 99 |       expect(jobConfig.get("excludePatterns")).toEqual(newExcludePatterns);
+100 |     });
+101 |   });
+102 | 
+103 |   describe("validation", () => {
+104 |     it("should validate numeric constraints", () => {
+105 |       expect(() => jobConfig.set("maxFileSize", -1)).toThrow();
+106 |       expect(() => jobConfig.set("maxDepth", -1)).toThrow();
+107 |     });
+108 | 
+109 |     it("should use default name if not provided", () => {
+110 |       const jobConfig = new JobConfig(
+111 |         { ...DEFAULT_JOB_CONFIG },
+112 |         mockGlobalConfig
+113 |       );
+114 |       expect(jobConfig.get("name")).toContain("config-code-wrangler-");
+115 |     });
+116 | 
+117 |     it("should handle validation errors gracefully", () => {
+118 |       const invalidUpdate = { maxFileSize: "invalid" };
+119 |       expect(() =>
+120 |         jobConfig.set("maxFileSize", invalidUpdate as unknown as number)
+121 |       ).toThrow("Configuration validation failed");
+122 |       expect(logger.error).toHaveBeenCalled();
+123 |     });
+124 |   });
+125 | 
+126 |   describe("error handling", () => {
+127 |     it("should handle ZodError properly", () => {
+128 |       const zodError = new z.ZodError([
+129 |         {
+130 |           code: "invalid_type",
+131 |           expected: "string",
+132 |           received: "number",
+133 |           path: ["pattern"],
+134 |           message: "Expected string, received number"
+135 |         }
+136 |       ]);
+137 | 
+138 |       expect(() => jobConfig["handleConfigError"](zodError)).toThrow(
+139 |         "Configuration validation failed"
+140 |       );
+141 |       expect(logger.error).toHaveBeenCalled();
+142 |     });
+143 | 
+144 |     it("should rethrow non-Zod errors", () => {
+145 |       const genericError = new Error("Generic error");
+146 |       expect(() => jobConfig["handleConfigError"](genericError)).toThrow(
+147 |         genericError
+148 |       );
+149 |     });
+150 |   });
+151 | });
+152 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: JobManager.test.ts
+- Path: `/root/git/codewrangler/src/utils/config/core/__tests__/JobManager.test.ts`
+- Size: 3.55 KB
+- Extension: .ts
+- Lines of code: 103
+- Content:
+
+```ts
+  1 | import { logger } from "../../../logger";
+  2 | import { DEFAULT_JOB_CONFIG } from "../../schema";
+  3 | import { IJobConfig, JobConfigOptions } from "../../schema/types";
+  4 | import { Config } from "../Config";
+  5 | import { JobManager } from "../JobManager";
+  6 | 
+  7 | jest.mock("../../../logger", () => ({
+  8 |   logger: {
+  9 |     info: jest.fn(),
+ 10 |     error: jest.fn(),
+ 11 |     warn: jest.fn(),
+ 12 |     debug: jest.fn(),
+ 13 |     setConfig: jest.fn()
+ 14 |   }
+ 15 | }));
+ 16 | 
+ 17 | describe("JobManager", () => {
+ 18 |   let jobManager: JobManager;
+ 19 |   let mockConfig: jest.Mocked<Config>;
+ 20 | 
+ 21 |   beforeEach(() => {
+ 22 |     mockConfig = {
+ 23 |       get: jest.fn(),
+ 24 |       set: jest.fn(),
+ 25 |       getAll: jest.fn(),
+ 26 |       override: jest.fn(),
+ 27 |       loadSources: jest.fn()
+ 28 |     } as unknown as jest.Mocked<Config>;
+ 29 | 
+ 30 |     jobManager = new JobManager(mockConfig);
+ 31 |   });
+ 32 | 
+ 33 |   describe("Job Registration", () => {
+ 34 |     it("should register a new job with default values", () => {
+ 35 |       const jobConfig = {
+ 36 |         name: "test-job"
+ 37 |       } as JobConfigOptions;
+ 38 | 
+ 39 |       jobManager.registerJob(jobConfig);
+ 40 |       const jobs = jobManager.getJobs();
+ 41 |       expect(jobs).toHaveLength(1);
+ 42 |       expect(jobs[0]?.get("name")).toBe("test-job");
+ 43 |     });
+ 44 | 
+ 45 |     it("should merge job config with defaults", () => {
+ 46 |       const jobConfig: Partial<IJobConfig> = {
+ 47 |         name: "test-job",
+ 48 |         description: "Custom description"
+ 49 |       };
+ 50 | 
+ 51 |       jobManager.registerJob(jobConfig as JobConfigOptions);
+ 52 |       const job = jobManager.getJobs()[0];
+ 53 | 
+ 54 |       expect(job?.getAll()).toEqual({
+ 55 |         ...DEFAULT_JOB_CONFIG,
+ 56 |         ...jobConfig
+ 57 |       });
+ 58 |     });
+ 59 |   });
+ 60 | 
+ 61 |   describe("Job Merging", () => {
+ 62 |     it("should merge new jobs with existing ones", () => {
+ 63 |       const existingJob = {
+ 64 |         name: "existing-job",
+ 65 |         description: "Original description"
+ 66 |       };
+ 67 | 
+ 68 |       const newJobConfig = {
+ 69 |         name: "existing-job",
+ 70 |         description: "Updated description"
+ 71 |       } as JobConfigOptions;
+ 72 | 
+ 73 |       jobManager.registerJob(existingJob);
+ 74 |       jobManager.mergeJobs([newJobConfig]);
+ 75 | 
+ 76 |       const jobs = jobManager.getJobs();
+ 77 |       expect(jobs).toHaveLength(1);
+ 78 |       expect(jobs[0]?.get("description")).toBe("Updated description");
+ 79 |     });
+ 80 | 
+ 81 |     it("should add new jobs when merging", () => {
+ 82 |       const newJobs = [
+ 83 |         { name: "job-1", description: "First job" },
+ 84 |         { name: "job-2", description: "Second job" }
+ 85 |       ];
+ 86 | 
+ 87 |       jobManager.mergeJobs(newJobs as JobConfigOptions[]);
+ 88 |       expect(jobManager.getJobs()).toHaveLength(2);
+ 89 |     });
+ 90 |   });
+ 91 | 
+ 92 |   describe("Job Execution", () => {
+ 93 |     it("should execute callback for all jobs", async () => {
+ 94 |       const mockCallback = jest.fn();
+ 95 |       jobManager.registerJob({ name: "job-1" });
+ 96 |       jobManager.registerJob({ name: "job-2" });
+ 97 | 
+ 98 |       await jobManager.executeJobs(mockCallback);
+ 99 |       expect(mockCallback).toHaveBeenCalledTimes(2);
+100 |     });
+101 | 
+102 |     it("should handle job execution errors", async () => {
+103 |       const mockCallback = jest.fn().mockRejectedValue(new Error("Job failed"));
+104 |       jobManager.registerJob({ name: "failing-job" });
+105 | 
+106 |       await jobManager.executeJobs(mockCallback);
+107 |       expect(logger.error).toHaveBeenCalled();
+108 |     });
+109 | 
+110 |     it("should continue execution after job failure", async () => {
+111 |       const mockCallback = jest
+112 |         .fn()
+113 |         .mockResolvedValueOnce("success")
+114 |         .mockRejectedValueOnce(new Error("Job failed"))
+115 |         .mockResolvedValueOnce("success");
+116 | 
+117 |       jobManager.registerJob({ name: "job-1" });
+118 |       jobManager.registerJob({ name: "job-2" });
+119 |       jobManager.registerJob({ name: "job-3" });
+120 | 
+121 |       const results = await jobManager.executeJobs(mockCallback);
+122 |       expect(results).toEqual(["success", undefined, "success"]);
+123 |     });
+124 |   });
+125 | });
+126 | 
 ```
 
 ---------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { IConfigurationSource } from "./interfaces/IConfigurationSource";
+import { ILoadConfigResult } from "../schema/types";
 
 export abstract class CLIConfigSource<T extends object>
   implements IConfigurationSource<T>
@@ -16,5 +17,5 @@ export abstract class CLIConfigSource<T extends object>
     this.schema = schema;
   }
 
-  public abstract load(): Promise<T>;
+  public abstract load(): Promise<ILoadConfigResult<T>>;
 }

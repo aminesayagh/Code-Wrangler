@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 import { logger } from "../../../logger";
+import { Config } from "../Config";
 import { ConfigManager } from "../ConfigManager";
+import { JobManager } from "../JobManager";
 
 jest.mock("../../../logger", () => ({
   logger: {
@@ -141,6 +143,27 @@ describe("ConfigManager", () => {
       config.name = "modified";
 
       expect(configManager.get("name")).toBe("test");
+    });
+  });
+
+  describe("Job Execution", () => {
+    const mockConfig = {
+      name: "test"
+    };
+
+    it("should handle errors during job execution callback", async () => {
+      const jobManager = new JobManager(mockConfig as unknown as Config);
+      const mockCallback = jest
+        .fn()
+        .mockRejectedValue(new Error("Execution error"));
+
+      jobManager.registerJob({ name: "test-job" });
+      const results = await jobManager.executeJobs(mockCallback);
+
+      expect(results).toContain(undefined);
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining("Error in job test-job")
+      );
     });
   });
 });
