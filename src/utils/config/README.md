@@ -75,39 +75,47 @@ classDiagram
     class Config {
         -ConfigOptions config
         -JobManager jobManager
-        -ConfigObserver[] observers
-        +initialize() Promise~Config~
-        +getInstance() Config
+        +static initialize() Promise~Config~
+        +static getInstance() Config
         +get(key) T
         +set(key, value) void
         +override(config) void
+        +addSource(source) void
+        +loadSources() Promise~void~
     }
 
-    class ConfigBuilder {
-        -Config config
-        +create() ConfigBuilder
-        +withDefaultConfig() this
-        +withFileConfig(path) this
-        +withCliConfig(options) this
-        +build() Config
+    class ConfigManager~T~ {
+        <<abstract>>
+        #config T
+        +get(key) T[key]
+        +set(key, value) void
+        +getAll() T
+        #validate(config) T
+        #handleConfigError(error) void
+    }
+
+    class JobConfig {
+        -IJobConfig config
+        +Config global
+        +get(key) T
+        +set(key, value) void
+        +getAll() IJobConfig
     }
 
     class JobManager {
-        -Map~string, IJobConfig~ jobs
+        -Map~string, JobConfig~ jobs
+        -Config global
         +registerJob(config) void
         +mergeJobs(jobs) void
-        +getJob(name) IJobConfig
-        +getAllJobs() IJobConfig[]
+        +getJobs() JobConfig[]
+        +executeJobs(callback) Promise~T[]~
     }
 
     class IConfigurationSource {
         <<interface>>
         +priority number
-        +load() Promise~ConfigOptions~
-    }
-
-    class DefaultConfigSource {
-        +load() Promise~ConfigOptions~
+        +schema z.ZodSchema~T~
+        +load() Promise~T~
     }
 
     class FileConfigSource {
@@ -115,14 +123,19 @@ classDiagram
         +load() Promise~ConfigOptions~
     }
 
-    class CLIConfigSource {
-        -ParsedArgs args
-        +load() Promise~ConfigOptions~
+    class CLIConfigSource~T~ {
+        #args string[]
+        #options T
+        #schema z.ZodSchema~T~
+        +load() Promise~T~
     }
 
+    JobConfig --|> ConfigManager
+    Config --|> ConfigManager
     Config *-- JobManager
-    ConfigBuilder --> Config
-    DefaultConfigSource ..|> IConfigurationSource
+    JobManager o-- JobConfig
+    JobConfig --> Config
+    Config o-- IConfigurationSource
     FileConfigSource ..|> IConfigurationSource
     CLIConfigSource ..|> IConfigurationSource
 ```
