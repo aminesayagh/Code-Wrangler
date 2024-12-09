@@ -21,6 +21,7 @@ export class ConfigBuilder {
   }
 
   public withFileConfig(filePath: string): ConfigBuilder {
+    console.log("withFileConfig", filePath);
     this.config.addSource(new FileConfigSource(filePath));
     return this;
   }
@@ -42,5 +43,9 @@ export class ConfigBuilder {
       logger.error("Failed to load configuration sources", error);
     });
     return this.config;
+  }
+
+  public reset(): void {
+    this.config.reset();
   }
 }
