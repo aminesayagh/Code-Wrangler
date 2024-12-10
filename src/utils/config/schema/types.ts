@@ -1,5 +1,6 @@
 import { LogLevelString } from "../../logger/Logger";
 
+
 export const OUTPUT_FORMATS = {
   markdown: "md",
   html: "html"
@@ -15,7 +16,7 @@ export interface IJobConfig {
   name: string;
   description: string;
   pattern: string;
-  outputFile: string;
+  outputFile?: string;
   rootDir: string;
   excludePatterns: string[];
   maxFileSize: number;
@@ -38,6 +39,10 @@ interface IConfigBase {
 
 export interface IConfig extends IConfigBase {
   jobs?: IJobConfig[];
+}
+
+export interface IConfigDeepPartial extends Omit<Partial<IConfig>, "jobs"> {
+  jobs?: Partial<IJobConfig>[];
 }
 
 export type ConfigOptions = Partial<IConfig>;

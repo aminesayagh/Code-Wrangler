@@ -9,7 +9,8 @@ import {
   DEFAULT_CONFIG,
   DEFAULT_JOB_CONFIG,
   IConfig,
-  configSchema
+  configSchema,
+  configSchemaFields
 } from "../schema";
 import { IConfigurationSource } from "../sources/interfaces/IConfigurationSource";
 
@@ -89,7 +90,7 @@ export class Config extends ConfigManager<IConfig> {
    * @param config - The new configuration values.
    */
   public override(config: Partial<ConfigOptions>): void {
-    const newOverrideConfig = { ...this.config, ...config };
+    const newOverrideConfig = Config.merge(config) as IConfig;
     try {
       this.validate(newOverrideConfig);
       this.config = newOverrideConfig;
@@ -127,7 +128,10 @@ export class Config extends ConfigManager<IConfig> {
     config: Partial<T>,
     defaultConfig: Omit<T, "name"> = DEFAULT_CONFIG as Omit<T, "name">
   ): T {
-    return super.merge(config, defaultConfig) as T;
+    return ConfigManager.keepConfigFields<IConfig>(
+      super.merge(config, defaultConfig),
+      configSchemaFields
+    ) as T;
   }
   /**
    * Validates the configuration.
@@ -170,7 +174,7 @@ export class Config extends ConfigManager<IConfig> {
         await callback(source);
       } catch (error) {
         logger.error(
-          `Failed to navigate configuration source: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to navigate configuration source on general config: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     }

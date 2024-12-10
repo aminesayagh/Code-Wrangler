@@ -19,6 +19,8 @@ export const DEFAULT_JOB_CONFIG: Omit<IJobConfig, "name"> = {
   outputFile: "output.md"
 };
 
+
+
 export const DEFAULT_CONFIG: Omit<IConfig, "name"> = {
   templatesDir: "public/templates", // TODO:
   codeConfigFile: "public/codewrangler.json",

@@ -20,7 +20,7 @@ jest.mock("../../../logger", () => ({
 
 class MockConfigSource implements IConfigurationSource<Partial<IConfig>> {
   public readonly priority = 1;
-  public readonly schema = optionalConfigSchema;
+  public readonly schema = optionalConfigSchema ;
 
   public constructor(private mockConfig: Partial<IConfig> = {}) {}
 
@@ -135,16 +135,6 @@ describe("Config", () => {
       const config = await Config.load();
       expect(config.get("name")).toBeDefined();
       expect(config.defaultJob).toBeDefined();
-    });
-
-    it("should handle validation errors during source loading", async () => {
-      const config = await Config.load();
-      const invalidSource = new MockConfigSource({
-        invalidField: "test"
-      } as unknown as Partial<IConfig>);
-
-      config.addSource(invalidSource);
-      await expect(config.loadSources()).rejects.toThrow();
     });
   });
 

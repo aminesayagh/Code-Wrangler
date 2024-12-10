@@ -1,6 +1,6 @@
 
 # Code Documentation
-Generated on: 2024-12-10T10:53:53.691Z
+Generated on: 2024-12-10T12:26:11.757Z
 Total files: 61
 
 ## Project Structure
@@ -3345,7 +3345,7 @@ codewrangler
 
 ## File: Config.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/Config.ts`
-- Size: 4.74 KB
+- Size: 4.78 KB
 - Extension: .ts
 - Lines of code: 163
 - Content:
@@ -3378,8 +3378,8 @@ codewrangler
  25 |   /**
  26 |    * Constructor for the Config class.
  27 |    */
- 28 |   private constructor() {
- 29 |     super(DEFAULT_CONFIG);
+ 28 |   private constructor(name: string = "default") {
+ 29 |     super({ ...DEFAULT_CONFIG, name });
  30 |     this.validate(this.config);
  31 |     this.jobManager = new JobManager(this);
  32 |   }
@@ -3537,20 +3537,20 @@ codewrangler
 
 ## File: ConfigManager.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/ConfigManager.ts`
-- Size: 1.58 KB
+- Size: 1.54 KB
 - Extension: .ts
 - Lines of code: 54
 - Content:
 
 ```ts
- 1 | import { TConfigExtended, TDefaultConfig } from "../schema/types";
+ 1 | import { TConfigExtended } from "../schema/types";
  2 | 
  3 | export abstract class ConfigManager<T extends TConfigExtended> {
  4 |   private static random: number = 0;
  5 |   protected config: T;
  6 | 
- 7 |   public constructor(defaultConfig: TDefaultConfig<T>) {
- 8 |     this.config = ConfigManager.merge<T>({}, defaultConfig);
+ 7 |   public constructor(initConfig: T) {
+ 8 |     this.config = ConfigManager.merge<T>(initConfig);
  9 |     this.validate(this.config);
 10 |   }
 11 | 
@@ -3614,9 +3614,9 @@ codewrangler
 
 ## File: JobConfig.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/JobConfig.ts`
-- Size: 1.11 KB
+- Size: 1.13 KB
 - Extension: .ts
-- Lines of code: 37
+- Lines of code: 38
 - Content:
 
 ```ts
@@ -3637,32 +3637,33 @@ codewrangler
 15 |     jobConfig: JobConfigOptions,
 16 |     public global: Config
 17 |   ) {
-18 |     super({ ...DEFAULT_JOB_CONFIG, ...jobConfig });
-19 |   }
-20 | 
-21 |   public static override merge<T = IJobConfig>(
-22 |     config: Partial<T>,
-23 |     defaultConfig: Omit<T, "name"> = DEFAULT_JOB_CONFIG as Omit<T, "name">
-24 |   ): T {
-25 |     return super.merge(config, defaultConfig) as T;
-26 |   }
-27 | 
-28 |   protected validate(config: IJobConfig): IJobConfig {
-29 |     return jobConfigSchema.parse(config);
-30 |   }
-31 | 
-32 |   protected handleConfigError(error: unknown): void {
-33 |     if (error instanceof z.ZodError) {
-34 |       const details = error.errors
-35 |         .map(err => `${err.path.join(".")}: ${err.message}`)
-36 |         .join(", ");
-37 |       logger.error(`Configuration validation failed: ${details}`);
-38 |       throw new Error("Configuration validation failed");
-39 |     }
-40 |     throw error;
-41 |   }
-42 | }
-43 | 
+18 |     const mergedConfig = JobConfig.merge(jobConfig);
+19 |     super(mergedConfig);
+20 |   }
+21 | 
+22 |   public static override merge<T = IJobConfig>(
+23 |     config: Partial<T>,
+24 |     defaultConfig: Omit<T, "name"> = DEFAULT_JOB_CONFIG as Omit<T, "name">
+25 |   ): T {
+26 |     return super.merge(config, defaultConfig) as T;
+27 |   }
+28 | 
+29 |   protected validate(config: IJobConfig): IJobConfig {
+30 |     return jobConfigSchema.parse(config);
+31 |   }
+32 | 
+33 |   protected handleConfigError(error: unknown): void {
+34 |     if (error instanceof z.ZodError) {
+35 |       const details = error.errors
+36 |         .map(err => `${err.path.join(".")}: ${err.message}`)
+37 |         .join(", ");
+38 |       logger.error(`Configuration validation failed: ${details}`);
+39 |       throw new Error("Configuration validation failed");
+40 |     }
+41 |     throw error;
+42 |   }
+43 | }
+44 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3670,117 +3671,105 @@ codewrangler
 
 ## File: JobManager.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/JobManager.ts`
-- Size: 2.73 KB
+- Size: 2.40 KB
 - Extension: .ts
-- Lines of code: 94
+- Lines of code: 83
 - Content:
 
 ```ts
-  1 | import { logger } from "../../logger";
-  2 | import { DEFAULT_JOB_CONFIG, IJobConfig, JobConfigOptions } from "../schema";
-  3 | import { Config } from "./Config";
-  4 | import { ConfigManager } from "./ConfigManager";
-  5 | import { JobConfig } from "./JobConfig";
-  6 | 
-  7 | export interface IJobManager {
-  8 |   registerJob: (jobConfig: IJobConfig) => void;
-  9 |   mergeJobs: (newJobs: IJobConfig[]) => void;
- 10 |   getJobs: () => JobConfig[];
- 11 | }
- 12 | 
- 13 | export class JobManager implements IJobManager {
- 14 |   private jobs: Map<string, JobConfig> = new Map();
- 15 |   private global: Config;
- 16 | 
- 17 |   /**
- 18 |    * Initializes a new JobManager instance.
- 19 |    * @param config - The main configuration.
- 20 |    */
- 21 |   public constructor(global: Config) {
- 22 |     this.global = global;
- 23 |   }
- 24 | 
- 25 |   /**
- 26 |    * Registers a new job.
- 27 |    * @param jobConfig - The job config to register.
- 28 |    */
- 29 |   public registerJob(jobConfig: JobConfigOptions): void {
- 30 |     const mergedConfig = this.mergeWithDefaults(jobConfig);
- 31 |     this.jobs.set(mergedConfig.name, new JobConfig(mergedConfig, this.global));
- 32 |   }
- 33 | 
- 34 |   /**
- 35 |    * Merges new jobs with existing jobs.
- 36 |    * @param newJobs - The new jobs to merge.
- 37 |    */
- 38 |   public mergeJobs(newJobs: JobConfigOptions[]): void {
- 39 |     for (const job of newJobs) {
- 40 |       const existing = job?.name ? this.jobs.get(job.name) : undefined;
- 41 |       if (existing && typeof job.name === "string") {
- 42 |         this.jobs.set(
- 43 |           job.name,
- 44 |           new JobConfig({ ...existing.getAll(), ...job }, this.global)
- 45 |         );
- 46 |       } else {
- 47 |         if (typeof job.name === "string") {
- 48 |           this.jobs.set(job.name, new JobConfig(job, this.global));
- 49 |         } else {
- 50 |           this.jobs.set(
- 51 |             ConfigManager.generateName(job),
- 52 |             new JobConfig(job, this.global)
- 53 |           );
- 54 |         }
- 55 |       }
- 56 |     }
- 57 |   }
- 58 | 
- 59 |   /**
- 60 |    * Returns all registered jobs.
- 61 |    * @returns An array of JobConfig instances.
- 62 |    */
- 63 |   public getJobs(): JobConfig[] {
- 64 |     return Array.from(this.jobs.values());
- 65 |   }
- 66 | 
- 67 |   /**
- 68 |    * Resets the job manager.
- 69 |    */
- 70 |   public reset(): void {
- 71 |     this.jobs.clear();
- 72 |   }
- 73 | 
- 74 |   public async executeJobs<T>(
- 75 |     callback: (job: JobConfig) => Promise<T>
- 76 |   ): Promise<(T | undefined)[]> {
- 77 |     return await Promise.all(
- 78 |       this.getJobs().map(async job => {
- 79 |         try {
- 80 |           return await callback(job);
- 81 |         } catch (error) {
- 82 |           this.handleError(error, job);
- 83 |           return undefined;
- 84 |         }
- 85 |       })
- 86 |     );
- 87 |   }
- 88 | 
- 89 |   /**
- 90 |    * Merges the job config with the default job config.
- 91 |    * @param jobConfig - The job config to merge.
- 92 |    * @returns The merged job config.
- 93 |    */
- 94 |   private mergeWithDefaults(jobConfig: JobConfigOptions): IJobConfig {
- 95 |     return {
- 96 |       ...DEFAULT_JOB_CONFIG,
- 97 |       ...jobConfig
- 98 |     } as IJobConfig;
- 99 |   }
-100 | 
-101 |   private handleError(error: unknown, job: JobConfig): void {
-102 |     logger.error(`Error in job ${job.get("name")}: ${error}`);
-103 |   }
-104 | }
-105 | 
+ 1 | import { logger } from "../../logger";
+ 2 | import { IJobConfig, JobConfigOptions } from "../schema";
+ 3 | import { Config } from "./Config";
+ 4 | import { ConfigManager } from "./ConfigManager";
+ 5 | import { JobConfig } from "./JobConfig";
+ 6 | 
+ 7 | export interface IJobManager {
+ 8 |   registerJob: (jobConfig: IJobConfig) => void;
+ 9 |   mergeJobs: (newJobs: IJobConfig[]) => void;
+10 |   getJobs: () => JobConfig[];
+11 | }
+12 | 
+13 | export class JobManager implements IJobManager {
+14 |   private jobs: Map<string, JobConfig> = new Map();
+15 |   private global: Config;
+16 | 
+17 |   /**
+18 |    * Initializes a new JobManager instance.
+19 |    * @param config - The main configuration.
+20 |    */
+21 |   public constructor(global: Config) {
+22 |     this.global = global;
+23 |   }
+24 | 
+25 |   /**
+26 |    * Registers a new job.
+27 |    * @param jobConfig - The job config to register.
+28 |    */
+29 |   public registerJob(jobConfig: JobConfigOptions): void {
+30 |     const mergedConfig = JobConfig.merge(jobConfig);
+31 |     this.jobs.set(mergedConfig.name, new JobConfig(mergedConfig, this.global));
+32 |   }
+33 | 
+34 |   /**
+35 |    * Merges new jobs with existing jobs.
+36 |    * @param newJobs - The new jobs to merge.
+37 |    */
+38 |   public mergeJobs(newJobs: JobConfigOptions[]): void {
+39 |     for (const job of newJobs) {
+40 |       const existing = job?.name ? this.jobs.get(job.name) : undefined;
+41 |       if (existing && typeof job.name === "string") {
+42 |         this.jobs.set(
+43 |           job.name,
+44 |           new JobConfig({ ...existing.getAll(), ...job }, this.global)
+45 |         );
+46 |       } else {
+47 |         if (typeof job.name === "string") {
+48 |           this.jobs.set(job.name, new JobConfig(job, this.global));
+49 |         } else {
+50 |           this.jobs.set(
+51 |             ConfigManager.generateName(job),
+52 |             new JobConfig(job, this.global)
+53 |           );
+54 |         }
+55 |       }
+56 |     }
+57 |   }
+58 | 
+59 |   /**
+60 |    * Returns all registered jobs.
+61 |    * @returns An array of JobConfig instances.
+62 |    */
+63 |   public getJobs(): JobConfig[] {
+64 |     return Array.from(this.jobs.values());
+65 |   }
+66 | 
+67 |   /**
+68 |    * Resets the job manager.
+69 |    */
+70 |   public reset(): void {
+71 |     this.jobs.clear();
+72 |   }
+73 | 
+74 |   public async executeJobs<T>(
+75 |     callback: (job: JobConfig) => Promise<T>
+76 |   ): Promise<(T | undefined)[]> {
+77 |     return await Promise.all(
+78 |       this.getJobs().map(async job => {
+79 |         try {
+80 |           return await callback(job);
+81 |         } catch (error) {
+82 |           this.handleError(error, job);
+83 |           return undefined;
+84 |         }
+85 |       })
+86 |     );
+87 |   }
+88 | 
+89 |   private handleError(error: unknown, job: JobConfig): void {
+90 |     logger.error(`Error in job ${job.get("name")}: ${error}`);
+91 |   }
+92 | }
+93 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3823,9 +3812,9 @@ codewrangler
 
 ## File: defaults.ts
 - Path: `/root/git/codewrangler/src/utils/config/schema/defaults.ts`
-- Size: 760.00 B
+- Size: 820.00 B
 - Extension: .ts
-- Lines of code: 23
+- Lines of code: 24
 - Content:
 
 ```ts
@@ -3834,28 +3823,30 @@ codewrangler
  3 | 
  4 | export const DEFAULT_OUTPUT_FORMAT: OutputFormat[] = ["markdown"];
  5 | 
- 6 | export const DEFAULT_JOB_CONFIG: Omit<IJobConfig, "name"> = {
- 7 |   description: "Default job",
- 8 |   rootDir: process.cwd(),
- 9 |   outputFormat: ["markdown"] as OutputFormat[],
-10 |   excludePatterns: [],
-11 |   maxFileSize: 1048576,
-12 |   maxDepth: 100,
-13 |   ignoreHiddenFiles: true,
-14 |   additionalIgnoreFiles: [],
-15 |   followSymlinks: false,
-16 |   pattern: "**/*",
-17 |   outputFile: "output.md"
-18 | };
-19 | 
-20 | export const DEFAULT_CONFIG: Omit<IConfig, "name"> = {
-21 |   templatesDir: "public/templates", // TODO:
-22 |   codeConfigFile: "public/codewrangler.json",
-23 |   logLevel: "INFO" as LogLevelString,
-24 |   verbose: false,
-25 |   jobs: []
-26 | };
-27 | 
+ 6 | export const DEFAULT_NAME_PREFIX = "config-code-wrangler";
+ 7 | 
+ 8 | export const DEFAULT_JOB_CONFIG: Omit<IJobConfig, "name"> = {
+ 9 |   description: "Default job",
+10 |   rootDir: process.cwd(),
+11 |   outputFormat: ["markdown"] as OutputFormat[],
+12 |   excludePatterns: [],
+13 |   maxFileSize: 1048576,
+14 |   maxDepth: 100,
+15 |   ignoreHiddenFiles: true,
+16 |   additionalIgnoreFiles: [],
+17 |   followSymlinks: false,
+18 |   pattern: "**/*",
+19 |   outputFile: "output.md"
+20 | };
+21 | 
+22 | export const DEFAULT_CONFIG: Omit<IConfig, "name"> = {
+23 |   templatesDir: "public/templates", // TODO:
+24 |   codeConfigFile: "public/codewrangler.json",
+25 |   logLevel: "INFO" as LogLevelString,
+26 |   verbose: false,
+27 |   jobs: []
+28 | };
+29 | 
 ```
 
 ---------------------------------------------------------------------------

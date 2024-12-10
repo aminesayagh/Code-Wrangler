@@ -10,10 +10,10 @@ export const documentConfigSchema = z
     rootDir: z.string().default("."),
     outputFile: z.string().optional(),
     excludePatterns: z.string().optional(),
-    ignoreHidden: z.string().default("true"),
-    additionalIgnore: z.string().optional(),
-    followSymlinks: z.string().default("true"),
-    verbose: z.string().default("false")
+    ignoreHidden: z.boolean().default(true),
+    additionalIgnore: z.array(z.string()).optional(),
+    followSymlinks: z.boolean().default(true),
+    verbose: z.boolean().default(false)
   })
   .strict();
 

@@ -7,7 +7,8 @@ import {
   DEFAULT_JOB_CONFIG,
   IJobConfig,
   JobConfigOptions,
-  jobConfigSchema
+  jobConfigSchema,
+  jobConfigSchemaFields
 } from "../schema";
 
 export class JobConfig extends ConfigManager<IJobConfig> {
@@ -23,7 +24,10 @@ export class JobConfig extends ConfigManager<IJobConfig> {
     config: Partial<T>,
     defaultConfig: Omit<T, "name"> = DEFAULT_JOB_CONFIG as Omit<T, "name">
   ): T {
-    return super.merge(config, defaultConfig) as T;
+    return ConfigManager.keepConfigFields<IJobConfig>(
+      super.merge(config, defaultConfig),
+      jobConfigSchemaFields
+    ) as T;
   }
 
   protected validate(config: IJobConfig): IJobConfig {

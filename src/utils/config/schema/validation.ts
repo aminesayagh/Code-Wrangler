@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { DEFAULT_CONFIG, DEFAULT_JOB_CONFIG } from "./defaults";
 import { LOG_VALUES, LogLevelString } from "../../logger/Logger";
 
 export const outputFormatSchema = z.enum(["markdown", "html"] as const);
@@ -15,24 +16,40 @@ export const jobConfigSchema = z
     name: z.string(),
     description: z.string(),
     pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
-    outputFile: z.string(),
-    outputFormat: z.array(outputFormatSchema),
-    rootDir: z.string(),
-    excludePatterns: z.array(z.string()),
-    maxFileSize: z.number().positive(),
-    maxDepth: z.number().min(0),
-    ignoreHiddenFiles: z.boolean(),
-    additionalIgnoreFiles: z.array(z.string()),
-    followSymlinks: z.boolean()
+    outputFile: z.string().optional(),
+    outputFormat: z
+      .array(outputFormatSchema)
+      .default(DEFAULT_JOB_CONFIG.outputFormat),
+    rootDir: z.string().default(DEFAULT_JOB_CONFIG.rootDir),
+    excludePatterns: z
+      .array(z.string())
+      .default(DEFAULT_JOB_CONFIG.excludePatterns),
+    maxFileSize: z.number().positive().default(DEFAULT_JOB_CONFIG.maxFileSize),
+    maxDepth: z.number().min(0).default(DEFAULT_JOB_CONFIG.maxDepth),
+    ignoreHiddenFiles: z
+      .boolean()
+      .default(DEFAULT_JOB_CONFIG.ignoreHiddenFiles),
+    additionalIgnoreFiles: z
+      .array(z.string())
+      .default(DEFAULT_JOB_CONFIG.additionalIgnoreFiles),
+    followSymlinks: z.boolean().default(DEFAULT_JOB_CONFIG.followSymlinks)
   })
   .strict();
+
+
+
+export const jobConfigSchemaPartial = jobConfigSchema.partial();
+
+export const jobConfigSchemaFields = Object.keys(
+  jobConfigSchema.shape
+) as (keyof typeof jobConfigSchema.shape)[];
 
 export const optionalJobConfigSchema = jobConfigSchema.partial();
 
 export const configSchema = z
   .object({
     name: z.string(),
-    templatesDir: z.string(),
+    templatesDir: z.string().default(DEFAULT_CONFIG.templatesDir),
     codeConfigFile: z
       .string()
       .regex(/\.json$/, "Config file must end with .json"),
@@ -41,6 +58,13 @@ export const configSchema = z
     jobs: z.array(jobConfigSchema)
   })
   .strict();
+
+export type IConfig = z.infer<typeof configSchema>;
+
+// list of all the fields in the configSchema
+export const configSchemaFields = Object.keys(
+  configSchema.shape
+) as (keyof typeof configSchema.shape)[];
 
 // Propose me a new zod parser based on the configSchema, but with all the fields optional.
 

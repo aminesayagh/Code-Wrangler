@@ -39,6 +39,7 @@ export class ProgramBuilder {
         "Directory to search",
         this.config.defaultJob.get("rootDir")
       )
+      .option("-n, --name <name>", "Job name")
       .option(
         "-c, --config <config>",
         "Config file",

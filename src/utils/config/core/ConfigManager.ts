@@ -39,6 +39,16 @@ export abstract class ConfigManager<T extends TConfigExtended> {
     return `config-code-wrangler-${ConfigManager.random}`;
   }
 
+  public static keepConfigFields<K>(
+    config: Partial<K>,
+    fields: (keyof K)[]
+  ): Partial<K> {
+    return fields.reduce((acc, field) => {
+      acc[field] = config[field];
+      return acc;
+    }, {} as Partial<K>);
+  }
+
   public static merge<T extends TConfigExtended>(
     config: Partial<T>,
     defaultConfig?: Omit<T, "name">

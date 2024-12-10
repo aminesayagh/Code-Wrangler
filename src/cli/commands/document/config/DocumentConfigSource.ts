@@ -32,6 +32,11 @@ export class DocumentConfigSource extends CLIConfigSource<
     const rawConfig = this.parseArgs(); // parse to a raw config of key value pairs
     const validConfig = this.validate(rawConfig); // validate the raw config
     const transformedConfig = this.transform(validConfig); // transform the valid config to the final config
+    console.log(
+      "transformedConfig",
+      Config.merge<IConfig>(transformedConfig),
+      JobConfig.merge<IJobConfig>(transformedConfig),
+    );
     return await Promise.resolve({
       config: Config.merge<IConfig>(transformedConfig),
       jobConfig: [JobConfig.merge<IJobConfig>(transformedConfig)],
@@ -54,13 +59,11 @@ export class DocumentConfigSource extends CLIConfigSource<
       excludePatterns: config.excludePatterns
         ? config.excludePatterns.split(",")
         : undefined,
-      additionalIgnore: config.additionalIgnore
-        ? config.additionalIgnore.split(",")
-        : undefined,
+      additionalIgnore: config.additionalIgnore,
       rootDir: documentFactory.resolve(config.rootDir),
-      ignoreHidden: config.ignoreHidden === "true" ? true : false,
-      followSymlinks: config.followSymlinks === "true" ? true : false,
-      verbose: config.verbose === "true" ? true : false,
+      ignoreHidden: config.ignoreHidden,
+      followSymlinks: config.followSymlinks,
+      verbose: config.verbose,
       outputFile: config.outputFile
         ? this.normalizeOutputFile(config.outputFile)
         : undefined

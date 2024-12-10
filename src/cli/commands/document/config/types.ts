@@ -15,8 +15,6 @@ export interface IDocumentCommandOptions
   verbose?: string;
 }
 
-
-
 export interface IDocumentCommandConfig extends ICommandOptions {
   name?: string;
   pattern: string;
