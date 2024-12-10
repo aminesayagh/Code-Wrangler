@@ -81,7 +81,7 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
     } as BaseTemplate & Record<string, string>;
 
     if (rootDirectory.type === "directory") {
-      templateConfig["TOTAL_FILES"] = rootDirectory.deepLength;
+      templateConfig["TOTAL_FILES"] = rootDirectory.length;
       templateConfig["TOTAL_DIRECTORIES"] = rootDirectory.deepLength;
     }
 
