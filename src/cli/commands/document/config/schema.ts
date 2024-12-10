@@ -6,10 +6,10 @@ export const documentConfigSchema = z
   .object({
     name: z.string().optional(),
     pattern: z.string().default("**/*"),
-    outputFormat: outputFormatSchema.default("markdown"),
+    outputFormat: z.array(outputFormatSchema),
     rootDir: z.string().default("."),
     outputFile: z.string().optional(),
-    excludePatterns: z.string().optional(),
+    excludePatterns: z.array(z.string()).optional(),
     ignoreHidden: z.boolean().default(true),
     additionalIgnore: z.array(z.string()).optional(),
     followSymlinks: z.boolean().default(true),

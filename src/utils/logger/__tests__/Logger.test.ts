@@ -2,7 +2,7 @@
 import colors from "colors";
 
 import { Config } from "../../config";
-import { LOG_LEVEL, LOG_VALUES, Logger } from "../Logger";
+import { LOG_LEVEL, LOG_VALUES, LogLevelString, Logger } from "../Logger";
 
 jest.mock("../../config");
 jest.spyOn(console, "log").mockImplementation(() => {});
@@ -54,7 +54,7 @@ describe("Logger", () => {
 
     it("should return ERROR level when config returns undefined", () => {
       logger.setConfig(mockConfig);
-      mockConfig.get.mockReturnValue(undefined);
+      mockConfig.get.mockReturnValue(undefined as unknown as LogLevelString);
       expect(logger["logLevel"]).toBe(LOG_LEVEL.ERROR);
     });
 

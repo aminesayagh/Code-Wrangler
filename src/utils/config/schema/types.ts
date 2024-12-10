@@ -1,6 +1,5 @@
 import { LogLevelString } from "../../logger/Logger";
 
-
 export const OUTPUT_FORMATS = {
   markdown: "md",
   html: "html"
@@ -29,20 +28,12 @@ export interface IJobConfig {
 
 export type JobConfigOptions = Partial<IJobConfig> & { name?: string };
 
-interface IConfigBase {
+export interface IConfig {
   name: string;
   templatesDir: string;
   codeConfigFile: string;
   logLevel: LogLevelString;
   verbose: boolean;
-}
-
-export interface IConfig extends IConfigBase {
-  jobs?: IJobConfig[];
-}
-
-export interface IConfigDeepPartial extends Omit<Partial<IConfig>, "jobs"> {
-  jobs?: Partial<IJobConfig>[];
 }
 
 export type ConfigOptions = Partial<IConfig>;

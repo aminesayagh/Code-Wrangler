@@ -30,12 +30,13 @@ export class DocumentConfigSource extends CLIConfigSource<
 
   public async load(): Promise<ILoadConfigResult<IDocumentCommandConfig>> {
     const rawConfig = this.parseArgs(); // parse to a raw config of key value pairs
+    console.log(rawConfig);
     const validConfig = this.validate(rawConfig); // validate the raw config
     const transformedConfig = this.transform(validConfig); // transform the valid config to the final config
     console.log(
       "transformedConfig",
       Config.merge<IConfig>(transformedConfig),
-      JobConfig.merge<IJobConfig>(transformedConfig),
+      JobConfig.merge<IJobConfig>(transformedConfig)
     );
     return await Promise.resolve({
       config: Config.merge<IConfig>(transformedConfig),
@@ -54,11 +55,9 @@ export class DocumentConfigSource extends CLIConfigSource<
   private transform(config: IDocumentConfig): IDocumentCommandConfig {
     return {
       ...config,
-      outputFormat: [config.outputFormat],
+      outputFormat: config.outputFormat,
       pattern: normalizePattern(config.pattern),
-      excludePatterns: config.excludePatterns
-        ? config.excludePatterns.split(",")
-        : undefined,
+      excludePatterns: config.excludePatterns,
       additionalIgnore: config.additionalIgnore,
       rootDir: documentFactory.resolve(config.rootDir),
       ignoreHidden: config.ignoreHidden,
@@ -78,10 +77,10 @@ export class DocumentConfigSource extends CLIConfigSource<
     return {
       pattern: this.args[0],
       verbose: this.options.verbose,
-      outputFormat: this.options.outputFormat,
-      rootDir: this.options.rootDir,
-      outputFile: this.options.outputFile,
-      excludePatterns: this.options.excludePatterns,
+      outputFormat: this.options.format,
+      rootDir: this.options.dir,
+      outputFile: this.options.output,
+      excludePatterns: this.options.exclude,
       ignoreHidden: this.options.ignoreHidden,
       additionalIgnore: this.options.additionalIgnore
     };

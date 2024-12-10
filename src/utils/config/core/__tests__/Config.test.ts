@@ -20,7 +20,7 @@ jest.mock("../../../logger", () => ({
 
 class MockConfigSource implements IConfigurationSource<Partial<IConfig>> {
   public readonly priority = 1;
-  public readonly schema = optionalConfigSchema ;
+  public readonly schema = optionalConfigSchema as z.ZodType<Partial<IConfig>>;
 
   public constructor(private mockConfig: Partial<IConfig> = {}) {}
 

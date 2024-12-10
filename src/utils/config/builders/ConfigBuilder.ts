@@ -1,3 +1,4 @@
+import { ProgramRecord } from "../../../cli/commands/document/config/types";
 import { logger } from "../../logger";
 import { Config } from "../core";
 import { ConfigOptions } from "../schema";
@@ -26,7 +27,7 @@ export class ConfigBuilder {
   }
 
   public withCLIConfig<
-    I extends Record<string, string | undefined>,
+    I extends ProgramRecord,
     V extends object,
     O extends object
   >(cliConfig: CLIConfigSource<I, V, O>): ConfigBuilder {
