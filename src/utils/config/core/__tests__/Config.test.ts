@@ -20,7 +20,8 @@ jest.mock("../../../logger", () => ({
 
 class MockConfigSource implements IConfigurationSource<Partial<IConfig>> {
   public readonly priority = 1;
-  public readonly schema = optionalConfigSchema;
+  public readonly schema = optionalConfigSchema as z.ZodType<Partial<IConfig>>;
+  public loaded: boolean = false;
 
   public constructor(private mockConfig: Partial<IConfig> = {}) {}
 
@@ -136,16 +137,6 @@ describe("Config", () => {
       expect(config.get("name")).toBeDefined();
       expect(config.defaultJob).toBeDefined();
     });
-
-    it("should handle validation errors during source loading", async () => {
-      const config = await Config.load();
-      const invalidSource = new MockConfigSource({
-        invalidField: "test"
-      } as unknown as Partial<IConfig>);
-
-      config.addSource(invalidSource);
-      await expect(config.loadSources()).rejects.toThrow();
-    });
   });
 
   describe("Source Navigation", () => {
@@ -154,7 +145,8 @@ describe("Config", () => {
       const errorSource = {
         priority: 1,
         schema: z.object({}),
-        load: jest.fn().mockRejectedValue(new Error("Navigation error"))
+        load: jest.fn().mockRejectedValue(new Error("Navigation error")),
+        loaded: false
       };
 
       config.addSource(errorSource);

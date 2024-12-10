@@ -15,10 +15,12 @@ export const jobConfigSchema = z
     name: z.string(),
     description: z.string(),
     pattern: z.string().regex(/^.*$/, "Pattern must be a valid regex"),
-    outputFile: z.string(),
-    outputFormat: z.array(outputFormatSchema),
+    outputFile: z.string().optional(),
+    outputFormat: z
+      .array(outputFormatSchema),
     rootDir: z.string(),
-    excludePatterns: z.array(z.string()),
+    excludePatterns: z
+      .array(z.string()),
     maxFileSize: z.number().positive(),
     maxDepth: z.number().min(0),
     ignoreHiddenFiles: z.boolean(),
@@ -27,20 +29,28 @@ export const jobConfigSchema = z
   })
   .strict();
 
+export const jobConfigSchemaPartial = jobConfigSchema.partial();
+
+export const jobConfigSchemaFields = Object.keys(
+  jobConfigSchema.shape
+) as (keyof typeof jobConfigSchema.shape)[];
+
 export const optionalJobConfigSchema = jobConfigSchema.partial();
 
 export const configSchema = z
   .object({
     name: z.string(),
     templatesDir: z.string(),
-    codeConfigFile: z
-      .string()
-      .regex(/\.json$/, "Config file must end with .json"),
+    codeConfigFile: z.string().regex(/\.json$/, "Config file must end with .json"),
     logLevel: logLevelSchema,
-    verbose: z.boolean(),
-    jobs: z.array(jobConfigSchema)
+    verbose: z.boolean()
   })
   .strict();
+
+// list of all the fields in the configSchema
+export const configSchemaFields = Object.keys(
+  configSchema.shape
+) as (keyof typeof configSchema.shape)[];
 
 // Propose me a new zod parser based on the configSchema, but with all the fields optional.
 

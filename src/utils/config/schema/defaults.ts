@@ -23,6 +23,5 @@ export const DEFAULT_CONFIG: Omit<IConfig, "name"> = {
   templatesDir: "public/templates", // TODO:
   codeConfigFile: "public/codewrangler.json",
   logLevel: "INFO" as LogLevelString,
-  verbose: false,
-  jobs: []
+  verbose: false
 };

@@ -46,7 +46,7 @@ describe("FileConfigSource", () => {
       const result = await fileConfigSource.load();
       expect(result.config?.name).toEqual(mockConfig.name);
       expect(result.config?.templatesDir).toEqual(mockConfig.templatesDir);
-      expect(result.jobConfig).toEqual(undefined);
+      expect(result.jobConfig).toEqual([]);
     });
 
     it("should handle invalid configuration gracefully", async () => {

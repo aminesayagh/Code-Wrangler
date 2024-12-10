@@ -43,6 +43,7 @@ export class DocumentCLIBuilder {
     this.program.action(
       async (pattern: string, options: IDocumentCommandOptions) => {
         const documentConfigSource = new DocumentConfigSource(pattern, options);
+        
         configBuilder.withCLIConfig(documentConfigSource);
         this.config = configBuilder.build();
 

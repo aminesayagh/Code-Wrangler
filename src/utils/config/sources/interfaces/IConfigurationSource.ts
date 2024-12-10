@@ -8,4 +8,5 @@ export interface IConfigurationSource<O extends object, V extends object = O> {
   readonly priority: number;
   readonly schema: z.ZodSchema<V>;
   load: () => Promise<ILoadConfigResult<O>>;
+  loaded: boolean;
 }

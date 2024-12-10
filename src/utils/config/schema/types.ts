@@ -15,7 +15,7 @@ export interface IJobConfig {
   name: string;
   description: string;
   pattern: string;
-  outputFile: string;
+  outputFile?: string;
   rootDir: string;
   excludePatterns: string[];
   maxFileSize: number;
@@ -28,16 +28,12 @@ export interface IJobConfig {
 
 export type JobConfigOptions = Partial<IJobConfig> & { name?: string };
 
-interface IConfigBase {
+export interface IConfig {
   name: string;
   templatesDir: string;
   codeConfigFile: string;
   logLevel: LogLevelString;
   verbose: boolean;
-}
-
-export interface IConfig extends IConfigBase {
-  jobs?: IJobConfig[];
 }
 
 export type ConfigOptions = Partial<IConfig>;

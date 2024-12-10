@@ -1,6 +1,6 @@
 
 # Code Documentation
-Generated on: 2024-12-10T10:53:53.652Z
+Generated on: 2024-12-10T12:26:11.722Z
 Total files: 22
 
 ## Project Structure
@@ -2943,7 +2943,7 @@ codewrangler
 
 ## File: Config.test.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/__tests__/Config.test.ts`
-- Size: 5.03 KB
+- Size: 5.04 KB
 - Extension: .ts
 - Lines of code: 142
 - Content:
@@ -2975,11 +2975,11 @@ codewrangler
  24 | 
  25 |   public constructor(private mockConfig: Partial<IConfig> = {}) {}
  26 | 
- 27 |   public async load(): Promise<ILoadConfigResult<Partial<IConfig>>> {
+ 27 |   public async load(): Promise<ILoadConfigResult<IConfig>> {
  28 |     return await Promise.resolve({
- 29 |       config: this.mockConfig,
+ 29 |       config: this.mockConfig as IConfig,
  30 |       jobConfig: [],
- 31 |       input: this.mockConfig
+ 31 |       input: this.mockConfig as IConfig
  32 |     });
  33 |   }
  34 | }
@@ -3611,15 +3611,15 @@ codewrangler
 
 ## File: FileConfigSource.test.ts
 - Path: `/root/git/codewrangler/src/utils/config/sources/__tests__/FileConfigSource.test.ts`
-- Size: 2.77 KB
+- Size: 2.99 KB
 - Extension: .ts
-- Lines of code: 78
+- Lines of code: 80
 - Content:
 
 ```ts
  1 | import { JsonReader } from "../../../../infrastructure/filesystem/JsonReader";
  2 | import { logger } from "../../../../utils/logger";
- 3 | import { DEFAULT_CONFIG } from "../../schema/defaults";
+ 3 | import { DEFAULT_CONFIG, DEFAULT_NAME_PREFIX } from "../../schema/defaults";
  4 | import { IConfig } from "../../schema/types";
  5 | import { FileConfigSource } from "../../sources/FileConfigSource";
  6 | 
@@ -3663,37 +3663,37 @@ codewrangler
 44 |       );
 45 | 
 46 |       const result = await fileConfigSource.load();
-47 |       expect(result.config).toEqual(mockConfig);
-48 |       expect(result.jobConfig).toEqual([]);
-49 |     });
-50 | 
-51 |     it("should handle invalid configuration gracefully", async () => {
-52 |       const invalidConfig = {
-53 |         name: 123, // Invalid type
-54 |         templatesDir: ["invalid"] // Invalid type
-55 |       };
-56 | 
-57 |       (JsonReader.prototype.readJsonSync as jest.Mock).mockResolvedValue(
-58 |         invalidConfig
-59 |       );
-60 | 
-61 |       const result = await fileConfigSource.load();
-62 |       expect(result.config).toEqual(DEFAULT_CONFIG);
-63 |       expect(logger.warn).toHaveBeenCalled();
-64 |     });
-65 | 
-66 |     it("should handle file read errors", async () => {
-67 |       (JsonReader.prototype.readJsonSync as jest.Mock).mockRejectedValue(
-68 |         new Error("File read error")
-69 |       );
-70 | 
-71 |       const result = await fileConfigSource.load();
-72 |       expect(result.config).toEqual(DEFAULT_CONFIG);
-73 |       expect(logger.warn).toHaveBeenCalledWith(
-74 |         expect.stringContaining("Failed to load configuration from")
-75 |       );
-76 |     });
-77 | 
+47 |       expect(result.config?.name).toEqual(mockConfig.name);
+48 |       expect(result.config?.templatesDir).toEqual(mockConfig.templatesDir);
+49 |       expect(result.jobConfig).toEqual(undefined);
+50 |     });
+51 | 
+52 |     it("should handle invalid configuration gracefully", async () => {
+53 |       const invalidConfig = {
+54 |         name: 123, // Invalid type
+55 |         templatesDir: ["invalid"] // Invalid type
+56 |       };
+57 | 
+58 |       (JsonReader.prototype.readJsonSync as jest.Mock).mockResolvedValue(
+59 |         invalidConfig
+60 |       );
+61 | 
+62 |       const result = await fileConfigSource.load();
+63 |       expect(result.config?.name).toContain(DEFAULT_NAME_PREFIX);
+64 |       expect(logger.warn).toHaveBeenCalled();
+65 |     });
+66 | 
+67 |     it("should handle file read errors", async () => {
+68 |       (JsonReader.prototype.readJsonSync as jest.Mock).mockRejectedValue(
+69 |         new Error("File read error")
+70 |       );
+71 | 
+72 |       const result = await fileConfigSource.load();
+73 |       expect(result.config?.name).toContain(DEFAULT_NAME_PREFIX);
+74 |       expect(logger.warn).toHaveBeenCalledWith(
+75 |         expect.stringContaining("Failed to load configuration from")
+76 |       );
+77 |     });
 78 |   });
 79 | 
 80 |   describe("error handling", () => {
@@ -3707,12 +3707,13 @@ codewrangler
 88 |       );
 89 | 
 90 |       const result = await fileConfigSource.load();
-91 |       expect(result.config).toEqual(DEFAULT_CONFIG);
-92 |       expect(logger.warn).toHaveBeenCalled();
-93 |     });
-94 |   });
-95 | });
-96 | 
+91 |       expect(result.config?.name).toContain(DEFAULT_NAME_PREFIX);
+92 |       expect(result.config?.logLevel).toEqual(DEFAULT_CONFIG.logLevel);
+93 |       expect(logger.warn).toHaveBeenCalled();
+94 |     });
+95 |   });
+96 | });
+97 | 
 ```
 
 ---------------------------------------------------------------------------

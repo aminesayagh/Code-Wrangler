@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { ConfigSource } from "./ConfigSource";
 import { IConfigurationSource } from "./interfaces/IConfigurationSource";
 import { JsonReader } from "../../../infrastructure/filesystem/JsonReader";
 import { logger } from "../../logger";
@@ -7,39 +8,49 @@ import { Config } from "../core/Config";
 import { JobConfig } from "../core/JobConfig";
 import { IConfig } from "../schema";
 import { IJobConfig, ILoadConfigResult } from "../schema/types";
-import { optionalConfigSchema } from "../schema/validation";
+import { jobConfigSchema, optionalConfigSchema } from "../schema/validation";
 
 export class FileConfigSource
-  implements IConfigurationSource<Partial<IConfig>>
+  extends ConfigSource
+  implements IConfigurationSource<Partial<IConfig & { jobs: IJobConfig[] }>>
 {
   public readonly priority = 1;
-  public readonly schema: z.ZodSchema<Partial<IConfig>>;
+  public readonly schema: z.ZodSchema<
+    Partial<IConfig> & { jobs?: IJobConfig[] }
+  >;
   public inputFileConfig: object | undefined;
   private jsonReader: JsonReader;
 
   public constructor(private readonly filePath: string) {
+    super();
     this.jsonReader = new JsonReader();
-    this.schema = optionalConfigSchema;
+    this.schema = optionalConfigSchema.extend({
+      jobs: z.array(jobConfigSchema).default([])
+    });
   }
 
   public async load(): Promise<ILoadConfigResult<Partial<IConfig>>> {
     try {
       this.inputFileConfig = await this.jsonReader.readJsonSync(this.filePath);
-      const config = optionalConfigSchema.parse(this.inputFileConfig);
+      const config = this.schema.parse(this.inputFileConfig);
+      this.isLoaded = true;
       return {
         config: Config.merge<IConfig>(config),
-        jobConfig: config?.jobs?.map(job => JobConfig.merge<IJobConfig>(job)),
+        jobConfig: config.jobs?.map(job => JobConfig.merge<IJobConfig>(job)),
         input: this.inputFileConfig
       };
     } catch (error) {
-      logger.warn(
-        `Failed to load configuration from ${this.filePath}: ${error instanceof Error ? error.message : String(error)}`
-      );
-      return {
-        config: Config.merge<IConfig>({}),
-        jobConfig: [],
-        input: {}
-      };
+      return this.handleError(error);
     }
+  }
+  private handleError(error: unknown): ILoadConfigResult<Partial<IConfig>> {
+    logger.warn(
+      `Failed to load configuration from ${this.filePath}: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return {
+      config: Config.merge<IConfig>({}),
+      jobConfig: [],
+      input: {}
+    };
   }
 }
