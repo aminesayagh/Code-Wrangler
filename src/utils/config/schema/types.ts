@@ -43,7 +43,15 @@ export interface IConfig extends IConfigBase {
 export type ConfigOptions = Partial<IConfig>;
 
 export interface ILoadConfigResult<T extends object> {
-  config: Partial<IConfig>;
-  jobConfig: Partial<IJobConfig>[];
+  config?: IConfig;
+  jobConfig?: IJobConfig[];
   input: T;
 }
+
+// TConfigExtended is a type that extends an whatever object that has a name property
+export type TConfigExtended = object & { name: string };
+// export type TConfigExtended = IConfig | IJobConfig;
+
+export type TDefaultConfig<T extends TConfigExtended> = Omit<T, "name"> & {
+  name?: string;
+};

@@ -2,9 +2,8 @@ import { DocumentOrchestratorBuilder } from "../../../orchestration/DocumentOrch
 import { DocumentTreeBuilder } from "../../../services/builder/DocumentTreeBuilder";
 import { logger } from "../../../utils/logger";
 import { BaseCommand } from "../base";
-import { IDocumentCommandOptions } from "./config/types";
 
-export class DocumentCommand extends BaseCommand<IDocumentCommandOptions> {
+export class DocumentCommand extends BaseCommand {
   protected override async beforeExecution(): Promise<void> {
     this.logVerbose();
     await super.beforeExecution();

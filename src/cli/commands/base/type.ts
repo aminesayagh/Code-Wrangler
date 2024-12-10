@@ -3,6 +3,6 @@ export interface ICommandOptions {
   verbose?: boolean;
 }
 
-export interface ICommand<T extends ICommandOptions = ICommandOptions> {
-  execute: (options: T) => Promise<void>;
+export interface ICommand {
+  execute: () => Promise<void>;
 }

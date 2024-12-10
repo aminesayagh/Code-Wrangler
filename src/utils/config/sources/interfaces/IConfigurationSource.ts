@@ -2,8 +2,10 @@ import { z } from "zod";
 
 import { ILoadConfigResult } from "../../schema/types";
 
-export interface IConfigurationSource<T extends object> {
+// O: Output: The options that will be used to build the config
+// V: Valid: The options that will be used to validate the config
+export interface IConfigurationSource<O extends object, V extends object = O> {
   readonly priority: number;
-  readonly schema: z.ZodSchema<T>;
-  load: () => Promise<ILoadConfigResult<T>>;
+  readonly schema: z.ZodSchema<V>;
+  load: () => Promise<ILoadConfigResult<O>>;
 }

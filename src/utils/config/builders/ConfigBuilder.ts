@@ -25,9 +25,11 @@ export class ConfigBuilder {
     return this;
   }
 
-  public withCLIConfig<I extends object>(
-    cliConfig: CLIConfigSource<I>
-  ): ConfigBuilder {
+  public withCLIConfig<
+    I extends Record<string, string | undefined>,
+    V extends object,
+    O extends object
+  >(cliConfig: CLIConfigSource<I, V, O>): ConfigBuilder {
     this.config.addSource(cliConfig);
     return this;
   }
@@ -42,5 +44,9 @@ export class ConfigBuilder {
       logger.error("Failed to load configuration sources", error);
     });
     return this.config;
+  }
+
+  public reset(): void {
+    this.config.reset();
   }
 }

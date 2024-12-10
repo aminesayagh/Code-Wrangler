@@ -24,11 +24,11 @@ class MockConfigSource implements IConfigurationSource<Partial<IConfig>> {
 
   public constructor(private mockConfig: Partial<IConfig> = {}) {}
 
-  public async load(): Promise<ILoadConfigResult<Partial<IConfig>>> {
+  public async load(): Promise<ILoadConfigResult<IConfig>> {
     return await Promise.resolve({
-      config: this.mockConfig,
+      config: this.mockConfig as IConfig,
       jobConfig: [],
-      input: this.mockConfig
+      input: this.mockConfig as IConfig
     });
   }
 }

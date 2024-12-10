@@ -15,7 +15,15 @@ export class JobConfig extends ConfigManager<IJobConfig> {
     jobConfig: JobConfigOptions,
     public global: Config
   ) {
-    super({ ...DEFAULT_JOB_CONFIG, ...jobConfig });
+    const mergedConfig = JobConfig.merge(jobConfig);
+    super(mergedConfig);
+  }
+
+  public static override merge<T = IJobConfig>(
+    config: Partial<T>,
+    defaultConfig: Omit<T, "name"> = DEFAULT_JOB_CONFIG as Omit<T, "name">
+  ): T {
+    return super.merge(config, defaultConfig) as T;
   }
 
   protected validate(config: IJobConfig): IJobConfig {

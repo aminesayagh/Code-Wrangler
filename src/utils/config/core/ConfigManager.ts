@@ -1,9 +1,11 @@
-export abstract class ConfigManager<T extends { name: string }> {
+import { TConfigExtended } from "../schema/types";
+
+export abstract class ConfigManager<T extends TConfigExtended> {
   private static random: number = 0;
   protected config: T;
 
-  public constructor(defaultConfig: Omit<T, "name"> & { name?: string }) {
-    this.config = { name: this.generateName(), ...defaultConfig } as T;
+  public constructor(initConfig: T) {
+    this.config = ConfigManager.merge<T>(initConfig);
     this.validate(this.config);
   }
 
@@ -29,12 +31,30 @@ export abstract class ConfigManager<T extends { name: string }> {
     return { ...this.config };
   }
 
-  public generateName(): string {
-    if (typeof this.config?.name === "string") {
-      return this.config.name;
+  public static generateName<T extends { name?: string }>(config: T): string {
+    if (typeof config?.name === "string") {
+      return config.name;
     }
     ConfigManager.random++;
     return `config-code-wrangler-${ConfigManager.random}`;
+  }
+
+  public static merge<T extends TConfigExtended>(
+    config: Partial<T>,
+    defaultConfig?: Omit<T, "name">
+  ): T {
+    if (
+      !config ||
+      Object.keys(config).length === 0 ||
+      config.name === undefined
+    ) {
+      return {
+        ...defaultConfig,
+        name: ConfigManager.generateName(config),
+        ...config
+      } as T;
+    }
+    return { ...defaultConfig, ...config } as T;
   }
 
   protected abstract validate(config: T): T;

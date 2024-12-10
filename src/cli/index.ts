@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { ConfigBuilder } from "../utils/config";
 import { DocumentCLIBuilder } from "./program/singleJob/SingleJobProgram";
 

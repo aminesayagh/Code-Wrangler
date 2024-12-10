@@ -1,29 +1,40 @@
 import { z } from "zod";
 
-import { documentConfigSchema } from "./schema";
-import { IDocumentCommandOptions } from "./types";
+import { IDocumentConfig, documentConfigSchema } from "./schema";
+import { IDocumentCommandConfig, IDocumentCommandOptions } from "./types";
 import { documentFactory } from "../../../../infrastructure/filesystem/DocumentFactory";
-import { CLIConfigSource, ILoadConfigResult } from "../../../../utils/config";
+import {
+  CLIConfigSource,
+  Config,
+  IConfig,
+  IJobConfig,
+  ILoadConfigResult,
+  JobConfig
+} from "../../../../utils/config";
 import { normalizePattern } from "../../../../utils/pattern";
 
 type IDocumentCommandInputOptions = Partial<IDocumentCommandOptions>;
 
-export class DocumentConfigSource extends CLIConfigSource<IDocumentCommandOptions> {
+export class DocumentConfigSource extends CLIConfigSource<
+  IDocumentCommandOptions,
+  IDocumentCommandConfig,
+  IDocumentConfig
+> {
   public constructor(args: string, options: IDocumentCommandInputOptions) {
     super(
       [args],
       options,
-      documentConfigSchema as z.ZodSchema<IDocumentCommandOptions>
+      documentConfigSchema as z.ZodSchema<IDocumentConfig>
     );
   }
 
-  public async load(): Promise<ILoadConfigResult<IDocumentCommandOptions>> {
+  public async load(): Promise<ILoadConfigResult<IDocumentCommandConfig>> {
     const rawConfig = this.parseArgs(); // parse to a raw config of key value pairs
     const validConfig = this.validate(rawConfig); // validate the raw config
     const transformedConfig = this.transform(validConfig); // transform the valid config to the final config
     return await Promise.resolve({
-      config: transformedConfig,
-      jobConfig: [],
+      config: Config.merge<IConfig>(transformedConfig),
+      jobConfig: [JobConfig.merge<IJobConfig>(transformedConfig)],
       input: transformedConfig
     });
   }
@@ -31,22 +42,32 @@ export class DocumentConfigSource extends CLIConfigSource<IDocumentCommandOption
   public static create(
     args: string,
     options: IDocumentCommandInputOptions
-  ): Promise<ILoadConfigResult<IDocumentCommandOptions>> {
+  ): Promise<ILoadConfigResult<IDocumentCommandConfig>> {
     return new DocumentConfigSource(args, options).load();
   }
 
-  private transform(config: IDocumentCommandOptions): IDocumentCommandOptions {
+  private transform(config: IDocumentConfig): IDocumentCommandConfig {
     return {
       ...config,
+      outputFormat: [config.outputFormat],
       pattern: normalizePattern(config.pattern),
-      rootDir: documentFactory.resolve(config.rootDir ?? "."),
-      outputFile: this.normalizeOutputFile(config.outputFile ?? "")
+      excludePatterns: config.excludePatterns
+        ? config.excludePatterns.split(",")
+        : undefined,
+      additionalIgnore: config.additionalIgnore
+        ? config.additionalIgnore.split(",")
+        : undefined,
+      rootDir: documentFactory.resolve(config.rootDir),
+      ignoreHidden: config.ignoreHidden === "true" ? true : false,
+      followSymlinks: config.followSymlinks === "true" ? true : false,
+      verbose: config.verbose === "true" ? true : false,
+      outputFile: config.outputFile
+        ? this.normalizeOutputFile(config.outputFile)
+        : undefined
     };
   }
 
-  private validate(
-    config: IDocumentCommandInputOptions
-  ): IDocumentCommandOptions {
+  private validate(config: IDocumentCommandInputOptions): IDocumentConfig {
     return this.schema.parse(config);
   }
 
