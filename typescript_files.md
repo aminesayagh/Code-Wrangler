@@ -2,21 +2,20 @@
 
 ## Overview
 
-This documentation was automatically generated on 2024-12-10T15:16:24.670Z.
+This documentation was automatically generated on 2024-12-10T17:26:01.751Z.
 
 ## Summary
 
-- Total Files: 0
-- Total Directories: 135
-- Total Size: 211015
+- Total Files: 135
+- Total Size: 211626
 
 ## Content of Files
 
 ### Directory: src
 
 - **Path:** /root/git/codewrangler/src
-- **Size:** 211015 bytes
-- **Files:** 0
+- **Size:** 211626 bytes
+- **Files:** 92
 - **Total Files (including subdirectories):** 92
 - **Depth:** 0
 
@@ -26,7 +25,7 @@ This documentation was automatically generated on 2024-12-10T15:16:24.670Z.
 
 - **Path:** /root/git/codewrangler/src/cli
 - **Size:** 11372 bytes
-- **Files:** 1
+- **Files:** 13
 - **Total Files (including subdirectories):** 13
 - **Depth:** 1
 
@@ -36,7 +35,7 @@ This documentation was automatically generated on 2024-12-10T15:16:24.670Z.
 
 - **Path:** /root/git/codewrangler/src/cli/commands
 - **Size:** 7270 bytes
-- **Files:** 0
+- **Files:** 8
 - **Total Files (including subdirectories):** 8
 - **Depth:** 2
 
@@ -132,7 +131,7 @@ export interface ICommand {
 
 - **Path:** /root/git/codewrangler/src/cli/commands/document
 - **Size:** 6090 bytes
-- **Files:** 2
+- **Files:** 5
 - **Total Files (including subdirectories):** 5
 - **Depth:** 3
 
@@ -428,7 +427,7 @@ main().catch(() => {
 
 - **Path:** /root/git/codewrangler/src/cli/program
 - **Size:** 3649 bytes
-- **Files:** 1
+- **Files:** 4
 - **Total Files (including subdirectories):** 4
 - **Depth:** 2
 
@@ -627,8 +626,8 @@ export * from "./ProgramBuilder";
 ### Directory: core
 
 - **Path:** /root/git/codewrangler/src/core
-- **Size:** 23522 bytes
-- **Files:** 0
+- **Size:** 24172 bytes
+- **Files:** 11
 - **Total Files (including subdirectories):** 11
 - **Depth:** 1
 
@@ -637,8 +636,8 @@ export * from "./ProgramBuilder";
 ### Directory: entities
 
 - **Path:** /root/git/codewrangler/src/core/entities
-- **Size:** 16742 bytes
-- **Files:** 3
+- **Size:** 17392 bytes
+- **Files:** 6
 - **Total Files (including subdirectories):** 6
 - **Depth:** 2
 
@@ -783,9 +782,9 @@ export abstract class NodeBase implements INodeLifeCycle {
 
 - **Path:** /root/git/codewrangler/src/core/entities/NodeDirectory.ts
 - **Extension:** ts
-- **Size:** 3129 bytes
+- **Size:** 3779 bytes
 - **Depth:** 3
-- **Lines:** 108
+- **Lines:** 135
 
 ```ts
 import { INodeContent, NodeBase } from "./NodeBase";
@@ -836,6 +835,12 @@ export abstract class NodeDirectory extends NodeBase {
   public set numberOfFiles(numberOfFiles: number) {
     this._propsDirectory.numberOfFiles = numberOfFiles;
   }
+  public get numberOfDirectories(): number {
+    return this._propsDirectory.numberOfDirectories;
+  }
+  public set numberOfDirectories(numberOfDirectories: number) {
+    this._propsDirectory.numberOfDirectories = numberOfDirectories;
+  }
   public override get props(): IPropsDirectoryNode {
     return {
       ...super.props,
@@ -864,21 +869,42 @@ export abstract class NodeDirectory extends NodeBase {
 
   public abstract override render(strategy: IRenderStrategy): INodeContent;
 
+  private countFiles(): number {
+    return this.children.reduce(
+      (acc, child) => acc + (child.type === "file" ? 1 : child.numberOfFiles),
+      0
+    );
+  }
+
+  private countDirectories(): number {
+    return this.children.reduce(
+      (acc, child) => acc + (child.type === "directory" ? 1 : 0),
+      0
+    );
+  }
+
+  private countDeepLength(): number {
+    return this.children.reduce(
+      (acc, child) =>
+        acc + (child.type === "directory" ? child.deepLength + 1 : 1),
+      0
+    );
+  }
+
+  private countSize(): number {
+    return this.children.reduce((acc, child): number => acc + child.size, 0);
+  }
+
   private bundleMetrics(): void {
     // Calculate directory metrics in a single pass
-    const metrics = this.children.reduce(
-      (acc, child) => ({
-        length: acc.length + (child.type === "file" ? 1 : 0),
-        numberOfFiles:
-          acc.numberOfFiles + (child.type === "file" ? 1 : child.numberOfFiles),
-        deepLength:
-          acc.deepLength +
-          (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
-        size: acc.size + child.size
-      }),
-      { length: 0, numberOfFiles: 0, deepLength: 0, size: 0 }
-    );
-
+    const metrics = {
+      length: this.countFiles(),
+      numberOfFiles: this.countFiles(),
+      numberOfDirectories: this.countDirectories(),
+      deepLength: this.countDeepLength(),
+      size: this.countSize()
+    };
+    console.log(this.children);
     Object.assign(this, metrics);
   }
 
@@ -1338,7 +1364,7 @@ describe("NodeFile", () => {
 
 - **Path:** /root/git/codewrangler/src/core/errors
 - **Size:** 6780 bytes
-- **Files:** 4
+- **Files:** 5
 - **Total Files (including subdirectories):** 5
 - **Depth:** 2
 
@@ -1982,7 +2008,7 @@ if (require.main === module) {
 
 - **Path:** /root/git/codewrangler/src/infrastructure
 - **Size:** 50442 bytes
-- **Files:** 0
+- **Files:** 9
 - **Total Files (including subdirectories):** 9
 - **Depth:** 1
 
@@ -1992,7 +2018,7 @@ if (require.main === module) {
 
 - **Path:** /root/git/codewrangler/src/infrastructure/filesystem
 - **Size:** 37088 bytes
-- **Files:** 3
+- **Files:** 6
 - **Total Files (including subdirectories):** 6
 - **Depth:** 2
 
@@ -3260,7 +3286,7 @@ describe("jsonReader", () => {
 
 - **Path:** /root/git/codewrangler/src/infrastructure/templates
 - **Size:** 13354 bytes
-- **Files:** 2
+- **Files:** 3
 - **Total Files (including subdirectories):** 3
 - **Depth:** 2
 
@@ -3762,7 +3788,7 @@ export type DirectoryTemplateString = keyof DirectoryTemplate;
 
 - **Path:** /root/git/codewrangler/src/orchestration
 - **Size:** 5471 bytes
-- **Files:** 3
+- **Files:** 6
 - **Total Files (including subdirectories):** 6
 - **Depth:** 1
 
@@ -4034,8 +4060,8 @@ export * from "./IDocumentOrchestrator";
 ### Directory: public
 
 - **Path:** /root/git/codewrangler/src/public
-- **Size:** 1196 bytes
-- **Files:** 1
+- **Size:** 1153 bytes
+- **Files:** 7
 - **Total Files (including subdirectories):** 7
 - **Depth:** 1
 
@@ -4074,7 +4100,7 @@ export * from "./IDocumentOrchestrator";
 ### Directory: templates
 
 - **Path:** /root/git/codewrangler/src/public/templates
-- **Size:** 782 bytes
+- **Size:** 739 bytes
 - **Files:** 6
 - **Total Files (including subdirectories):** 6
 - **Depth:** 2
@@ -4161,9 +4187,9 @@ export * from "./IDocumentOrchestrator";
 
 - **Path:** /root/git/codewrangler/src/public/templates/page.md
 - **Extension:** md
-- **Size:** 277 bytes
+- **Size:** 234 bytes
 - **Depth:** 3
-- **Lines:** 16
+- **Lines:** 15
 
 ```md
 # Project Documentation: {{PROJECT_NAME}}
@@ -4175,7 +4201,6 @@ This documentation was automatically generated on {{GENERATION_DATE}}.
 ## Summary
 
 - Total Files: {{TOTAL_FILES}}
-- Total Directories: {{TOTAL_DIRECTORIES}}
 - Total Size: {{TOTAL_SIZE}}
 
 ## Content of Files
@@ -4186,8 +4211,8 @@ This documentation was automatically generated on {{GENERATION_DATE}}.
 ### Directory: services
 
 - **Path:** /root/git/codewrangler/src/services
-- **Size:** 50044 bytes
-- **Files:** 0
+- **Size:** 50048 bytes
+- **Files:** 15
 - **Total Files (including subdirectories):** 15
 - **Depth:** 1
 
@@ -4197,7 +4222,7 @@ This documentation was automatically generated on {{GENERATION_DATE}}.
 
 - **Path:** /root/git/codewrangler/src/services/builder
 - **Size:** 24836 bytes
-- **Files:** 3
+- **Files:** 6
 - **Total Files (including subdirectories):** 6
 - **Depth:** 2
 
@@ -5085,8 +5110,8 @@ describe("NodeTreeBuilder", () => {
 ### Directory: renderer
 
 - **Path:** /root/git/codewrangler/src/services/renderer
-- **Size:** 25208 bytes
-- **Files:** 3
+- **Size:** 25212 bytes
+- **Files:** 9
 - **Total Files (including subdirectories):** 9
 - **Depth:** 2
 
@@ -5096,7 +5121,7 @@ describe("NodeTreeBuilder", () => {
 
 - **Path:** /root/git/codewrangler/src/services/renderer/RenderStrategy.ts
 - **Extension:** ts
-- **Size:** 3491 bytes
+- **Size:** 3495 bytes
 - **Depth:** 3
 - **Lines:** 112
 
@@ -5184,7 +5209,7 @@ export abstract class RenderBaseStrategy implements IRenderStrategy {
     } as BaseTemplate & Record<string, string>;
 
     if (rootDirectory.type === "directory") {
-      templateConfig["TOTAL_FILES"] = rootDirectory.length;
+      templateConfig["TOTAL_FILES"] = rootDirectory.deepLength;
       templateConfig["TOTAL_DIRECTORIES"] = rootDirectory.deepLength;
     }
 
@@ -6165,7 +6190,7 @@ export interface IPropsFileNode extends IPropsNode {
 
 - **Path:** /root/git/codewrangler/src/utils
 - **Size:** 59469 bytes
-- **Files:** 1
+- **Files:** 28
 - **Total Files (including subdirectories):** 28
 - **Depth:** 1
 
@@ -6175,7 +6200,7 @@ export interface IPropsFileNode extends IPropsNode {
 
 - **Path:** /root/git/codewrangler/src/utils/config
 - **Size:** 51786 bytes
-- **Files:** 2
+- **Files:** 24
 - **Total Files (including subdirectories):** 24
 - **Depth:** 2
 
@@ -6489,7 +6514,7 @@ For questions or clarification, please refer to our contribution guidelines or o
 
 - **Path:** /root/git/codewrangler/src/utils/config/builders
 - **Size:** 5514 bytes
-- **Files:** 2
+- **Files:** 3
 - **Total Files (including subdirectories):** 3
 - **Depth:** 3
 
@@ -6725,7 +6750,7 @@ export * from "./ConfigBuilder";
 
 - **Path:** /root/git/codewrangler/src/utils/config/core
 - **Size:** 28145 bytes
-- **Files:** 5
+- **Files:** 9
 - **Total Files (including subdirectories):** 9
 - **Depth:** 3
 
@@ -8056,7 +8081,7 @@ export const optionalConfigSchema = configSchema.partial();
 
 - **Path:** /root/git/codewrangler/src/utils/config/sources
 - **Size:** 6481 bytes
-- **Files:** 4
+- **Files:** 6
 - **Total Files (including subdirectories):** 6
 - **Depth:** 3
 
@@ -8358,7 +8383,7 @@ export interface IConfigurationSource<O extends object, V extends object = O> {
 
 - **Path:** /root/git/codewrangler/src/utils/logger
 - **Size:** 7561 bytes
-- **Files:** 2
+- **Files:** 3
 - **Total Files (including subdirectories):** 3
 - **Depth:** 2
 

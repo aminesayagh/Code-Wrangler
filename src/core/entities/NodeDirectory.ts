@@ -46,6 +46,12 @@ export abstract class NodeDirectory extends NodeBase {
   public set numberOfFiles(numberOfFiles: number) {
     this._propsDirectory.numberOfFiles = numberOfFiles;
   }
+  public get numberOfDirectories(): number {
+    return this._propsDirectory.numberOfDirectories;
+  }
+  public set numberOfDirectories(numberOfDirectories: number) {
+    this._propsDirectory.numberOfDirectories = numberOfDirectories;
+  }
   public override get props(): IPropsDirectoryNode {
     return {
       ...super.props,
@@ -74,21 +80,41 @@ export abstract class NodeDirectory extends NodeBase {
 
   public abstract override render(strategy: IRenderStrategy): INodeContent;
 
+  private countFiles(): number {
+    return this.children.reduce(
+      (acc, child) => acc + (child.type === "file" ? 1 : child.numberOfFiles),
+      0
+    );
+  }
+
+  private countDirectories(): number {
+    return this.children.reduce(
+      (acc, child) => acc + (child.type === "directory" ? 1 : 0),
+      0
+    );
+  }
+
+  private countDeepLength(): number {
+    return this.children.reduce(
+      (acc, child) =>
+        acc + (child.type === "directory" ? child.deepLength + 1 : 1),
+      0
+    );
+  }
+
+  private countSize(): number {
+    return this.children.reduce((acc, child): number => acc + child.size, 0);
+  }
+
   private bundleMetrics(): void {
     // Calculate directory metrics in a single pass
-    const metrics = this.children.reduce(
-      (acc, child) => ({
-        length: acc.length + (child.type === "file" ? 1 : 0),
-        numberOfFiles:
-          acc.numberOfFiles + (child.type === "file" ? 1 : child.numberOfFiles),
-        deepLength:
-          acc.deepLength +
-          (child instanceof NodeDirectory ? child.deepLength + 1 : 1),
-        size: acc.size + child.size
-      }),
-      { length: 0, numberOfFiles: 0, deepLength: 0, size: 0 }
-    );
-
+    const metrics = {
+      length: this.countFiles(),
+      numberOfFiles: this.countFiles(),
+      numberOfDirectories: this.countDirectories(),
+      deepLength: this.countDeepLength(),
+      size: this.countSize()
+    };
     Object.assign(this, metrics);
   }
 
