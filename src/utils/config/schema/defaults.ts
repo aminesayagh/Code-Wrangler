@@ -1,6 +1,10 @@
 import { IConfig, IJobConfig, OutputFormat } from "./types";
 import { LogLevelString } from "../../logger/Logger";
 
+export const DEFAULT_OUTPUT_FORMAT: OutputFormat[] = ["markdown"];
+
+export const DEFAULT_NAME_PREFIX = "config-code-wrangler";
+
 export const DEFAULT_JOB_CONFIG: Omit<IJobConfig, "name"> = {
   description: "Default job",
   rootDir: process.cwd(),

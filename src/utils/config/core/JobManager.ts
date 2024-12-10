@@ -1,6 +1,7 @@
 import { logger } from "../../logger";
-import { DEFAULT_JOB_CONFIG, IJobConfig, JobConfigOptions } from "../schema";
+import { IJobConfig, JobConfigOptions } from "../schema";
 import { Config } from "./Config";
+import { ConfigManager } from "./ConfigManager";
 import { JobConfig } from "./JobConfig";
 
 export interface IJobManager {
@@ -26,7 +27,7 @@ export class JobManager implements IJobManager {
    * @param jobConfig - The job config to register.
    */
   public registerJob(jobConfig: JobConfigOptions): void {
-    const mergedConfig = this.mergeWithDefaults(jobConfig);
+    const mergedConfig = JobConfig.merge(jobConfig);
     this.jobs.set(mergedConfig.name, new JobConfig(mergedConfig, this.global));
   }
 
@@ -47,7 +48,7 @@ export class JobManager implements IJobManager {
           this.jobs.set(job.name, new JobConfig(job, this.global));
         } else {
           this.jobs.set(
-            this.global.generateName(),
+            ConfigManager.generateName(job),
             new JobConfig(job, this.global)
           );
         }
@@ -83,18 +84,6 @@ export class JobManager implements IJobManager {
         }
       })
     );
-  }
-
-  /**
-   * Merges the job config with the default job config.
-   * @param jobConfig - The job config to merge.
-   * @returns The merged job config.
-   */
-  private mergeWithDefaults(jobConfig: JobConfigOptions): IJobConfig {
-    return {
-      ...DEFAULT_JOB_CONFIG,
-      ...jobConfig
-    } as IJobConfig;
   }
 
   private handleError(error: unknown, job: JobConfig): void {

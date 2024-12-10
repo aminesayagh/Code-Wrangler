@@ -1,14 +1,10 @@
-import { ICommand, ICommandOptions } from "./type";
+import { ICommand } from "./type";
 import { Config } from "../../../utils/config";
 import { logger } from "../../../utils/logger";
 
-export abstract class BaseCommand<T extends ICommandOptions>
-  implements ICommand<T>
-{
-  public constructor(
-    protected readonly config: Config,
-    protected readonly options: T
-  ) {}
+// T: Has to be the valid and parsed options provided by the CLI
+export abstract class BaseCommand implements ICommand {
+  public constructor(protected readonly config: Config) {}
 
   public async execute(): Promise<void> {
     try {

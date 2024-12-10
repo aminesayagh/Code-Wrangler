@@ -1,16 +1,20 @@
 import { z } from "zod";
 
+import { outputFormatSchema } from "../../../../utils/config";
+
 export const documentConfigSchema = z
   .object({
-    name: z.string().default("document"),
-    pattern: z.string().default("**/*.{js,ts,jsx,tsx}"),
-    outputFormat: z.string().default("json"),
+    name: z.string().optional(),
+    pattern: z.string().default("**/*"),
+    outputFormat: outputFormatSchema.default("markdown"),
     rootDir: z.string().default("."),
     outputFile: z.string().optional(),
-    excludePatterns: z.array(z.string()).optional(),
-    ignoreHidden: z.boolean().default(true),
-    additionalIgnore: z.array(z.string()).optional(),
-    followSymlinks: z.boolean().default(true),
-    verbose: z.boolean().default(false)
+    excludePatterns: z.string().optional(),
+    ignoreHidden: z.string().default("true"),
+    additionalIgnore: z.string().optional(),
+    followSymlinks: z.string().default("true"),
+    verbose: z.string().default("false")
   })
   .strict();
+
+export type IDocumentConfig = z.infer<typeof documentConfigSchema>;

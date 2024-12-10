@@ -1,6 +1,6 @@
 import { JsonReader } from "../../../../infrastructure/filesystem/JsonReader";
 import { logger } from "../../../../utils/logger";
-import { DEFAULT_CONFIG } from "../../schema/defaults";
+import { DEFAULT_CONFIG, DEFAULT_NAME_PREFIX } from "../../schema/defaults";
 import { IConfig } from "../../schema/types";
 import { FileConfigSource } from "../../sources/FileConfigSource";
 
@@ -44,8 +44,9 @@ describe("FileConfigSource", () => {
       );
 
       const result = await fileConfigSource.load();
-      expect(result.config).toEqual(mockConfig);
-      expect(result.jobConfig).toEqual([]);
+      expect(result.config?.name).toEqual(mockConfig.name);
+      expect(result.config?.templatesDir).toEqual(mockConfig.templatesDir);
+      expect(result.jobConfig).toEqual(undefined);
     });
 
     it("should handle invalid configuration gracefully", async () => {
@@ -59,7 +60,7 @@ describe("FileConfigSource", () => {
       );
 
       const result = await fileConfigSource.load();
-      expect(result.config).toEqual(DEFAULT_CONFIG);
+      expect(result.config?.name).toContain(DEFAULT_NAME_PREFIX);
       expect(logger.warn).toHaveBeenCalled();
     });
 
@@ -69,12 +70,11 @@ describe("FileConfigSource", () => {
       );
 
       const result = await fileConfigSource.load();
-      expect(result.config).toEqual(DEFAULT_CONFIG);
+      expect(result.config?.name).toContain(DEFAULT_NAME_PREFIX);
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining("Failed to load configuration from")
       );
     });
-
   });
 
   describe("error handling", () => {
@@ -88,7 +88,8 @@ describe("FileConfigSource", () => {
       );
 
       const result = await fileConfigSource.load();
-      expect(result.config).toEqual(DEFAULT_CONFIG);
+      expect(result.config?.name).toContain(DEFAULT_NAME_PREFIX);
+      expect(result.config?.logLevel).toEqual(DEFAULT_CONFIG.logLevel);
       expect(logger.warn).toHaveBeenCalled();
     });
   });

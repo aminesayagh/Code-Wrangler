@@ -1,7 +1,7 @@
 
 # Code Documentation
-Generated on: 2024-12-09T19:09:57.529Z
-Total files: 20
+Generated on: 2024-12-10T10:53:53.652Z
+Total files: 22
 
 ## Project Structure
 
@@ -58,6 +58,8 @@ codewrangler
         ├── config
         │   ├── __tests__
         │   ├── builders
+        │   │   └── __tests__
+        │   │       └── ConfigBuilder.test.ts
         │   ├── core
         │   │   └── __tests__
         │   │       ├── Config.test.ts
@@ -66,6 +68,8 @@ codewrangler
         │   │       └── JobManager.test.ts
         │   ├── schema
         │   └── sources
+        │       ├── __tests__
+        │       │   └── FileConfigSource.test.ts
         │       └── interfaces
         └── logger
             └── __tests__
@@ -2794,11 +2798,154 @@ codewrangler
 ---------------------------------------------------------------------------
 
 
+## File: ConfigBuilder.test.ts
+- Path: `/root/git/codewrangler/src/utils/config/builders/__tests__/ConfigBuilder.test.ts`
+- Size: 3.93 KB
+- Extension: .ts
+- Lines of code: 106
+- Content:
+
+```ts
+  1 | import { logger } from "../../../logger";
+  2 | import { ConfigBuilder } from "../../builders/ConfigBuilder";
+  3 | import { Config } from "../../core/Config";
+  4 | import { CLIConfigSource } from "../../sources/CLIConfigSource";
+  5 | import { FileConfigSource } from "../../sources/FileConfigSource";
+  6 | 
+  7 | jest.mock("../../../logger", () => ({
+  8 |   logger: {
+  9 |     info: jest.fn(),
+ 10 |     error: jest.fn(),
+ 11 |     warn: jest.fn(),
+ 12 |     debug: jest.fn()
+ 13 |   }
+ 14 | }));
+ 15 | 
+ 16 | jest.mock("../../core/Config");
+ 17 | jest.mock("../../sources/FileConfigSource");
+ 18 | jest.mock("../../sources/CLIConfigSource");
+ 19 | 
+ 20 | describe("ConfigBuilder", () => {
+ 21 |   let mockConfig: jest.Mocked<Config>;
+ 22 |   let builderInstance: ConfigBuilder;
+ 23 | 
+ 24 |   beforeEach(() => {
+ 25 |     jest.clearAllMocks();
+ 26 | 
+ 27 |     // Create mock Config instance with all required methods
+ 28 |     mockConfig = {
+ 29 |       addSource: jest.fn(),
+ 30 |       override: jest.fn(),
+ 31 |       loadSources: jest.fn().mockResolvedValue(undefined)
+ 32 |     } as unknown as jest.Mocked<Config>;
+ 33 | 
+ 34 |     // Mock the Config.load static method to return our mockConfig
+ 35 |     (Config.load as jest.Mock).mockResolvedValue(mockConfig);
+ 36 | 
+ 37 |     // Reset the ConfigBuilder singleton
+ 38 |     // @ts-expect-error - accessing private static member for testing
+ 39 |     ConfigBuilder.instance = undefined;
+ 40 |   });
+ 41 | 
+ 42 |   describe("create", () => {
+ 43 |     it("should create a singleton instance", async () => {
+ 44 |       const instance1 = await ConfigBuilder.create();
+ 45 |       const instance2 = await ConfigBuilder.create();
+ 46 | 
+ 47 |       expect(instance1).toBe(instance2);
+ 48 |       expect(logger.info).toHaveBeenCalledWith("ConfigBuilder created");
+ 49 |       // Store the instance for other tests
+ 50 |       builderInstance = instance1;
+ 51 |     });
+ 52 | 
+ 53 |     it("should handle creation errors", async () => {
+ 54 |       (Config.load as jest.Mock).mockRejectedValue(
+ 55 |         new Error("Config load failed")
+ 56 |       );
+ 57 | 
+ 58 |       await expect(ConfigBuilder.create()).rejects.toThrow(
+ 59 |         "Config load failed"
+ 60 |       );
+ 61 |     });
+ 62 |   });
+ 63 | 
+ 64 |   describe("configuration methods", () => {
+ 65 |     beforeEach(async () => {
+ 66 |       // Ensure we have a fresh builder instance that uses our mockConfig
+ 67 |       builderInstance = await ConfigBuilder.create();
+ 68 |     });
+ 69 | 
+ 70 |     describe("withFileConfig", () => {
+ 71 |       it("should add file configuration source", () => {
+ 72 |         const filePath = "config.json";
+ 73 |         const result = builderInstance.withFileConfig(filePath);
+ 74 | 
+ 75 |         expect(mockConfig.addSource).toHaveBeenCalledWith(
+ 76 |           expect.any(FileConfigSource)
+ 77 |         );
+ 78 |         expect(result).toBe(builderInstance);
+ 79 |       });
+ 80 |     });
+ 81 | 
+ 82 |     describe("withCLIConfig", () => {
+ 83 |       it("should add CLI configuration source", () => {
+ 84 |         const mockCLISource = {} as CLIConfigSource<
+ 85 |           Record<string, string | undefined>,
+ 86 |           object
+ 87 |         >;
+ 88 |         const result = builderInstance.withCLIConfig(mockCLISource);
+ 89 | 
+ 90 |         expect(mockConfig.addSource).toHaveBeenCalledWith(mockCLISource);
+ 91 |         expect(result).toBe(builderInstance);
+ 92 |       });
+ 93 |     });
+ 94 | 
+ 95 |     describe("withOverride", () => {
+ 96 |       it("should apply configuration override", () => {
+ 97 |         const override = { name: "test" };
+ 98 |         const result = builderInstance.withOverride(override);
+ 99 | 
+100 |         expect(mockConfig.override).toHaveBeenCalledWith(override);
+101 |         expect(result).toBe(builderInstance);
+102 |       });
+103 |     });
+104 | 
+105 |     describe("build", () => {
+106 |       it("should return configured Config instance", () => {
+107 |         const config = builderInstance.build();
+108 |         expect(config).toBe(mockConfig);
+109 |       });
+110 | 
+111 |       it("should load sources before returning", () => {
+112 |         builderInstance.build();
+113 |         expect(mockConfig.loadSources).toHaveBeenCalled();
+114 |       });
+115 | 
+116 |       it("should handle load errors gracefully", async () => {
+117 |         mockConfig.loadSources.mockRejectedValue(new Error("Load error"));
+118 | 
+119 |         builderInstance.build();
+120 | 
+121 |         await new Promise(process.nextTick); // Allow async error to be handled
+122 |         expect(logger.error).toHaveBeenCalledWith(
+123 |           "Failed to load configuration sources",
+124 |           expect.any(Error)
+125 |         );
+126 |       });
+127 |     });
+128 |   });
+129 | });
+130 | 
+```
+
+---------------------------------------------------------------------------
+
+
 ## File: Config.test.ts
 - Path: `/root/git/codewrangler/src/utils/config/core/__tests__/Config.test.ts`
-- Size: 4.93 KB
+- Size: 5.03 KB
 - Extension: .ts
-- Lines of code: 138
+- Lines of code: 142
 - Content:
 
 ```ts
@@ -2806,7 +2953,7 @@ codewrangler
   2 | 
   3 | import { logger } from "../../../logger";
   4 | import { DEFAULT_CONFIG, DEFAULT_JOB_CONFIG } from "../../schema/defaults";
-  5 | import { IConfig } from "../../schema/types";
+  5 | import { IConfig, ILoadConfigResult } from "../../schema/types";
   6 | import { optionalConfigSchema } from "../../schema/validation";
   7 | import { IConfigurationSource } from "../../sources/interfaces/IConfigurationSource";
   8 | import { Config } from "../Config";
@@ -2828,144 +2975,148 @@ codewrangler
  24 | 
  25 |   public constructor(private mockConfig: Partial<IConfig> = {}) {}
  26 | 
- 27 |   public async load(): Promise<Partial<typeof DEFAULT_CONFIG>> {
- 28 |     return await Promise.resolve(this.mockConfig);
- 29 |   }
- 30 | }
- 31 | 
- 32 | describe("Config", () => {
- 33 |   beforeEach(() => {
- 34 |     Config.destroy();
- 35 |     jest.clearAllMocks();
- 36 |   });
- 37 | 
- 38 |   describe("Singleton Pattern", () => {
- 39 |     it("should create only one instance", async () => {
- 40 |       const instance1 = await Config.load();
- 41 |       const instance2 = await Config.load();
- 42 |       expect(instance1).toBe(instance2);
- 43 |     });
- 44 | 
- 45 |     it("should throw error if getInstance called before initialization", () => {
- 46 |       Config.destroy();
- 47 |       expect(() => Config.getInstance()).toThrow(
- 48 |         "Config must be initialized before use"
- 49 |       );
- 50 |     });
- 51 |   });
- 52 | 
- 53 |   describe("Configuration Sources", () => {
- 54 |     it("should load configuration from sources in priority order", async () => {
- 55 |       const config = await Config.load();
- 56 |       const source1 = new MockConfigSource({ name: "Source1" });
- 57 |       const source2 = new MockConfigSource({ name: "Source2" });
- 58 | 
- 59 |       config.addSource(source1);
- 60 |       config.addSource(source2);
- 61 | 
- 62 |       await config.loadSources();
- 63 |       expect(config.get("name")).toBe("Source2");
- 64 |     });
+ 27 |   public async load(): Promise<ILoadConfigResult<Partial<IConfig>>> {
+ 28 |     return await Promise.resolve({
+ 29 |       config: this.mockConfig,
+ 30 |       jobConfig: [],
+ 31 |       input: this.mockConfig
+ 32 |     });
+ 33 |   }
+ 34 | }
+ 35 | 
+ 36 | describe("Config", () => {
+ 37 |   beforeEach(() => {
+ 38 |     Config.destroy();
+ 39 |     jest.clearAllMocks();
+ 40 |   });
+ 41 | 
+ 42 |   describe("Singleton Pattern", () => {
+ 43 |     it("should create only one instance", async () => {
+ 44 |       const instance1 = await Config.load();
+ 45 |       const instance2 = await Config.load();
+ 46 |       expect(instance1).toBe(instance2);
+ 47 |     });
+ 48 | 
+ 49 |     it("should throw error if getInstance called before initialization", () => {
+ 50 |       Config.destroy();
+ 51 |       expect(() => Config.getInstance()).toThrow(
+ 52 |         "Config must be initialized before use"
+ 53 |       );
+ 54 |     });
+ 55 |   });
+ 56 | 
+ 57 |   describe("Configuration Sources", () => {
+ 58 |     it("should load configuration from sources in priority order", async () => {
+ 59 |       const config = await Config.load();
+ 60 |       const source1 = new MockConfigSource({ name: "Source1" });
+ 61 |       const source2 = new MockConfigSource({ name: "Source2" });
+ 62 | 
+ 63 |       config.addSource(source1);
+ 64 |       config.addSource(source2);
  65 | 
- 66 |     it("should handle source loading errors gracefully", async () => {
- 67 |       const config = await Config.load();
- 68 |       const failingSource = new MockConfigSource();
- 69 |       jest
- 70 |         .spyOn(failingSource, "load")
- 71 |         .mockRejectedValue(new Error("Load failed"));
- 72 | 
- 73 |       config.addSource(failingSource);
- 74 |       await config.loadSources();
- 75 | 
- 76 |       expect(logger.error).toHaveBeenCalled();
- 77 |     });
- 78 |   });
+ 66 |       await config.loadSources();
+ 67 |       expect(config.get("name")).toBe("Source2");
+ 68 |     });
+ 69 | 
+ 70 |     it("should handle source loading errors gracefully", async () => {
+ 71 |       const config = await Config.load();
+ 72 |       const failingSource = new MockConfigSource();
+ 73 |       jest
+ 74 |         .spyOn(failingSource, "load")
+ 75 |         .mockRejectedValue(new Error("Load failed"));
+ 76 | 
+ 77 |       config.addSource(failingSource);
+ 78 |       await config.loadSources();
  79 | 
- 80 |   describe("Default Job", () => {
- 81 |     it("should initialize with default job config", async () => {
- 82 |       const config = await Config.load();
- 83 |       expect(config.defaultJob).toBeInstanceOf(JobConfig);
- 84 |       expect(config.defaultJob.getAll()).toEqual({
- 85 |         ...DEFAULT_JOB_CONFIG,
- 86 |         name: expect.any(String)
- 87 |       });
- 88 |     });
- 89 |   });
- 90 | 
- 91 |   describe("Configuration Override", () => {
- 92 |     it("should allow overriding configuration values", async () => {
- 93 |       const config = await Config.load();
- 94 |       const override = { name: "Overridden" };
- 95 | 
- 96 |       config.override(override);
- 97 |       expect(config.get("name")).toBe("Overridden");
- 98 |     });
+ 80 |       expect(logger.error).toHaveBeenCalled();
+ 81 |     });
+ 82 |   });
+ 83 | 
+ 84 |   describe("Default Job", () => {
+ 85 |     it("should initialize with default job config", async () => {
+ 86 |       const config = await Config.load();
+ 87 |       expect(config.defaultJob).toBeInstanceOf(JobConfig);
+ 88 |       expect(config.defaultJob.getAll()).toEqual({
+ 89 |         ...DEFAULT_JOB_CONFIG,
+ 90 |         name: expect.any(String)
+ 91 |       });
+ 92 |     });
+ 93 |   });
+ 94 | 
+ 95 |   describe("Configuration Override", () => {
+ 96 |     it("should allow overriding configuration values", async () => {
+ 97 |       const config = await Config.load();
+ 98 |       const override = { name: "Overridden" };
  99 | 
-100 |     it("should validate overridden values", async () => {
-101 |       const config = await Config.load();
-102 |       const invalidOverride = { name: 123 }; // Invalid type
+100 |       config.override(override);
+101 |       expect(config.get("name")).toBe("Overridden");
+102 |     });
 103 | 
-104 |       expect(() =>
-105 |         config.override(
-106 |           invalidOverride as unknown as Partial<typeof DEFAULT_CONFIG>
-107 |         )
-108 |       ).toThrow();
-109 |     });
-110 |   });
-111 |   describe("Configuration Validation", () => {
-112 |     it("should validate configuration on load", async () => {
-113 |       const config = await Config.load();
-114 |       const invalidSource = new MockConfigSource({
-115 |         name: 123 as unknown as string
-116 |       });
-117 | 
-118 |       config.addSource(invalidSource);
-119 |       await expect(config.loadSources()).rejects.toThrow();
-120 |     });
-121 |   });
-122 |   describe("Logger Integration", () => {
-123 |     it("should initialize logger with config instance", async () => {
-124 |       await Config.load();
-125 |       expect(logger.setConfig).toHaveBeenCalled();
-126 |     });
-127 |   });
-128 | 
-129 |   describe("Configuration Loading", () => {
-130 |     it("should properly initialize default configuration", async () => {
-131 |       const config = await Config.load();
-132 |       expect(config.get("name")).toBeDefined();
-133 |       expect(config.defaultJob).toBeDefined();
-134 |     });
-135 | 
-136 |     it("should handle validation errors during source loading", async () => {
-137 |       const config = await Config.load();
-138 |       const invalidSource = new MockConfigSource({
-139 |         invalidField: "test"
-140 |       } as unknown as Partial<IConfig>);
-141 | 
-142 |       config.addSource(invalidSource);
-143 |       await expect(config.loadSources()).rejects.toThrow();
-144 |     });
-145 |   });
-146 | 
-147 |   describe("Source Navigation", () => {
-148 |     it("should handle errors during source navigation", async () => {
-149 |       const config = await Config.load();
-150 |       const errorSource = {
-151 |         priority: 1,
-152 |         schema: z.object({}),
-153 |         load: jest.fn().mockRejectedValue(new Error("Navigation error"))
-154 |       };
-155 | 
-156 |       config.addSource(errorSource);
-157 |       await config.loadSources();
-158 |       expect(logger.error).toHaveBeenCalledWith(
-159 |         expect.stringContaining("Failed to navigate configuration source")
-160 |       );
-161 |     });
-162 |   });
-163 | });
-164 | 
+104 |     it("should validate overridden values", async () => {
+105 |       const config = await Config.load();
+106 |       const invalidOverride = { name: 123 }; // Invalid type
+107 | 
+108 |       expect(() =>
+109 |         config.override(
+110 |           invalidOverride as unknown as Partial<typeof DEFAULT_CONFIG>
+111 |         )
+112 |       ).toThrow();
+113 |     });
+114 |   });
+115 |   describe("Configuration Validation", () => {
+116 |     it("should validate configuration on load", async () => {
+117 |       const config = await Config.load();
+118 |       const invalidSource = new MockConfigSource({
+119 |         name: 123 as unknown as string
+120 |       });
+121 | 
+122 |       config.addSource(invalidSource);
+123 |       await expect(config.loadSources()).rejects.toThrow();
+124 |     });
+125 |   });
+126 |   describe("Logger Integration", () => {
+127 |     it("should initialize logger with config instance", async () => {
+128 |       await Config.load();
+129 |       expect(logger.setConfig).toHaveBeenCalled();
+130 |     });
+131 |   });
+132 | 
+133 |   describe("Configuration Loading", () => {
+134 |     it("should properly initialize default configuration", async () => {
+135 |       const config = await Config.load();
+136 |       expect(config.get("name")).toBeDefined();
+137 |       expect(config.defaultJob).toBeDefined();
+138 |     });
+139 | 
+140 |     it("should handle validation errors during source loading", async () => {
+141 |       const config = await Config.load();
+142 |       const invalidSource = new MockConfigSource({
+143 |         invalidField: "test"
+144 |       } as unknown as Partial<IConfig>);
+145 | 
+146 |       config.addSource(invalidSource);
+147 |       await expect(config.loadSources()).rejects.toThrow();
+148 |     });
+149 |   });
+150 | 
+151 |   describe("Source Navigation", () => {
+152 |     it("should handle errors during source navigation", async () => {
+153 |       const config = await Config.load();
+154 |       const errorSource = {
+155 |         priority: 1,
+156 |         schema: z.object({}),
+157 |         load: jest.fn().mockRejectedValue(new Error("Navigation error"))
+158 |       };
+159 | 
+160 |       config.addSource(errorSource);
+161 |       await config.loadSources();
+162 |       expect(logger.error).toHaveBeenCalledWith(
+163 |         expect.stringContaining("Failed to navigate configuration source")
+164 |       );
+165 |     });
+166 |   });
+167 | });
+168 | 
 ```
 
 ---------------------------------------------------------------------------
@@ -3453,6 +3604,115 @@ codewrangler
 124 |   });
 125 | });
 126 | 
+```
+
+---------------------------------------------------------------------------
+
+
+## File: FileConfigSource.test.ts
+- Path: `/root/git/codewrangler/src/utils/config/sources/__tests__/FileConfigSource.test.ts`
+- Size: 2.77 KB
+- Extension: .ts
+- Lines of code: 78
+- Content:
+
+```ts
+ 1 | import { JsonReader } from "../../../../infrastructure/filesystem/JsonReader";
+ 2 | import { logger } from "../../../../utils/logger";
+ 3 | import { DEFAULT_CONFIG } from "../../schema/defaults";
+ 4 | import { IConfig } from "../../schema/types";
+ 5 | import { FileConfigSource } from "../../sources/FileConfigSource";
+ 6 | 
+ 7 | jest.mock("../../../../infrastructure/filesystem/JsonReader");
+ 8 | jest.mock("../../../../utils/logger", () => ({
+ 9 |   logger: {
+10 |     warn: jest.fn(),
+11 |     error: jest.fn()
+12 |   }
+13 | }));
+14 | 
+15 | describe("FileConfigSource", () => {
+16 |   let fileConfigSource: FileConfigSource;
+17 |   const testFilePath = "test-config.json";
+18 |   const DEFAULT_NAME = "test-project";
+19 | 
+20 |   beforeEach(() => {
+21 |     jest.clearAllMocks();
+22 |     fileConfigSource = new FileConfigSource(testFilePath);
+23 |   });
+24 | 
+25 |   describe("constructor", () => {
+26 |     it("should initialize with correct priority", () => {
+27 |       expect(fileConfigSource.priority).toBe(1);
+28 |     });
+29 | 
+30 |     it("should set correct schema", () => {
+31 |       expect(fileConfigSource.schema).toBeDefined();
+32 |     });
+33 |   });
+34 | 
+35 |   describe("load", () => {
+36 |     it("should load and parse valid configuration file", async () => {
+37 |       const mockConfig: Partial<IConfig> = {
+38 |         name: DEFAULT_NAME,
+39 |         templatesDir: "templates"
+40 |       };
+41 | 
+42 |       (JsonReader.prototype.readJsonSync as jest.Mock).mockResolvedValue(
+43 |         mockConfig
+44 |       );
+45 | 
+46 |       const result = await fileConfigSource.load();
+47 |       expect(result.config).toEqual(mockConfig);
+48 |       expect(result.jobConfig).toEqual([]);
+49 |     });
+50 | 
+51 |     it("should handle invalid configuration gracefully", async () => {
+52 |       const invalidConfig = {
+53 |         name: 123, // Invalid type
+54 |         templatesDir: ["invalid"] // Invalid type
+55 |       };
+56 | 
+57 |       (JsonReader.prototype.readJsonSync as jest.Mock).mockResolvedValue(
+58 |         invalidConfig
+59 |       );
+60 | 
+61 |       const result = await fileConfigSource.load();
+62 |       expect(result.config).toEqual(DEFAULT_CONFIG);
+63 |       expect(logger.warn).toHaveBeenCalled();
+64 |     });
+65 | 
+66 |     it("should handle file read errors", async () => {
+67 |       (JsonReader.prototype.readJsonSync as jest.Mock).mockRejectedValue(
+68 |         new Error("File read error")
+69 |       );
+70 | 
+71 |       const result = await fileConfigSource.load();
+72 |       expect(result.config).toEqual(DEFAULT_CONFIG);
+73 |       expect(logger.warn).toHaveBeenCalledWith(
+74 |         expect.stringContaining("Failed to load configuration from")
+75 |       );
+76 |     });
+77 | 
+78 |   });
+79 | 
+80 |   describe("error handling", () => {
+81 |     it("should return default configuration on validation failure", async () => {
+82 |       const invalidConfig = {
+83 |         logLevel: "INVALID_LEVEL"
+84 |       };
+85 | 
+86 |       (JsonReader.prototype.readJsonSync as jest.Mock).mockResolvedValue(
+87 |         invalidConfig
+88 |       );
+89 | 
+90 |       const result = await fileConfigSource.load();
+91 |       expect(result.config).toEqual(DEFAULT_CONFIG);
+92 |       expect(logger.warn).toHaveBeenCalled();
+93 |     });
+94 |   });
+95 | });
+96 | 
 ```
 
 ---------------------------------------------------------------------------

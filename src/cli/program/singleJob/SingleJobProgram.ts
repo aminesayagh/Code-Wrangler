@@ -46,9 +46,11 @@ export class DocumentCLIBuilder {
         configBuilder.withCLIConfig(documentConfigSource);
         this.config = configBuilder.build();
 
-        const documentCLI = new DocumentCommand(this.config, options);
+        const documentCLI = new DocumentCommand(this.config);
         await documentCLI.execute();
       }
     );
+
+    this.program.parse(process.argv);
   }
 }

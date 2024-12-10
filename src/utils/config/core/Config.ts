@@ -25,8 +25,8 @@ export class Config extends ConfigManager<IConfig> {
   /**
    * Constructor for the Config class.
    */
-  private constructor() {
-    super(DEFAULT_CONFIG);
+  private constructor(name: string = "default") {
+    super({ ...DEFAULT_CONFIG, name });
     this.validate(this.config);
     this.jobManager = new JobManager(this);
   }
@@ -49,7 +49,7 @@ export class Config extends ConfigManager<IConfig> {
    */
   public reset(): void {
     logger.info("Resetting config to default");
-    this.config = { ...DEFAULT_CONFIG, name: this.generateName() } as IConfig;
+    this.config = Config.merge({});
     this.jobManager.reset();
   }
 
@@ -105,7 +105,7 @@ export class Config extends ConfigManager<IConfig> {
    * Loads the configuration sources.
    */
   public async loadSources(): Promise<void> {
-    let mergedConfig = { ...DEFAULT_CONFIG, ...this.config };
+    let mergedConfig = Config.merge(this.config);
 
     await this.navigateSource(async source => {
       const { config, jobConfig } = await source.load();
@@ -123,6 +123,12 @@ export class Config extends ConfigManager<IConfig> {
     this.override(mergedConfig);
   }
 
+  public static override merge<T = IConfig>(
+    config: Partial<T>,
+    defaultConfig: Omit<T, "name"> = DEFAULT_CONFIG as Omit<T, "name">
+  ): T {
+    return super.merge(config, defaultConfig) as T;
+  }
   /**
    * Validates the configuration.
    * @param config - The configuration to validate.

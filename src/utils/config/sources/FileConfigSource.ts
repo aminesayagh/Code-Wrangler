@@ -3,9 +3,10 @@ import { z } from "zod";
 import { IConfigurationSource } from "./interfaces/IConfigurationSource";
 import { JsonReader } from "../../../infrastructure/filesystem/JsonReader";
 import { logger } from "../../logger";
+import { Config } from "../core/Config";
+import { JobConfig } from "../core/JobConfig";
 import { IConfig } from "../schema";
-import { DEFAULT_CONFIG } from "../schema/defaults";
-import { ILoadConfigResult } from "../schema/types";
+import { IJobConfig, ILoadConfigResult } from "../schema/types";
 import { optionalConfigSchema } from "../schema/validation";
 
 export class FileConfigSource
@@ -26,8 +27,8 @@ export class FileConfigSource
       this.inputFileConfig = await this.jsonReader.readJsonSync(this.filePath);
       const config = optionalConfigSchema.parse(this.inputFileConfig);
       return {
-        config,
-        jobConfig: [],
+        config: Config.merge<IConfig>(config),
+        jobConfig: config?.jobs?.map(job => JobConfig.merge<IJobConfig>(job)),
         input: this.inputFileConfig
       };
     } catch (error) {
@@ -35,7 +36,7 @@ export class FileConfigSource
         `Failed to load configuration from ${this.filePath}: ${error instanceof Error ? error.message : String(error)}`
       );
       return {
-        config: DEFAULT_CONFIG,
+        config: Config.merge<IConfig>({}),
         jobConfig: [],
         input: {}
       };

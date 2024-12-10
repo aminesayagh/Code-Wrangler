@@ -21,14 +21,15 @@ export class ConfigBuilder {
   }
 
   public withFileConfig(filePath: string): ConfigBuilder {
-    console.log("withFileConfig", filePath);
     this.config.addSource(new FileConfigSource(filePath));
     return this;
   }
 
-  public withCLIConfig<I extends object>(
-    cliConfig: CLIConfigSource<I>
-  ): ConfigBuilder {
+  public withCLIConfig<
+    I extends Record<string, string | undefined>,
+    V extends object,
+    O extends object
+  >(cliConfig: CLIConfigSource<I, V, O>): ConfigBuilder {
     this.config.addSource(cliConfig);
     return this;
   }

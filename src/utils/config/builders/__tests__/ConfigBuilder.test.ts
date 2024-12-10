@@ -81,7 +81,10 @@ describe("ConfigBuilder", () => {
 
     describe("withCLIConfig", () => {
       it("should add CLI configuration source", () => {
-        const mockCLISource = {} as CLIConfigSource<object>;
+        const mockCLISource = {} as CLIConfigSource<
+          Record<string, string | undefined>,
+          object
+        >;
         const result = builderInstance.withCLIConfig(mockCLISource);
 
         expect(mockConfig.addSource).toHaveBeenCalledWith(mockCLISource);
