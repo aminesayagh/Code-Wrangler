@@ -21,6 +21,7 @@ jest.mock("../../../logger", () => ({
 class MockConfigSource implements IConfigurationSource<Partial<IConfig>> {
   public readonly priority = 1;
   public readonly schema = optionalConfigSchema as z.ZodType<Partial<IConfig>>;
+  public loaded: boolean = false;
 
   public constructor(private mockConfig: Partial<IConfig> = {}) {}
 
@@ -144,7 +145,8 @@ describe("Config", () => {
       const errorSource = {
         priority: 1,
         schema: z.object({}),
-        load: jest.fn().mockRejectedValue(new Error("Navigation error"))
+        load: jest.fn().mockRejectedValue(new Error("Navigation error")),
+        loaded: false
       };
 
       config.addSource(errorSource);

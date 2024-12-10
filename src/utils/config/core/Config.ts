@@ -171,7 +171,9 @@ export class Config extends ConfigManager<IConfig> {
   ): Promise<void> {
     for (const source of this.sources) {
       try {
-        await callback(source);
+        if (!source.loaded) {
+          await callback(source);
+        }
       } catch (error) {
         logger.error(
           `Failed to navigate configuration source on general config: ${error instanceof Error ? error.message : String(error)}`

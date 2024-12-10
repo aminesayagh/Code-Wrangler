@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { ConfigSource } from "./ConfigSource";
 import { IConfigurationSource } from "./interfaces/IConfigurationSource";
 import { JsonReader } from "../../../infrastructure/filesystem/JsonReader";
 import { logger } from "../../logger";
@@ -10,6 +11,7 @@ import { IJobConfig, ILoadConfigResult } from "../schema/types";
 import { jobConfigSchema, optionalConfigSchema } from "../schema/validation";
 
 export class FileConfigSource
+  extends ConfigSource
   implements IConfigurationSource<Partial<IConfig & { jobs: IJobConfig[] }>>
 {
   public readonly priority = 1;
@@ -20,6 +22,7 @@ export class FileConfigSource
   private jsonReader: JsonReader;
 
   public constructor(private readonly filePath: string) {
+    super();
     this.jsonReader = new JsonReader();
     this.schema = optionalConfigSchema.extend({
       jobs: z.array(jobConfigSchema).default([])
@@ -30,6 +33,7 @@ export class FileConfigSource
     try {
       this.inputFileConfig = await this.jsonReader.readJsonSync(this.filePath);
       const config = this.schema.parse(this.inputFileConfig);
+      this.isLoaded = true;
       return {
         config: Config.merge<IConfig>(config),
         jobConfig: config.jobs?.map(job => JobConfig.merge<IJobConfig>(job)),

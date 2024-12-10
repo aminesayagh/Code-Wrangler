@@ -30,14 +30,9 @@ export class DocumentConfigSource extends CLIConfigSource<
 
   public async load(): Promise<ILoadConfigResult<IDocumentCommandConfig>> {
     const rawConfig = this.parseArgs(); // parse to a raw config of key value pairs
-    console.log(rawConfig);
     const validConfig = this.validate(rawConfig); // validate the raw config
     const transformedConfig = this.transform(validConfig); // transform the valid config to the final config
-    console.log(
-      "transformedConfig",
-      Config.merge<IConfig>(transformedConfig),
-      JobConfig.merge<IJobConfig>(transformedConfig)
-    );
+    this.isLoaded = true;
     return await Promise.resolve({
       config: Config.merge<IConfig>(transformedConfig),
       jobConfig: [JobConfig.merge<IJobConfig>(transformedConfig)],
