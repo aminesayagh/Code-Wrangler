@@ -30,15 +30,6 @@ The marketplace will be a platform where documentation solutions come together. 
 
 Whether you're documenting a small project or a large enterprise codebase, the marketplace will have a plugin to match your specific use case - and if it doesn't, you can build and share your own. Join us in building the future of code documentation automation.
 
-## Key Features
-
-- 🌳 **Smart Repository Scanning**: Advanced file tree generation with intelligent filtering and customizable ignore patterns
-- 🔌 **Plugin Architecture**: Extensible pipeline system supporting custom documentation workflows and integrations
-- 🤖 **AI Integration Ready**: Built-in support for LLM-powered documentation enhancement and code analysis
-- 📦 **Template Engine**: Flexible template system supporting multiple output formats and custom variables
-- ⚡ **High Performance**: Parallel processing and caching capabilities for efficient handling of large repositories
-- 🔄 **Incremental Updates**: Smart change detection for efficient documentation maintenance
-
 ## Development Status and Demo
 
 This library is currently in active development. The core functionality has been implemented, but there are still some features and improvements that are in progress. We welcome any feedback or contributions from the community as we work towards a stable release.
@@ -359,7 +350,7 @@ npm test
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](./documentation/CONTRIBUTING.md) for details on:
+We welcome contributions! Please see our [Contributing Guide](./documentation/CONTRIBUTING.md) for details
 
 ## License
 
